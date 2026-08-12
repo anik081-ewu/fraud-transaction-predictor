@@ -1,0 +1,71 @@
+<section class="page upload-page">
+  <header class="page-header upload-header">
+    <div>
+      <span class="upload-eyebrow">Data ingestion</span>
+      <h2>Upload Transactions</h2>
+      <p>Import historical transactions into the database. Business dates are sealed automatically — you can proceed directly to Training Operations once the upload completes.</p>
+    </div>
+  </header>
+
+  <section class="panel upload-card">
+    <div class="upload-zone">
+      <div class="upload-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M5 14v5h14v-5"></path></svg>
+      </div>
+      <div class="upload-copy">
+        <strong>{{ selectedFile?.name || 'Choose a transaction dataset' }}</strong>
+        <span>Accepted formats: Excel (.xlsx, .xls) and CSV</span>
+      </div>
+      <label class="file-button">
+        Browse file
+        <input type="file" (change)="onFileSelected($event)" accept=".xlsx,.xls,.csv" />
+      </label>
+    </div>
+
+    <button type="button" (click)="upload()" [disabled]="!selectedFile || uploading() || polling()">
+      {{ uploading() ? 'Submitting...' : 'Upload Transactions' }}
+    </button>
+  </section>
+
+  <!-- Processing state — batch queued or being processed -->
+  <section class="panel upload-progress" *ngIf="polling() || batchResult()?.status === 'QUEUED' || batchResult()?.status === 'PROCESSING'">
+    <div class="progress-spinner" aria-label="Processing"></div>
+    <div class="progress-copy">
+      <strong>Processing batch {{ batchNo() }}</strong>
+      <span>Status: {{ batchResult()?.status ?? 'QUEUED' }} — checking every 2 seconds</span>
+    </div>
+  </section>
+
+  <!-- Completed state -->
+  <section class="panel upload-result" *ngIf="batchResult() as r">
+    <ng-container *ngIf="r.status === 'COMPLETED'">
+      <div>
+        <span>Valid rows</span>
+        <strong>{{ (r.successRows ?? 0) | number }}</strong>
+      </div>
+      <div>
+        <span>Rejected rows</span>
+        <strong>{{ (r.failedRows ?? 0) | number }}</strong>
+      </div>
+      <div>
+        <span>Batch</span>
+        <strong>{{ r.batchNo }}</strong>
+      </div>
+      <div *ngIf="r.minTransactionDate && r.maxTransactionDate">
+        <span>Date range</span>
+        <strong>{{ r.minTransactionDate }} → {{ r.maxTransactionDate }}</strong>
+      </div>
+      <div *ngIf="r.minTransactionDate">
+        <span>Business dates</span>
+        <strong>Sealed ✓</strong>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="r.status === 'FAILED'">
+      <div class="result-failed">
+        <strong>Upload failed</strong>
+        <span>Batch {{ r.batchNo }} could not be processed. Check your file format and required columns.</span>
+      </div>
+    </ng-container>
+  </section>
+</section>

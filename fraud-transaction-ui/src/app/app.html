@@ -1,0 +1,124 @@
+<app-alert></app-alert>
+
+<main class="auth-content" *ngIf="isAuthPage(); else applicationShell">
+  <router-outlet></router-outlet>
+</main>
+
+<ng-template #applicationShell>
+  <div
+    class="shell"
+    [class.sidebar-collapsed]="sidebarCollapsed()"
+    [class.mobile-menu-open]="mobileMenuOpen()"
+  >
+    <button
+      class="mobile-backdrop"
+      type="button"
+      aria-label="Close navigation"
+      (click)="closeMobileMenu()"
+    ></button>
+
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3 4.5 6v5.3c0 4.7 3.2 8.5 7.5 9.7 4.3-1.2 7.5-5 7.5-9.7V6L12 3Z"></path>
+            <path d="m8.8 12 2 2 4.5-4.5"></path>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <strong>Anomaly Intelligence</strong>
+          <span>Model Comparison</span>
+        </div>
+        <button
+          class="icon-button sidebar-toggle"
+          type="button"
+          [attr.aria-label]="sidebarCollapsed() ? 'Expand navigation' : 'Collapse navigation'"
+          (click)="toggleSidebar()"
+        >
+          <svg viewBox="0 0 24 24" [class.flipped]="sidebarCollapsed()">
+            <path d="m15 18-6-6 6-6"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="sidebar-body">
+        <nav>
+          <div class="nav-group">
+            <span class="nav-label">Workspace</span>
+            <a routerLink="/uploads" routerLinkActive="active" title="Upload Data">
+              <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M5 14v5h14v-5"></path></svg>
+              <span>Upload Data</span>
+            </a>
+            <a routerLink="/datasets" routerLinkActive="active" title="Model Comparison">
+              <svg viewBox="0 0 24 24"><path d="M4 6c0 1.1 3.6 2 8 2s8-.9 8-2-3.6-2-8-2-8 .9-8 2Z"></path><path d="M4 6v6c0 1.1 3.6 2 8 2s8-.9 8-2V6"></path><path d="M4 12v6c0 1.1 3.6 2 8 2s8-.9 8-2v-6"></path></svg>
+              <span>Model Comparison</span>
+            </a>
+<a *ngIf="isAdministrator()" routerLink="/training-operations" routerLinkActive="active" title="Training Operations">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"></path><path d="M8 10h8M8 14h5M12 3v3M12 18v3"></path></svg>
+              <span>Training Operations</span>
+            </a>
+          </div>
+
+          <div class="nav-group">
+            <span class="nav-label">Operations</span>
+            <a routerLink="/transaction-check" routerLinkActive="active" title="Transaction Check">
+              <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M12 3a9 9 0 1 0 0 18A9 9 0 0 0 12 3Z"></path></svg>
+              <span>Transaction Check</span>
+            </a>
+            <a *ngIf="isAdministrator()" routerLink="/cases" routerLinkActive="active" title="Case Management">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"></path><path d="M9 7V4h6v3M4 12h16"></path></svg>
+              <span>Case Management</span>
+            </a>
+            <a *ngIf="isAdministrator()" routerLink="/cases/manual" routerLinkActive="active" title="Create Manual Case">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+              <span>Manual Case</span>
+            </a>
+          </div>
+
+          <div class="nav-group">
+            <span class="nav-label">Configuration</span>
+            <a routerLink="/model-tuning" routerLinkActive="active" title="Model Tuning">
+              <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="17" r="2"></circle></svg>
+              <span>Model Tuning</span>
+            </a>
+            <a routerLink="/config" routerLinkActive="active" title="Risk Decision Policy">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"></path></svg>
+              <span>Risk Policy</span>
+            </a>
+            <a routerLink="/cold-start" routerLinkActive="active" title="Cold Start Configuration">
+              <svg viewBox="0 0 24 24"><path d="M12 2v20M4.2 6.5l15.6 11M19.8 6.5l-15.6 11"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <span>Cold Start</span>
+            </a>
+          </div>
+        </nav>
+      </div>
+
+      <div class="user-panel">
+        <div class="avatar">{{ userInitials() }}</div>
+        <div class="user-copy">
+          <strong>{{ displayName() }}</strong>
+          <span>{{ currentUser()?.roleName || 'User' }}</span>
+        </div>
+        <button class="icon-button logout-button" type="button" title="Sign out" aria-label="Sign out" (click)="logout()">
+          <svg viewBox="0 0 24 24"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"></path></svg>
+        </button>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="mobile-header">
+        <button class="icon-button" type="button" aria-label="Open navigation" (click)="toggleMobileMenu()">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+        </button>
+        <div>
+          <strong>Anomaly Intelligence</strong>
+          <span>Model Comparison</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <router-outlet></router-outlet>
+      </main>
+    </section>
+  </div>
+</ng-template>

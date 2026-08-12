@@ -1,0 +1,28 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h2>Cold Start</h2>
+      <p>
+        New accounts lack the transaction history the 4-layer engine needs to score reliably.
+        Cold start gates those accounts out of ML scoring until they have enough history,
+        returning a neutral <strong>NORMAL / ALLOW</strong> response in the meantime.
+      </p>
+    </div>
+  </header>
+
+  <section class="panel">
+    <h3>Cold Start Settings</h3>
+    <div class="grid two">
+      <div *ngFor="let item of items()">
+        <label [for]="item.configKey">{{ labelFor(item.configKey) }}</label>
+        <select *ngIf="isBoolean(item)" [id]="item.configKey" [(ngModel)]="item.configValue">
+          <option value="true">Enabled</option>
+          <option value="false">Disabled — all accounts scored regardless of history</option>
+        </select>
+        <input *ngIf="!isBoolean(item)" type="number" min="1" [id]="item.configKey" [(ngModel)]="item.configValue" />
+        <small>{{ item.description }}</small>
+      </div>
+    </div>
+    <button (click)="save()">Save</button>
+  </section>
+</section>

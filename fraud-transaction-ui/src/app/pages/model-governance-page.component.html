@@ -1,0 +1,292 @@
+<section class="page governance-page">
+  <header class="governance-header">
+    <div>
+      <span class="page-eyebrow">Controlled model lifecycle</span>
+      <h2>Model Governance</h2>
+      <p>Audit the 4-layer scoring engine, validate ML model challengers, and promote reviewed champions by segment.</p>
+    </div>
+    <button class="refresh-button" type="button" (click)="refresh(selectedVersion() || undefined)" [disabled]="loading()">
+      {{ loading() ? 'Refreshing...' : 'Refresh governance data' }}
+    </button>
+  </header>
+
+  <section class="governance-stats">
+    <article class="stat-always-active">
+      <span>Scoring engine</span>
+      <strong>4-layer · 100%</strong>
+      <small>All traffic — always active</small>
+    </article>
+    <article>
+      <span>Active model scopes</span>
+      <strong>{{ championCount() }}</strong>
+      <small>Segment and global pointers</small>
+    </article>
+    <article>
+      <span>Awaiting validation</span>
+      <strong>{{ candidateCount() }}</strong>
+      <small>Silent challengers collecting evidence</small>
+    </article>
+    <article>
+      <span>Ready to promote</span>
+      <strong>{{ validatedCount() }}</strong>
+      <small>Passed technical safety gates</small>
+    </article>
+    <article [class.admin-ready]="isAdministrator()">
+      <span>Your access</span>
+      <strong>{{ isAdministrator() ? 'Controller' : 'Read only' }}</strong>
+      <small>{{ isAdministrator() ? 'Promotion actions enabled' : 'ADMIN approval required' }}</small>
+    </article>
+  </section>
+
+  <!-- 4-layer engine health monitor -->
+  <section class="layered-monitor-panel">
+    <div class="section-title layered-title">
+      <div>
+        <span class="page-eyebrow">Production health</span>
+        <h3>4-layer scoring engine monitor</h3>
+        <p>Shadow scoring records every live prediction. Run a validation to audit agreement rate, alert volume, and recall against synthetic AML scenarios.</p>
+      </div>
+      <span class="architecture-badge always-active">Always active</span>
+    </div>
+
+    <div class="monitor-toolbar">
+      <label for="layeredSegment">
+        <span>Customer segment</span>
+        <div class="segment-control">
+          <input
+            id="layeredSegment"
+            type="text"
+            [(ngModel)]="layeredSegment"
+            placeholder="RETAIL_SALARIED"
+            [disabled]="layeredValidating()"
+          />
+          <button
+            type="button"
+            class="secondary-action"
+            (click)="validateLayered()"
+            [disabled]="!isAdministrator() || layeredValidating() || !layeredSegment.trim()"
+          >{{ layeredValidating() ? 'Validating...' : 'Run shadow validation' }}</button>
+        </div>
+      </label>
+      <p class="admin-message" *ngIf="!isAdministrator()">ADMIN or AML_ADMIN access is required to run validations.</p>
+    </div>
+
+    <div class="monitor-detail" *ngIf="latestLayeredValidation() as report; else noLayeredValidation">
+      <div class="monitor-detail-header">
+        <div>
+          <span class="page-eyebrow">{{ report.peerGroupCode || 'GLOBAL' }} · {{ report.windowStartedAt | date:'mediumDate' }} – {{ report.windowEndedAt | date:'mediumDate' }}</span>
+          <h4>Latest validation result</h4>
+        </div>
+        <span class="status-chip large" [ngClass]="statusClass(report.validationStatus)">{{ report.validationStatus }}</span>
+      </div>
+
+      <div class="monitor-metrics-grid">
+        <div><span>Shadow predictions</span><strong>{{ report.metrics.sampleCount | number }}</strong></div>
+        <div><span>Observation window</span><strong>{{ report.metrics.observationDays }} days</strong></div>
+        <div><span>Agreement rate</span><strong>{{ rate(report.metrics.agreementRate) }}</strong></div>
+        <div><span>Alert overlap (Jaccard)</span><strong>{{ rate(report.metrics.alertJaccard) }}</strong></div>
+        <div><span>Layered alert rate</span><strong>{{ rate(report.metrics.layeredAlertRate) }}</strong></div>
+        <div><span>Legacy alert rate</span><strong>{{ rate(report.metrics.legacyAlertRate) }}</strong></div>
+        <div><span>Synthetic recall</span><strong>{{ rate(report.metrics.syntheticScenarioRecall) }}</strong></div>
+        <div><span>Reviewed precision</span><strong>{{ rate(report.metrics.reviewedPrecision) }}</strong></div>
+        <div><span>P95 latency</span><strong>{{ report.metrics.predictionLatencyP95Ms == null ? '—' : (report.metrics.predictionLatencyP95Ms | number:'1.0-1') + ' ms' }}</strong></div>
+        <div><span>Score P50 / P95</span><strong>{{ rate(report.metrics.layeredScoreP50) }} / {{ rate(report.metrics.layeredScoreP95) }}</strong></div>
+        <div><span>HST availability</span><strong>{{ rate(report.metrics.hstAvailabilityRate) }}</strong></div>
+        <div><span>Online OCSVM availability</span><strong>{{ rate(report.metrics.onlineOcSvmAvailabilityRate) }}</strong></div>
+      </div>
+
+      <div class="validation-failure" *ngIf="report.blockingReasons.length">
+        <strong>Blocking issues</strong>
+        <ul>
+          <li *ngFor="let reason of report.blockingReasons">{{ reason }}</li>
+        </ul>
+      </div>
+      <div class="validation-warnings" *ngIf="report.warnings.length">
+        <strong>Warnings</strong>
+        <ul>
+          <li *ngFor="let warning of report.warnings">{{ warning }}</li>
+        </ul>
+      </div>
+      <p class="validation-meta">Validated by {{ report.validatedBy }} · {{ report.validatedAt | date:'medium' }} · Policy {{ report.riskPolicyVersion }}</p>
+    </div>
+    <ng-template #noLayeredValidation>
+      <div class="compact-empty">No validation has been recorded for this segment. Run a shadow validation to check engine health.</div>
+    </ng-template>
+
+    <!-- Segment overview strip -->
+    <div class="segment-overview" *ngIf="allSegmentValidations().length">
+      <span class="page-eyebrow">All segments — latest status</span>
+      <div class="segment-strip">
+        <article *ngFor="let report of allSegmentValidations()">
+          <span class="status-dot" [ngClass]="statusClass(report.validationStatus)"></span>
+          <div>
+            <strong>{{ report.peerGroupCode || 'GLOBAL' }}</strong>
+            <small>{{ rate(report.metrics.agreementRate) }} agreement · {{ report.metrics.sampleCount | number }} samples</small>
+          </div>
+          <span class="status-chip" [ngClass]="statusClass(report.validationStatus)">{{ report.validationStatus }}</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Active model champions -->
+  <section class="active-scope-panel">
+    <div class="section-title">
+      <div>
+        <span class="page-eyebrow">Production routing</span>
+        <h3>Active model pointers</h3>
+      </div>
+      <span class="fallback-note">Isolation Forest is the batch fallback for unavailable incremental models</span>
+    </div>
+    <div class="active-scope-grid" *ngIf="activeModels().length; else noChampions">
+      <article *ngFor="let pointer of activeModels()">
+        <div class="scope-icon">{{ segmentLabel(pointer.modelSegment).charAt(0) }}</div>
+        <div>
+          <span>{{ segmentLabel(pointer.modelSegment) }}</span>
+          <strong>{{ pointer.activeModelVersion }}</strong>
+          <small>
+            Previous: {{ pointer.previousModelVersion || 'None' }} · v{{ pointer.pointerVersion }}
+          </small>
+        </div>
+        <time>{{ pointer.activatedAt | date:'medium' }}</time>
+      </article>
+    </div>
+    <ng-template #noChampions>
+      <div class="empty-governance-state">No champion is active yet. The ML ensemble falls back to Isolation Forest.</div>
+    </ng-template>
+  </section>
+
+  <!-- Model registry + evidence -->
+  <div class="governance-layout">
+    <section class="registry-panel">
+      <div class="section-title">
+        <div>
+          <span class="page-eyebrow">Registry</span>
+          <h3>Half-Space Trees versions</h3>
+        </div>
+        <span>{{ models().length }} versions</span>
+      </div>
+
+      <div class="registry-list" *ngIf="models().length; else noModels">
+        <button
+          type="button"
+          *ngFor="let model of models()"
+          [class.selected]="selectedVersion() === model.modelVersion"
+          (click)="selectModel(model)"
+        >
+          <div class="registry-row-title">
+            <strong>{{ model.modelVersion }}</strong>
+            <span class="status-chip" [ngClass]="statusClass(model.status)">{{ model.status }}</span>
+          </div>
+          <div class="registry-meta">
+            <span>{{ segmentLabel(model.modelSegment) }}</span>
+            <span>{{ model.learnedRowCount || 0 | number }} rows</span>
+            <span>{{ model.createdAt | date:'mediumDate' }}</span>
+          </div>
+        </button>
+      </div>
+      <ng-template #noModels>
+        <div class="empty-governance-state">No governed HST model has been registered.</div>
+      </ng-template>
+    </section>
+
+    <section class="evidence-panel" *ngIf="selectedModel() as model; else selectVersion">
+      <div class="model-heading">
+        <div>
+          <span class="page-eyebrow">Selected version</span>
+          <h3>{{ model.modelVersion }}</h3>
+          <p>{{ model.modelType }} · {{ segmentLabel(model.modelSegment) }} · {{ model.featureVersion }}</p>
+        </div>
+        <span class="status-chip large" [ngClass]="statusClass(model.status)">{{ model.status }}</span>
+      </div>
+
+      <div class="contract-grid">
+        <div><span>Learned rows</span><strong>{{ model.learnedRowCount || 0 | number }}</strong></div>
+        <div><span>Training anomaly rate</span><strong>{{ rate(model.anomalyRate) }}</strong></div>
+        <div><span>Artifact size</span><strong>{{ model.artifactSizeBytes ? (model.artifactSizeBytes / 1048576 | number:'1.2-2') + ' MB' : '—' }}</strong></div>
+        <div><span>Registered by</span><strong>{{ model.registeredBy || 'system' }}</strong></div>
+      </div>
+
+      <div class="loading-detail" *ngIf="detailLoading()">Loading validation evidence...</div>
+
+      <section class="validation-card" *ngIf="!detailLoading() && latestValidation() as report; else noValidation">
+        <div class="validation-heading">
+          <div>
+            <span>Latest challenger validation</span>
+            <strong>{{ report.validatedAt | date:'medium' }}</strong>
+          </div>
+          <span class="status-chip large" [ngClass]="statusClass(report.validationStatus)">
+            {{ report.validationStatus }}
+          </span>
+        </div>
+        <div class="metric-grid">
+          <div><span>Silent sample</span><strong>{{ report.metrics.sampleCount | number }}</strong></div>
+          <div><span>Anomaly rate</span><strong>{{ rate(report.metrics.candidateAnomalyRate) }}</strong></div>
+          <div><span>Agreement</span><strong>{{ rate(report.metrics.agreementRate) }}</strong></div>
+          <div><span>Alert overlap</span><strong>{{ report.metrics.overlapCount | number }}</strong></div>
+          <div><span>Daily-rate variation</span><strong>{{ rate(report.metrics.dailyAnomalyRateStandardDeviation) }}</strong></div>
+          <div><span>Reviewed precision</span><strong>{{ rate(report.metrics.reviewedPrecision) }}</strong></div>
+        </div>
+        <p class="validation-failure" *ngIf="report.failureReason">{{ report.failureReason }}</p>
+      </section>
+      <ng-template #noValidation>
+        <div class="empty-governance-state" *ngIf="!detailLoading()">No validation report has been recorded for this version.</div>
+      </ng-template>
+
+      <section class="deployment-controls">
+        <div>
+          <span class="page-eyebrow">Explicit authorized action</span>
+          <h3>Deployment controls</h3>
+          <p *ngIf="!isAdministrator()">You can review evidence, but an ADMIN or AML_ADMIN must perform lifecycle actions.</p>
+        </div>
+        <label for="actionReason">Audit reason</label>
+        <textarea
+          id="actionReason"
+          [(ngModel)]="actionReason"
+          placeholder="Explain the validation, promotion, or rollback decision..."
+          [disabled]="!isAdministrator() || !!action()"
+        ></textarea>
+        <div class="action-buttons">
+          <button type="button" class="secondary-action" (click)="validateSelected()" [disabled]="!canValidate() || !!action()">
+            {{ action() === 'validate' ? 'Validating...' : (model.status === 'VALIDATED' ? 'Revalidate' : 'Validate candidate') }}
+          </button>
+          <button type="button" class="promote-action" (click)="promoteSelected()" [disabled]="!canPromote() || !!action()">
+            {{ action() === 'promote' ? 'Promoting...' : 'Promote to champion' }}
+          </button>
+          <button type="button" class="rollback-action" (click)="rollbackSelected()" [disabled]="!canRollback() || !!action()">
+            {{ action() === 'rollback' ? 'Rolling back...' : 'Rollback champion' }}
+          </button>
+        </div>
+      </section>
+
+      <section class="history-section">
+        <div class="section-title">
+          <div>
+            <span class="page-eyebrow">Immutable audit trail</span>
+            <h3>Deployment history</h3>
+          </div>
+        </div>
+        <div class="timeline" *ngIf="deployments().length; else noHistory">
+          <article *ngFor="let event of deployments()">
+            <span class="timeline-marker" [class.rollback]="event.deploymentAction === 'ROLLBACK'"></span>
+            <div>
+              <strong>{{ event.deploymentAction }} · {{ event.activatedModelVersion }}</strong>
+              <p>{{ event.reason }}</p>
+              <small>{{ event.performedBy }} · {{ event.performedAt | date:'medium' }}</small>
+            </div>
+          </article>
+        </div>
+        <ng-template #noHistory>
+          <div class="empty-governance-state">No deployment action exists for this scope.</div>
+        </ng-template>
+      </section>
+    </section>
+
+    <ng-template #selectVersion>
+      <section class="evidence-panel empty-selection">
+        <strong>Select a model version</strong>
+        <p>Validation evidence and controlled deployment actions will appear here.</p>
+      </section>
+    </ng-template>
+  </div>
+</section>

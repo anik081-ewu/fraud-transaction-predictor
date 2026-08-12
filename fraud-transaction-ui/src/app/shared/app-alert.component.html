@@ -1,0 +1,20 @@
+<div class="alert-backdrop" *ngIf="alerts.current() as alert" role="presentation">
+  <section
+    class="alert-modal"
+    [class.success]="alert.kind === 'success'"
+    [class.error]="alert.kind === 'error'"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="global-alert-title"
+    aria-describedby="global-alert-message"
+  >
+    <div class="alert-icon" aria-hidden="true">
+      <span *ngIf="alert.kind === 'success'">&#10003;</span>
+      <span *ngIf="alert.kind === 'error'">!</span>
+    </div>
+    <span class="alert-eyebrow">{{ alert.kind === 'success' ? 'Success' : 'Action required' }}</span>
+    <h3 id="global-alert-title">{{ alert.title }}</h3>
+    <p id="global-alert-message">{{ alert.message }}</p>
+    <button type="button" (click)="alerts.close()">{{ alert.actionLabel }}</button>
+  </section>
+</div>

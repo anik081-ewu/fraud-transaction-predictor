@@ -1,0 +1,424 @@
+﻿<section class="page train-page">
+  <header class="page-header train-header">
+    <div>
+      <span class="page-eyebrow">Model registry</span>
+      <h2>Model Comparison</h2>
+      <p>Compare all trained models side-by-side. Each column shows the best available version for that model type. Enable models in Risk Policy to include them in scoring decisions.</p>
+    </div>
+    <button class="refresh-button" type="button" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Loading¦' : 'Refresh' }}
+    </button>
+  </header>
+
+  <nav class="tab-bar">
+    <button type="button" [class.active]="tab() === 'models'" (click)="selectTab('models')">
+      Current models
+    </button>
+    <button type="button" [class.active]="tab() === 'analysis'" (click)="selectTab('analysis')">
+      Analysis
+    </button>
+  </nav>
+
+  <ng-container *ngIf="tab() === 'models'">
+
+  <div class="loading-state" *ngIf="loading() && !hasAnyModel()">
+    <span>Loading model registry¦</span>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading() && !hasAnyModel()">
+    No models have been trained yet. Run a training pipeline from <strong>Training Operations</strong> first.
+  </div>
+
+  <ng-container *ngIf="hasAnyModel()">
+    <div class="comparison-scroll">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th class="metric-label-col">Metric</th>
+            <th *ngFor="let modelType of modelTypes" class="model-col">
+              <div class="model-col-header">
+                <strong>{{ label(modelType) }}</strong>
+                <span class="family-badge">{{ family(modelType) }}</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- Learned rows -->
+          <tr>
+            <td class="metric-label">Learned rows</td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType)?.learnedRowCount != null; else dash">
+                <strong>{{ modelFor(modelType)!.learnedRowCount | number }}</strong>
+              </ng-container>
+              <ng-template #dash><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- EM-AUC: the row that is genuinely comparable across model types -->
+          <tr class="highlight-row">
+            <td class="metric-label">
+              EM-AUC
+              <span class="comparable-badge" title="Excess-Mass AUC (Goix et al.) label-free detector quality, scale-invariant so comparable across models">comparable</span>
+            </td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="excessMassAuc(modelType) !== null; else dashEm">
+                <strong class="em-auc" [class.em-leader]="isEmAucLeader(modelType)">
+                  {{ excessMassAuc(modelType) | number:'1.1-1' }}
+                </strong>
+                <small class="out-of">/ 100</small>
+              </ng-container>
+              <ng-template #dashEm><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- Score skewness -->
+          <tr>
+            <td class="metric-label">
+              Score skewness
+              <span class="comparable-badge">comparable</span>
+            </td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="scoreSkewness(modelType) !== null; else dashSkew">
+                {{ scoreSkewness(modelType) | number:'1.1-1' }} <small class="out-of">/ 100</small>
+              </ng-container>
+              <ng-template #dashSkew><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- Anomaly rate -->
+          <tr>
+            <td class="metric-label">Anomaly rate</td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType)?.anomalyRate != null; else dash2">
+                <strong>{{ modelFor(modelType)!.anomalyRate! * 100 | number:'1.2-2' }}%</strong>
+              </ng-container>
+              <ng-template #dash2><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- Average score -->
+          <tr>
+            <td class="metric-label">Average score <span class="native-scale" title="Each model scores on its own scale  compare within a model type, not across">native scale</span></td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType)?.averageScore != null; else dash3">
+                {{ modelFor(modelType)!.averageScore! | number:'1.3-3' }}
+              </ng-container>
+              <ng-template #dash3><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- P95 score -->
+          <tr>
+            <td class="metric-label">Score P95 <span class="native-scale">native scale</span></td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType)?.scoreP95 != null; else dash4">
+                {{ modelFor(modelType)!.scoreP95! | number:'1.3-3' }}
+              </ng-container>
+              <ng-template #dash4><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- P99 score -->
+          <tr>
+            <td class="metric-label">Score P99 <span class="native-scale">native scale</span></td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType)?.scoreP99 != null; else dash5">
+                {{ modelFor(modelType)!.scoreP99! | number:'1.3-3' }}
+              </ng-container>
+              <ng-template #dash5><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- Alert count -->
+          <tr>
+            <td class="metric-label">Alert count</td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType)?.alertCount != null; else dash6">
+                {{ modelFor(modelType)!.alertCount | number }}
+              </ng-container>
+              <ng-template #dash6><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- Validation rows -->
+          <tr>
+            <td class="metric-label">Validation rows</td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType)?.validationRowCount != null; else dash7">
+                {{ modelFor(modelType)!.validationRowCount | number }}
+              </ng-container>
+              <ng-template #dash7><span class="unavailable"></span></ng-template>
+            </td>
+          </tr>
+
+          <!-- Training duration -->
+          <tr>
+            <td class="metric-label">Training duration</td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType) as m">
+                <ng-container *ngIf="trainingDurationMs(m) as ms; else dash8">
+                  {{ ms | number:'1.0-0' }} ms
+                </ng-container>
+                <ng-template #dash8><span class="unavailable"></span></ng-template>
+              </ng-container>
+              <span class="unavailable" *ngIf="!modelFor(modelType)"></span>
+            </td>
+          </tr>
+
+          <!-- Registered at -->
+          <tr>
+            <td class="metric-label">Registered at</td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType) as m">
+                <small>{{ m.createdAt | date:'medium' }}</small>
+              </ng-container>
+              <span class="unavailable" *ngIf="!modelFor(modelType)"></span>
+            </td>
+          </tr>
+
+          <!-- Feature version -->
+          <tr>
+            <td class="metric-label">Feature version</td>
+            <td *ngFor="let modelType of modelTypes">
+              <ng-container *ngIf="modelFor(modelType) as m">
+                <small class="mono">{{ m.featureVersion }}</small>
+              </ng-container>
+              <span class="unavailable" *ngIf="!modelFor(modelType)"></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </ng-container>
+
+  <aside class="method-note" *ngIf="hasAnyModel()">
+    <strong>How to use this page</strong>
+    <p>Each column shows the best available model for that type  CHAMPION takes precedence over CANDIDATE. Enable models in the Risk Policy page to include their anomaly scores in the live fraud decision. Training is done from Training Operations  this page always reflects the current registry state.</p>
+    <p class="scale-caveat">
+      <strong>Comparing fairly:</strong> <em>EM-AUC</em> is the metric to rank detectors on  Excess-Mass AUC
+      (Goix et al., 2016) measures how tightly a detector concentrates high scores, needs no fraud labels, and is
+      scale-invariant, so it compares across model types. Score skewness, anomaly rate, alert count and learned rows
+      are also comparable. Average and P95/P99 scores are <em>not</em>: each detector scores on its own scale, so a
+      bigger number there does not mean a better model  use them only across versions of one model type.
+    </p>
+    <p class="scale-caveat">
+      <strong>Not fraud accuracy.</strong> These are label-free diagnostics. Precision, recall and true
+      false-positive rate stay unavailable until reviewers confirm outcomes in Case Management.
+    </p>
+  </aside>
+
+  </ng-container>
+
+  <!-- ===================== Analysis: agreement + data growth ===================== -->
+  <ng-container *ngIf="tab() === 'analysis'">
+
+    <!-- One snapshot, one button; both analyses run against it -->
+    <section class="growth-launch">
+      <div class="launch-copy">
+        <h3>Analyse a snapshot</h3>
+        <p>
+          Runs two studies over the same exported snapshot: whether the models flag the
+          <strong>same transactions</strong>, and how each behaves as <strong>history grows</strong>.
+          Both are stored once computed, so returning to this page is instant.
+        </p>
+      </div>
+      <div class="launch-control">
+        <select [(ngModel)]="selectedRunId" [disabled]="analysisRunning() || startingStudy() || startingAgreement()">
+          <option value="">Latest exported snapshot</option>
+          <option *ngFor="let run of studyableRuns()" [value]="run.trainingRunId">
+            {{ snapshotLabel(run) }}
+          </option>
+        </select>
+        <button type="button" class="start-study-btn"
+          (click)="runAnalysis()" [disabled]="analysisRunning() || startingStudy() || startingAgreement()">
+          {{ (startingStudy() || startingAgreement()) ? 'Starting¦'
+             : (analysisRunning() ? 'Analysing¦' : 'Run analysis') }}
+        </button>
+      </div>
+    </section>
+
+    <!-- ---------- Agreement: finishes first, so it is shown first ---------- -->
+    <h3 class="analysis-heading">Do the models flag the same transactions?</h3>
+
+    <div class="study-status" *ngIf="agreementStudy() as current">
+      <span class="status-badge" [ngClass]="studyStatusClass(current.status)">{{ current.status }}</span>
+      <span *ngIf="current.completedAt">Completed {{ current.completedAt | date:'medium' }}</span>
+      <span *ngIf="agreementRunning()">
+        Scoring the snapshot with every model.
+        <ng-container *ngIf="current.startedAt"> Started {{ current.startedAt | date:'shortTime' }}.</ng-container>
+      </span>
+      <span *ngIf="current.evaluatedRows">{{ current.evaluatedRows | number }} rows· {{ current.modelCount }} models</span>
+      <span class="study-failure" *ngIf="current.failureReason">{{ current.failureReason }}</span>
+    </div>
+
+    <div class="empty-state" *ngIf="!loadingAgreement() && !agreementStudy()">
+      Not run yet click <strong>Run analysis</strong> above.
+    </div>
+
+    <ng-container *ngIf="agreement() as result">
+      <div class="comparison-scroll">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th class="metric-label-col">Metric</th>
+              <th *ngFor="let modelType of agreementModels()" class="model-col">{{ label(modelType) }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-label">Flagged rows</td>
+              <td *ngFor="let modelType of agreementModels()">
+                <strong>{{ flaggedFor(modelType)?.flaggedCount | number }}</strong>
+                <small class="out-of">{{ (flaggedFor(modelType)?.flaggedRate ?? 0) * 100 | number:'1.2-2' }}%</small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="comparison-scroll">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th class="metric-label-col">
+                Overlap
+                <span class="comparable-badge" title="Jaccard = rows both flagged / rows either flagged">jaccard</span>
+              </th>
+              <th *ngFor="let modelType of agreementModels()" class="model-col">{{ label(modelType) }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rowModel of agreementModels()">
+              <td class="metric-label">{{ label(rowModel) }}</td>
+              <td *ngFor="let columnModel of agreementModels()"
+                  [style.background]="jaccardShade(rowModel, columnModel)">
+                <ng-container *ngIf="jaccardFor(rowModel, columnModel) as value; else selfCell">
+                  <strong>{{ value | number:'1.3-3' }}</strong>
+                  <span class="cell-detail">{{ bothCountFor(rowModel, columnModel) | number }} shared</span>
+                </ng-container>
+                <ng-template #selfCell><span class="unavailable"></span></ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <section class="consensus-panel">
+        <h4>Consensus across {{ result.modelCount }} models</h4>
+        <div class="consensus-bars">
+          <div class="consensus-row" *ngFor="let level of result.consensus">
+            <span class="consensus-label">Flagged by exactly {{ level.models }}</span>
+            <div class="consensus-track">
+              <span class="consensus-fill"
+                [style.width.%]="result.flaggedByAny ? (level.rowCount / result.flaggedByAny) * 100 : 0"></span>
+            </div>
+            <span class="consensus-value">{{ level.rowCount | number }}</span>
+          </div>
+        </div>
+        <div class="consensus-summary">
+          <span><strong>{{ result.flaggedByAny | number }}</strong> flagged by at least one model</span>
+          <span><strong>{{ result.flaggedByMajority | number }}</strong> by a majority</span>
+          <span [class.zero-unanimous]="result.unanimousCount === 0">
+            <strong>{{ result.unanimousCount | number }}</strong> by every model
+          </span>
+        </div>
+      </section>
+
+      <div class="empty-state" *ngIf="skippedModels().length">
+        Skipped: <span *ngFor="let s of skippedModels()">{{ label(s.modelType) }} ({{ s.reason }}) </span>
+      </div>
+
+      <aside class="method-note">
+        <strong>Reading the overlap</strong>
+        <p>
+          Jaccard is rows both models flagged divided by rows either flagged, so it is unaffected by
+          one model simply flagging more than another. Near 1 means two models are nearly
+          interchangeable; near 0 means they pick almost entirely different transactions.
+        </p>
+        <p class="scale-caveat">
+          <strong>Low overlap cuts both ways.</strong> It can mean the models are complementary, so
+          an ensemble widens coverage  or that each is latching onto different noise. A genuinely
+          anomalous transaction would usually look anomalous to several detectors, so very few
+          unanimous flags is worth investigating rather than celebrating.
+        </p>
+      </aside>
+    </ng-container>
+
+    <!-- ---------- Data growth: slower, so it fills in below ---------- -->
+    <h3 class="analysis-heading">How each detector behaves as history grows</h3>
+
+    <div class="study-status" *ngIf="study() as current">
+      <span class="status-badge" [ngClass]="studyStatusClass(current.status)">{{ current.status }}</span>
+      <span *ngIf="current.completedAt">Completed {{ current.completedAt | date:'medium' }}</span>
+      <span *ngIf="studyRunning()">
+        Training 5 detectors across {{ partitions().length || 4 }} partitions  several minutes.
+        <ng-container *ngIf="current.startedAt"> Started {{ current.startedAt | date:'shortTime' }}.</ng-container>
+      </span>
+      <span *ngIf="current.datasetRows">{{ current.datasetRows | number }} rows Â· {{ current.featureCount }} features</span>
+      <span class="study-failure" *ngIf="current.failureReason">{{ current.failureReason }}</span>
+    </div>
+
+    <div class="empty-state" *ngIf="!loadingStudy() && !study()">
+      No growth study has been run yet. Pick a snapshot above and click <strong>Run new study</strong>.
+    </div>
+
+    <div class="comparison-scroll" *ngIf="study()?.metrics?.length">
+      <table class="comparison-table growth-table">
+        <thead>
+          <tr>
+            <th class="metric-label-col">Detector</th>
+            <th *ngFor="let partition of partitions()" class="model-col">{{ partition }}% of history</th>
+            <th class="model-col">Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let detector of growthDetectors">
+            <td class="metric-label">
+              {{ label(detector) }}
+              <span class="native-scale" *ngIf="isStreamingDetector(detector)"
+                title="Streaming detector with a rolling window: it forgets older rows, so a falling curve is window behaviour, not degradation">windowed</span>
+            </td>
+            <td *ngFor="let partition of partitions()">
+              <ng-container *ngIf="metricFor(detector, partition) as cell; else noCell">
+                <strong class="em-auc">{{ emAucAt(detector, partition) | number:'1.1-1' }}</strong>
+                <small class="out-of">EM-AUC</small>
+                <span class="cell-detail">{{ cell.anomalyRate * 100 | number:'1.2-2' }}% flagged</span>
+                <span class="cell-detail">{{ cell.learnedRows | number }} rows Â· {{ cell.trainingDurationMs | number:'1.0-0' }} ms</span>
+                <em class="bounded-flag" *ngIf="cell.boundedTrainingSample">capped sample</em>
+              </ng-container>
+              <ng-template #noCell><span class="unavailable"></span></ng-template>
+            </td>
+            <td class="trend-cell">
+              <svg viewBox="0 0 120 28" preserveAspectRatio="none" class="sparkline" *ngIf="sparklinePoints(detector)">
+                <polyline [attr.points]="sparklinePoints(detector)" />
+              </svg>
+              <small class="out-of">EM-AUC vs data</small>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="method-note" *ngIf="study()?.metrics?.length">
+      <strong>Reading this table</strong>
+      <p>
+        Partitions are the <em>oldest</em> N% of the snapshot in chronological order, so each column
+        is a genuine "how much history had we seen by then" point  not a random sample. Rank
+        detectors on EM-AUC; a rising curve means the detector keeps improving with more history,
+        a flat one means it has saturated.
+      </p>
+      <p class="scale-caveat">
+        <strong>Two caveats.</strong> Cells marked <em>capped sample</em> hit a training-row limit,
+        so they did not actually learn from the whole partition and are not like-for-like points on
+        the curve. Detectors marked <em>windowed</em> (Half-Space Trees, Online One-Class SVM) forget
+        older rows by design  for them a declining curve reflects the rolling window, not a model
+        getting worse with more data.
+      </p>
+    </aside>
+
+  </ng-container>
+
+</section>

@@ -1,0 +1,15 @@
+:root {
+  color-scheme: light;
+  background: #f7f9fc;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #f7f9fc;
+}
+
+body {
+  color: #172033;
+}

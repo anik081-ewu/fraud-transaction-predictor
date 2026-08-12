@@ -1,0 +1,172 @@
+<section class="page case-page">
+  <header class="page-header case-header">
+    <div>
+      <span class="page-eyebrow">Investigation workspace</span>
+      <h2>Case Management</h2>
+      <p>Review cases created when anomaly votes meet the configured threshold.</p>
+    </div>
+    <a class="secondary-action" routerLink="/cases/manual">Create Manual Case</a>
+  </header>
+
+  <p class="message" *ngIf="message()">{{ message() }}</p>
+
+  <section class="case-stats">
+    <article><span>All cases</span><strong>{{ cases().length }}</strong></article>
+    <article><span>Active review</span><strong>{{ activeCount() }}</strong></article>
+    <article><span>STR generated</span><strong>{{ strCount() }}</strong></article>
+    <article><span>False positive</span><strong>{{ falsePositiveCount() }}</strong></article>
+  </section>
+
+  <section class="case-workspace">
+    <aside class="case-queue">
+      <div class="queue-header">
+        <div>
+          <span class="page-eyebrow">Review queue</span>
+          <h3>Generated cases</h3>
+        </div>
+        <button class="icon-refresh" type="button" (click)="loadCases()" title="Refresh cases">Refresh</button>
+      </div>
+
+      <div class="queue-filters">
+        <input
+          [ngModel]="searchText()"
+          (ngModelChange)="updateSearchText($event)"
+          placeholder="Search case, transaction, account"
+        />
+        <select [ngModel]="statusFilter()" (ngModelChange)="updateStatusFilter($event)">
+          <option value="ACTIVE">Active cases</option>
+          <option value="ALL">All cases</option>
+          <option value="STR_GENERATED">STR generated</option>
+          <option value="FALSE_POSITIVE">False positives</option>
+        </select>
+      </div>
+
+      <div class="queue-list" *ngIf="filteredCases().length; else noCases">
+        <button
+          class="case-list-item"
+          type="button"
+          *ngFor="let caseRecord of filteredCases()"
+          [class.selected]="caseRecord.id === selectedCaseId()"
+          (click)="selectCase(caseRecord.id)"
+        >
+          <span class="case-item-top">
+            <strong>{{ caseRecord.caseNo }}</strong>
+            <span class="priority" [attr.data-priority]="caseRecord.priority">{{ caseRecord.priority }}</span>
+          </span>
+          <span class="case-title">{{ caseRecord.title }}</span>
+          <span class="case-meta">{{ caseRecord.transactionId }} &middot; {{ caseRecord.accountId }}</span>
+          <span class="case-item-bottom">
+            <small>{{ caseRecord.createdAt | date:'medium' }}</small>
+            <span class="status" [class.resolved]="isResolved(caseRecord)">{{ caseRecord.status.replaceAll('_', ' ') }}</span>
+          </span>
+        </button>
+      </div>
+
+      <ng-template #noCases>
+        <div class="empty-queue">{{ loading() ? 'Loading cases...' : 'No cases match this filter.' }}</div>
+      </ng-template>
+    </aside>
+
+    <main class="case-detail" *ngIf="selectedCase() as caseRecord; else selectPrompt">
+      <header class="detail-header">
+        <div>
+          <span class="case-origin">{{ caseRecord.fraudAlertId ? 'Automatically generated' : 'Manually generated' }}</span>
+          <h3>{{ caseRecord.title }}</h3>
+          <p>{{ caseRecord.caseNo }} &middot; opened {{ caseRecord.createdAt | date:'medium' }}</p>
+        </div>
+        <span class="detail-status" [class.resolved]="isResolved(caseRecord)">
+          {{ caseRecord.status.replaceAll('_', ' ') }}
+        </span>
+      </header>
+
+      <section class="transaction-summary">
+        <article><span>Transaction</span><strong>{{ caseRecord.transactionId }}</strong></article>
+        <article><span>Account</span><strong>{{ caseRecord.accountId }}</strong></article>
+        <article><span>Priority</span><strong>{{ caseRecord.priority }}</strong></article>
+        <article><span>Assigned to</span><strong>{{ caseRecord.assignedTo || 'Unassigned' }}</strong></article>
+      </section>
+
+      <section class="evidence-panel" *ngIf="caseRecord.predictionEvidence as evidence">
+        <div class="evidence-heading">
+          <div><span class="page-eyebrow">Decision evidence</span><h4>Model prediction snapshot</h4></div>
+          <span class="risk-badge" [class.high-risk]="evidence.riskLevel === 'HIGH'">{{ evidence.riskLevel || 'UNRATED' }}</span>
+        </div>
+        <div class="evidence-grid">
+          <article><span>Anomaly votes</span><strong>{{ evidence.anomalyVotes ?? '—' }}</strong></article>
+          <article><span>Incremental score</span><strong>{{ evidence.incrementalModelScore == null ? '—' : (evidence.incrementalModelScore | number:'1.3-5') }}</strong></article>
+          <article><span>Batch score</span><strong>{{ evidence.batchModelScore == null ? '—' : (evidence.batchModelScore | number:'1.3-5') }}</strong></article>
+          <article><span>Model version</span><strong>{{ evidence.modelVersion || 'Legacy model' }}</strong></article>
+        </div>
+        <section class="anomaly-guidance" *ngIf="anomalyExplanations().length">
+          <div class="guidance-heading">
+            <span class="page-eyebrow">Why this transaction was flagged</span>
+            <h4>Signals requiring investigation</h4>
+            <p>{{ investigationSuggestion() }}</p>
+          </div>
+          <div class="reason-list">
+            <article *ngFor="let reason of anomalyExplanations()">
+              <span class="reason-marker" aria-hidden="true">!</span>
+              <div>
+                <strong>{{ reason.title }}</strong>
+                <p>{{ reason.explanation }}</p>
+                <small>{{ reason.code.replaceAll('_', ' ') }}</small>
+              </div>
+            </article>
+          </div>
+        </section>
+        <p *ngIf="evidence.learningDecisionReason"><strong>Learning control:</strong> {{ evidence.learningDecision }} — {{ evidence.learningDecisionReason }}</p>
+      </section>
+
+      <section class="decision-panel">
+        <div>
+          <span class="page-eyebrow">Investigation decision</span>
+          <h4>Complete this case</h4>
+          <p>Generate a draft STR XML for suspicious activity, or classify the alert as a false positive.</p>
+        </div>
+        <div class="decision-actions">
+          <button
+            class="str-button"
+            type="button"
+            (click)="generateStrXml()"
+            [disabled]="!!actionInProgress() || caseRecord.status === 'FALSE_POSITIVE'"
+          >
+            {{ actionInProgress() === 'STR' ? 'Generating...' : 'Generate STR XML' }}
+          </button>
+          <button
+            class="false-positive-button"
+            type="button"
+            (click)="markFalsePositive()"
+            [disabled]="!!actionInProgress() || caseRecord.status === 'STR_GENERATED'"
+          >
+            {{ actionInProgress() === 'FALSE_POSITIVE' ? 'Updating...' : 'Mark False Positive' }}
+          </button>
+        </div>
+      </section>
+
+      <section class="notes-panel">
+        <div class="notes-heading">
+          <div>
+            <span class="page-eyebrow">Analyst trail</span>
+            <h4>Case notes</h4>
+          </div>
+          <span>{{ caseRecord.notes.length }} notes</span>
+        </div>
+        <div class="note-composer">
+          <textarea [(ngModel)]="noteText" placeholder="Add investigation context or supporting information"></textarea>
+          <button type="button" (click)="addNote()" [disabled]="!noteText.trim()">Add Note</button>
+        </div>
+        <div class="notes-list" *ngIf="caseRecord.notes.length; else noNotes">
+          <article *ngFor="let note of caseRecord.notes">
+            <div><strong>{{ note.createdBy }}</strong><span>{{ note.createdAt | date:'medium' }}</span></div>
+            <p>{{ note.noteText }}</p>
+          </article>
+        </div>
+        <ng-template #noNotes><p class="empty-notes">No analyst notes yet.</p></ng-template>
+      </section>
+    </main>
+
+    <ng-template #selectPrompt>
+      <main class="case-detail select-prompt">Select a case from the review queue.</main>
+    </ng-template>
+  </section>
+</section>

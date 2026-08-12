@@ -1,0 +1,99 @@
+<section class="page manual-case-page">
+  <header class="page-header manual-header">
+    <div>
+      <span class="page-eyebrow">On-demand investigation</span>
+      <h2>Create Manual Case</h2>
+      <p>Search existing transactions and open a review case without waiting for anomaly voting.</p>
+    </div>
+    <a routerLink="/cases">Back to Case Management</a>
+  </header>
+
+  <p class="message" *ngIf="message()">{{ message() }}</p>
+
+  <section class="manual-layout">
+    <div class="panel transaction-search">
+      <div class="section-heading">
+        <div>
+          <span class="page-eyebrow">Step 1</span>
+          <h3>Find a transaction</h3>
+        </div>
+        <span>{{ transactions().length }} results</span>
+      </div>
+      <div class="search-control">
+        <input
+          [(ngModel)]="query"
+          (keyup.enter)="search()"
+          placeholder="Search by transaction ID or account ID"
+        />
+        <button type="button" (click)="search()">{{ loading() ? 'Searching...' : 'Search' }}</button>
+      </div>
+
+      <div class="transaction-results">
+        <button
+          type="button"
+          *ngFor="let transaction of transactions()"
+          [class.selected]="selectedTransaction()?.id === transaction.id"
+          (click)="selectTransaction(transaction)"
+        >
+          <span class="transaction-top">
+            <strong>{{ transaction.transactionId }}</strong>
+            <strong>{{ transaction.transactionAmount | number:'1.2-2' }}</strong>
+          </span>
+          <span>{{ transaction.accountId }} &middot; {{ transaction.transactionType }} &middot; {{ transaction.channel }}</span>
+          <small>{{ transaction.transactionDate | date:'medium' }} &middot; {{ transaction.location }}</small>
+        </button>
+        <p class="empty-results" *ngIf="!transactions().length && !loading()">No transactions found.</p>
+      </div>
+    </div>
+
+    <div class="panel case-form">
+      <div class="section-heading">
+        <div>
+          <span class="page-eyebrow">Step 2</span>
+          <h3>Review and create</h3>
+        </div>
+      </div>
+
+      <ng-container *ngIf="selectedTransaction() as transaction; else selectTransactionPrompt">
+        <section class="selected-transaction">
+          <span>Selected transaction</span>
+          <strong>{{ transaction.transactionId }}</strong>
+          <dl>
+            <div><dt>Account</dt><dd>{{ transaction.accountId }}</dd></div>
+            <div><dt>Amount</dt><dd>{{ transaction.transactionAmount | number:'1.2-2' }}</dd></div>
+            <div><dt>Date</dt><dd>{{ transaction.transactionDate | date:'medium' }}</dd></div>
+            <div><dt>Balance</dt><dd>{{ transaction.accountBalance | number:'1.2-2' }}</dd></div>
+            <div><dt>Location</dt><dd>{{ transaction.location }}</dd></div>
+            <div><dt>Source</dt><dd>{{ transaction.sourceType }}</dd></div>
+          </dl>
+        </section>
+
+        <label for="caseTitle">Case title</label>
+        <input id="caseTitle" [(ngModel)]="title" />
+
+        <div class="grid two">
+          <div>
+            <label for="priority">Priority</label>
+            <select id="priority" [(ngModel)]="priority">
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
+          </div>
+          <div>
+            <label for="assignedTo">Assign to</label>
+            <input id="assignedTo" [(ngModel)]="assignedTo" placeholder="Optional analyst username" />
+          </div>
+        </div>
+
+        <button class="create-button" type="button" (click)="createCase()" [disabled]="creating()">
+          {{ creating() ? 'Creating Case...' : 'Create Manual Case' }}
+        </button>
+      </ng-container>
+
+      <ng-template #selectTransactionPrompt>
+        <div class="selection-prompt">Select a transaction from the search results to continue.</div>
+      </ng-template>
+    </div>
+  </section>
+</section>

@@ -1,0 +1,183 @@
+<section class="page check-page">
+  <header class="page-header check-header">
+    <div>
+      <span class="page-eyebrow">Live scoring</span>
+      <h2>Transaction Check</h2>
+      <p>Submit a transaction and instantly see the fraud risk score, model votes, and recommended action.</p>
+    </div>
+  </header>
+
+  <div class="check-layout">
+    <!-- Form -->
+    <section class="panel check-form">
+      <div class="form-heading">
+        <h3>Transaction details</h3>
+        <button type="button" class="reset-btn" (click)="reset()" [disabled]="submitting()">Reset</button>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label for="txnId">Transaction ID</label>
+          <input id="txnId" [(ngModel)]="form.transactionId" placeholder="TXN-001" />
+        </div>
+        <div class="field">
+          <label for="accountId">Account ID</label>
+          <input id="accountId" [(ngModel)]="form.accountId" placeholder="ACC-001" />
+        </div>
+        <div class="field">
+          <label for="amount">Amount</label>
+          <input id="amount" type="number" min="0" step="0.01" [(ngModel)]="form.transactionAmount" placeholder="0.00" />
+        </div>
+        <div class="field">
+          <label for="balance">Account balance</label>
+          <input id="balance" type="number" min="0" step="0.01" [(ngModel)]="form.accountBalance" placeholder="Optional" />
+        </div>
+        <div class="field">
+          <label for="txnType">Transaction type</label>
+          <select id="txnType" [(ngModel)]="form.transactionType">
+            <option *ngFor="let t of TRANSACTION_TYPES" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="channel">Channel</label>
+          <select id="channel" [(ngModel)]="form.channel">
+            <option *ngFor="let c of CHANNELS" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="txnDate">Transaction date</label>
+          <input id="txnDate" type="datetime-local" [(ngModel)]="form.transactionDate" />
+        </div>
+        <div class="field">
+          <label for="location">Location</label>
+          <input id="location" [(ngModel)]="form.location" placeholder="e.g. London, UK" />
+        </div>
+        <div class="field">
+          <label for="age">Customer age <span class="optional">optional</span></label>
+          <input id="age" type="number" min="0" max="120" [(ngModel)]="form.customerAge" placeholder="—" />
+        </div>
+        <div class="field">
+          <label for="occupation">Customer occupation <span class="optional">optional</span></label>
+          <input id="occupation" [(ngModel)]="form.customerOccupation" placeholder="—" />
+        </div>
+        <div class="field">
+          <label for="loginAttempts">Login attempts</label>
+          <input id="loginAttempts" type="number" min="0" [(ngModel)]="form.loginAttempts" />
+        </div>
+      </div>
+
+      <button type="button" class="submit-btn" (click)="submit()"
+        [disabled]="submitting() || !form.accountId || !form.location">
+        {{ submitting() ? 'Checking…' : 'Check Transaction' }}
+      </button>
+
+      <div class="error-msg" *ngIf="errorMessage()">{{ errorMessage() }}</div>
+    </section>
+
+    <!-- Result -->
+    <section class="result-panel" *ngIf="result() as res; else emptyResult">
+      <div class="verdict-card" [class]="riskClass(res.riskLevel)">
+        <div class="verdict-top">
+          <div>
+            <span class="verdict-eyebrow">Risk level</span>
+            <strong class="verdict-level">{{ res.riskLevel }}</strong>
+          </div>
+          <span class="suspicious-badge" [class.flagged]="res.suspicious">
+            {{ res.suspicious ? 'Suspicious' : 'Clean' }}
+          </span>
+        </div>
+        <div class="decision-score" *ngIf="decisionScore(res) as score">
+          {{ score.toFixed(1) }} / 100 final score
+        </div>
+        <div class="verdict-meta">
+          <div><span>ML anomaly votes</span><strong>{{ detectorAnomalyCount(res) }} / {{ detectorCount(res) }}</strong></div>
+          <div><span>Recommended action</span><strong>{{ res.recommendedAction }}</strong></div>
+        </div>
+      </div>
+
+      <div class="panel result-section">
+        <h4>Decision explanation</h4>
+        <ul class="reasons-list">
+          <li *ngFor="let point of explanationPoints(res)">{{ point }}</li>
+        </ul>
+      </div>
+
+      <div class="panel result-section" *ngIf="res.reasons.length">
+        <h4>Signals that influenced the result</h4>
+        <div class="badge-list">
+          <span class="reason-badge" *ngFor="let reason of reasonBadges(res.reasons)">{{ reason }}</span>
+        </div>
+      </div>
+
+      <div class="panel result-section" *ngIf="keySignals(res.featureSummary).length">
+        <h4>Key signals</h4>
+        <div class="signal-grid">
+          <div class="signal-card" *ngFor="let entry of keySignals(res.featureSummary)">
+            <span>{{ entry.label }}</span>
+            <strong>{{ entry.value }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel result-section">
+        <h4>Model diagnostics</h4>
+        <div class="diagnostic-table">
+          <div class="diagnostic-head">
+            <span>Detector</span>
+            <span>Outcome</span>
+            <span>Primary score</span>
+            <span>Latency</span>
+          </div>
+          <div class="diagnostic-row" *ngFor="let row of detectorRows(res.modelResults)">
+            <span class="diagnostic-name">{{ row.name }}</span>
+            <span>
+              <span class="outcome-pill" [class.anomaly]="row.anomaly === true" [class.normal]="row.anomaly === false">
+                {{ row.anomaly === true ? 'Anomaly' : row.anomaly === false ? 'Normal' : 'N/A' }}
+              </span>
+            </span>
+            <span>{{ row.score }}</span>
+            <span>{{ row.duration }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel result-section">
+        <h4>Technical details</h4>
+        <details class="technical-block" *ngIf="layeredEntries(res.modelResults).length">
+          <summary>Layered risk architecture</summary>
+          <div class="model-rows">
+            <div class="model-row" *ngFor="let entry of layeredEntries(res.modelResults)">
+              <span class="model-key">{{ entry.label }}</span>
+              <span class="model-val">{{ entry.value }}</span>
+            </div>
+          </div>
+        </details>
+        <details class="technical-block">
+          <summary>Full feature summary</summary>
+          <div class="model-rows">
+            <div class="model-row" *ngFor="let entry of summaryEntries(res.featureSummary)">
+              <span class="model-key">{{ entry.label }}</span>
+              <span class="model-val">{{ entry.value }}</span>
+            </div>
+          </div>
+        </details>
+        <details class="technical-block">
+          <summary>Raw model payload</summary>
+          <div class="raw-model-list">
+            <div class="raw-model-card" *ngFor="let row of detectorRows(res.modelResults)">
+              <span class="model-key">{{ row.name }}</span>
+              <pre class="model-val raw-json">{{ row.details }}</pre>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <ng-template #emptyResult>
+      <section class="result-empty">
+        <div class="empty-icon">🔍</div>
+        <p>Fill in the transaction details and click <strong>Check Transaction</strong> to see the fraud scoring result.</p>
+      </section>
+    </ng-template>
+  </div>
+</section>

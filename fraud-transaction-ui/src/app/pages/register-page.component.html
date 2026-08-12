@@ -1,0 +1,57 @@
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-heading">
+      <span class="eyebrow">New user</span>
+      <h2>Create your account</h2>
+      <p>Register as a reviewer to access model evidence and case review tools.</p>
+    </div>
+
+    <form (ngSubmit)="register()" #registerForm="ngForm">
+      <label for="fullName">Full name</label>
+      <input
+        id="fullName"
+        name="fullName"
+        type="text"
+        autocomplete="name"
+        placeholder="Enter your full name"
+        [(ngModel)]="fullName"
+        required
+      />
+
+      <label for="username">Username</label>
+      <input
+        id="username"
+        name="username"
+        type="text"
+        autocomplete="username"
+        placeholder="Choose a username"
+        [(ngModel)]="username"
+        required
+      />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="new-password"
+        placeholder="At least 6 characters"
+        [(ngModel)]="password"
+        minlength="6"
+        required
+      />
+      <small class="field-hint">Use at least 6 characters.</small>
+
+      <p class="auth-message" *ngIf="message()">{{ message() }}</p>
+
+      <button type="submit" [disabled]="submitting() || registerForm.invalid">
+        {{ submitting() ? 'Creating account...' : 'Create account' }}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      Already have an account?
+      <a routerLink="/login">Sign in</a>
+    </p>
+  </div>
+</section>

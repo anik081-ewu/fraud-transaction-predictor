@@ -1,0 +1,38 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Maven
+.m2/
+target/
+
+# Logs
+logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node / Angular
+node_modules/
+dist/
+
+# Environment/config secrets
+.env
+.env.*
+application-local.yml
+application-local.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+
+outputs/
+**/outputs/
+
+fraud-ml-service/models/
+*.pkl

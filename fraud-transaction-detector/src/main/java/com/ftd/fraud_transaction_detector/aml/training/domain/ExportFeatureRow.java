@@ -1,0 +1,51 @@
+package com.ftd.fraud_transaction_detector.aml.training.domain;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+public record ExportFeatureRow(
+        long id,
+        String transactionId,
+        String customerId,
+        String accountId,
+        LocalDate businessDate,
+        LocalDateTime transactionDate,
+        String featureVersion,
+        String modelFeatureSchema,
+        String modelFeaturesJson,
+        double currentAmount,
+        Double currentBalance,
+        Double amountBalanceRatio,
+        int transactionHour,
+        int transactionDayOfWeek,
+        boolean night,
+        boolean weekend,
+        long customerHistoryCount,
+        long trustedHistoryCount,
+        int recentTransactionCount,
+        double profileConfidence,
+        Double last30Average,
+        Double last30Median,
+        Double last30StandardDeviation,
+        Double amountVsLast30Average,
+        Double amountVsLast30Median,
+        Double amountZScoreLast30,
+        int transactionCount1Hour,
+        int transactionCount24Hours,
+        int transactionCount7Days,
+        int transactionCount30Days,
+        double amountSum24Hours,
+        double amountSum7Days,
+        double amountSum30Days,
+        boolean newBeneficiary,
+        boolean newLocation,
+        boolean newChannel,
+        boolean newDevice,
+        boolean unusualTransactionHour,
+        String peerGroupCode,
+        Double peerAverageAmount,
+        Double peerStandardDeviationAmount,
+        Double amountVsPeerAverage,
+        Double peerAmountZScore
+) {
+}

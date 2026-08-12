@@ -1,0 +1,366 @@
+<section class="page risk-policy-page">
+  <header class="page-header policy-header">
+    <div>
+      <span class="policy-eyebrow">Rule Configuaration</span>
+      <h2>Risk Decision Policy</h2>
+      <p>Choose the weight of the rules, split the 100% score, and train them manually when needed.</p>
+    </div>
+    <div class="version-card" *ngIf="activePolicy() as policy">
+      <span>Active policy</span>
+      <strong>{{ policy.policyVersion }}</strong>
+      <small *ngIf="policy.updatedAt">Updated {{ policy.updatedAt | date:'medium' }}</small>
+    </div>
+  </header>
+
+  <div class="loading-card" *ngIf="loading()">Loading the active risk policy...</div>
+
+  <ng-container *ngIf="!loading()">
+    <section class="score-explainer">
+      <div>
+        <span>Final score</span>
+        <strong>Top-level layers plus a nested ML ensemble</strong>
+      </div>
+      <p>Medium starts at {{ percent(mediumRiskThreshold) }} and creates a case automatically. The page keeps both the layer budget and the ML budget balanced to exactly 100%.</p>
+    </section>
+
+    <section class="panel policy-section">
+      <header class="section-header">
+        <span>1</span>
+        <div>
+          <h3>Allocate Rule Weights</h3>
+          <p>Moving one layer automatically redistributes the remaining percentage across the others.</p>
+        </div>
+        <strong class="total-badge" [class.invalid]="!validTopLevelWeights()">{{ percent(topLevelTotal()) }}</strong>
+      </header>
+
+      <div class="weight-grid top-level-grid">
+        <article class="weight-card">
+          <div><span class="layer-icon behaviour">CB</span><strong>Customer behaviour</strong><output>{{ percent(customerBehaviourWeight) }}</output></div>
+          <p>Stable customer-specific behavior features and long-term personal transaction patterns.</p>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="customerBehaviourWeight" (ngModelChange)="setLayerWeight('customerBehaviourWeight', $event)" />
+          <input type="number" min="0" max="1" step="0.01" [ngModel]="customerBehaviourWeight" (ngModelChange)="setLayerWeight('customerBehaviourWeight', $event)" />
+          <button type="button" class="cb-sub-btn" [class.cb-sub-invalid]="!validCbSubWeights()" (click)="cbModalOpen.set(true)">
+            Configure sub-weights <span class="cb-sub-pill">{{ percent(cbAmountWeight) }} · {{ percent(cbNoveltyWeight) }} · {{ percent(cbFrequencyWeight) }} · {{ percent(cbTimeGapWeight) }} · {{ percent(cbUnusualHourWeight) }}</span>
+          </button>
+        </article>
+
+        <article class="weight-card">
+          <div><span class="layer-icon peer">PG</span><strong>Peer behaviour</strong><output>{{ percent(peerBehaviourWeight) }}</output></div>
+          <p>Deviation from similar customers, accounts, peer groups, and expected turnover bands.</p>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="peerBehaviourWeight" (ngModelChange)="setLayerWeight('peerBehaviourWeight', $event)" />
+          <input type="number" min="0" max="1" step="0.01" [ngModel]="peerBehaviourWeight" (ngModelChange)="setLayerWeight('peerBehaviourWeight', $event)" />
+          <button type="button" class="cb-sub-btn" [class.cb-sub-invalid]="!validPbSubWeights()" (click)="pbModalOpen.set(true)">
+            Configure sub-weights <span class="cb-sub-pill">{{ percent(pbAmountWeight) }} · {{ percent(pbFrequencyWeight) }} · {{ percent(pbExpectedTurnoverWeight) }}</span>
+          </button>
+        </article>
+
+        <article class="weight-card ensemble-card">
+          <div><span class="layer-icon ensemble">ML</span><strong>ML ensemble</strong><output>{{ percent(mlEnsembleWeight) }}</output></div>
+          <p>Selected production detectors inside the ensemble share this budget among themselves.</p>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="mlEnsembleWeight" (ngModelChange)="setLayerWeight('mlEnsembleWeight', $event)" />
+          <input type="number" min="0" max="1" step="0.01" [ngModel]="mlEnsembleWeight" (ngModelChange)="setLayerWeight('mlEnsembleWeight', $event)" />
+        </article>
+
+        <article class="weight-card">
+          <div><span class="layer-icon rules">AR</span><strong>AML rules</strong><output>{{ percent(rulesWeight) }}</output></div>
+          <p>Deterministic structuring, velocity, amount, sanctions, and location override controls.</p>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="rulesWeight" (ngModelChange)="setLayerWeight('rulesWeight', $event)" />
+          <input type="number" min="0" max="1" step="0.01" [ngModel]="rulesWeight" (ngModelChange)="setLayerWeight('rulesWeight', $event)" />
+          <button type="button" class="cb-sub-btn" [class.cb-sub-invalid]="!validRulesThresholds()" (click)="rulesModalOpen.set(true)">
+            Configure thresholds <span class="cb-sub-pill">{{ rulesReportingThreshold | number }} · {{ rulesRapidTxCount10m }}@10m · {{ rulesHighTxCount1h }}@1h</span>
+          </button>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel policy-section">
+      <header class="section-header">
+        <span>2</span>
+        <div>
+          <h3>Choose the production ML models</h3>
+          <p>Only enabled models participate in the ensemble. Their internal weights also auto-balance to 100%.</p>
+        </div>
+        <strong class="total-badge" [class.invalid]="!validModelWeights()">{{ percent(modelWeightTotal()) }}</strong>
+      </header>
+
+      <div class="model-grid">
+        <article class="model-card" *ngFor="let model of models" [class.disabled]="!model.enabled">
+          <button type="button" class="model-toggle" (click)="toggleModel(model.modelKey)">
+            <span class="model-head">
+              <span class="layer-icon" [class.batch]="model.family === 'BATCH'" [class.incremental]="model.family === 'INCREMENTAL'">
+                {{ model.family === 'BATCH' ? 'BT' : 'IN' }}
+              </span>
+              <span>
+                <strong>{{ model.displayName }}</strong>
+                <small>{{ model.family === 'BATCH' ? 'Batch detector' : 'Incremental detector' }}</small>
+              </span>
+            </span>
+            <span class="selection-badge">{{ model.enabled ? 'Selected' : 'Not selected' }}</span>
+          </button>
+
+          <p>{{ familyDescription(model.family) }}</p>
+
+          <div class="model-weight" *ngIf="model.enabled">
+            <div class="weight-meta">
+              <span>{{ percent(model.weight) }} of ML ensemble</span>
+              <strong>{{ percent(effectiveWeight(model)) }} of total score</strong>
+            </div>
+            <input type="range" min="0" max="1" step="0.01" [ngModel]="model.weight" (ngModelChange)="setModelWeight(model.modelKey, $event)" />
+            <input type="number" min="0" max="1" step="0.01" [ngModel]="model.weight" (ngModelChange)="setModelWeight(model.modelKey, $event)" />
+          </div>
+        </article>
+      </div>
+
+      <p class="validation-message" *ngIf="!validModelWeights()">Enabled ML models must total exactly 100% inside the ensemble.</p>
+    </section>
+
+    <section class="panel policy-section">
+      <header class="section-header">
+        <span>3</span>
+        <div>
+          <h3>Define risk and rollout thresholds</h3>
+          <p>Medium is the suspicious boundary and automatically creates a case.</p>
+        </div>
+      </header>
+
+      <div class="threshold-grid">
+        <label><span>LOW starts</span><strong>{{ percent(lowRiskThreshold) }}</strong><input type="number" min="0" max="1" step="0.01" [(ngModel)]="lowRiskThreshold" /></label>
+        <label class="case-threshold"><span>MEDIUM / create case</span><strong>{{ percent(mediumRiskThreshold) }}</strong><input type="number" min="0" max="1" step="0.01" [(ngModel)]="mediumRiskThreshold" /></label>
+        <label><span>HIGH starts</span><strong>{{ percent(highRiskThreshold) }}</strong><input type="number" min="0" max="1" step="0.01" [(ngModel)]="highRiskThreshold" /></label>
+      </div>
+
+      <div class="risk-scale" [class.invalid]="!validThresholds()">
+        <span class="normal" [style.width.%]="lowRiskThreshold * 100">NORMAL</span>
+        <span class="low" [style.width.%]="(mediumRiskThreshold - lowRiskThreshold) * 100">LOW</span>
+        <span class="medium" [style.width.%]="(highRiskThreshold - mediumRiskThreshold) * 100">MEDIUM</span>
+        <span class="high" [style.width.%]="(1 - highRiskThreshold) * 100">HIGH</span>
+      </div>
+      <p class="validation-message" *ngIf="!validThresholds()">Use ordered values: LOW &lt; MEDIUM &lt; HIGH.</p>
+    </section>
+
+    <section class="policy-activation">
+      <div>
+        <strong>Saving creates a new policy version</strong>
+        <span>Run shadow validation and promotion from Model Governance before this strategy controls production routing.</span>
+      </div>
+      <button type="button" (click)="save()" [disabled]="saving() || !validTopLevelWeights() || !validCbSubWeights() || !validPbSubWeights() || !validRulesThresholds() || !validModelWeights() || !validThresholds()">
+        {{ saving() ? 'Saving...' : 'Save policy' }}
+      </button>
+    </section>
+  </ng-container>
+</section>
+
+<!-- AML rule thresholds modal -->
+<div class="cb-modal-backdrop" *ngIf="rulesModalOpen()" (click)="rulesModalOpen.set(false)">
+  <div class="cb-modal rules-modal" (click)="$event.stopPropagation()">
+    <header class="cb-modal-header">
+      <div>
+        <span class="policy-eyebrow">AML rules</span>
+        <h3>Rule thresholds</h3>
+        <p>Adjust when each deterministic rule fires. The high-amount ratio must be lower than the extreme-amount ratio, and the 1-hour velocity threshold must be at least as high as the 10-minute one.</p>
+      </div>
+      <button type="button" class="cb-modal-close" (click)="rulesModalOpen.set(false)">✕</button>
+    </header>
+
+    <div class="cb-modal-body">
+      <div class="cb-modal-grid rules-modal-grid">
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Reporting threshold</strong><small>Total below-threshold amount that triggers the structuring rule.</small></div>
+          </div>
+          <input type="number" min="1" step="100" [(ngModel)]="rulesReportingThreshold" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Structuring count (24 h)</strong><small>Min transactions below threshold in 24 h to flag structuring.</small></div>
+          </div>
+          <input type="number" min="2" step="1" [(ngModel)]="rulesStructuringCount24h" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Rapid velocity (10 m)</strong><small>Transaction count in 10 minutes that triggers rapid velocity.</small></div>
+          </div>
+          <input type="number" min="2" step="1" [(ngModel)]="rulesRapidTxCount10m" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>High velocity (1 h)</strong><small>Transaction count in 1 hour that triggers high velocity. Must be ≥ 10-minute threshold.</small></div>
+          </div>
+          <input type="number" min="2" step="1" [(ngModel)]="rulesHighTxCount1h" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Multiple beneficiaries (1 h)</strong><small>Unique beneficiary count in 1 hour that triggers the rule.</small></div>
+          </div>
+          <input type="number" min="2" step="1" [(ngModel)]="rulesMultiBeneficiaryCount1h" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Repeated amount (24 h)</strong><small>Identical-amount transaction count in 24 h that triggers the rule.</small></div>
+          </div>
+          <input type="number" min="2" step="1" [(ngModel)]="rulesRepeatedAmountCount24h" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>High amount ratio</strong><small>Multiplier vs 30-day average that flags a high-amount transaction.</small></div>
+          </div>
+          <input type="number" min="1.1" step="0.5" [(ngModel)]="rulesHighCustomerAmountRatio" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Extreme amount ratio</strong><small>Multiplier vs 30-day average that flags an extreme-amount transaction. Must exceed high ratio.</small></div>
+          </div>
+          <input type="number" min="1.1" step="0.5" [(ngModel)]="rulesExtremeCustomerAmountRatio" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>High balance ratio</strong><small>Transaction-to-balance fraction that triggers the high-balance rule (0–1).</small></div>
+          </div>
+          <input type="number" min="0.01" max="1" step="0.05" [(ngModel)]="rulesHighBalanceRatio" />
+        </div>
+
+        <div class="cb-modal-cell rules-threshold-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Expected turnover ratio</strong><small>Transaction-to-monthly-turnover fraction that triggers the turnover rule (0–1).</small></div>
+          </div>
+          <input type="number" min="0.01" max="1" step="0.05" [(ngModel)]="rulesHighExpectedTurnoverRatio" />
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="cb-modal-footer">
+      <div class="cb-modal-total">
+        <small *ngIf="!validRulesThresholds()" class="invalid-text">One or more thresholds are invalid — check ratios and counts.</small>
+      </div>
+      <button type="button" (click)="rulesModalOpen.set(false)" [disabled]="!validRulesThresholds()">Apply</button>
+    </footer>
+  </div>
+</div>
+
+<!-- Peer behaviour sub-weights modal -->
+<div class="cb-modal-backdrop" *ngIf="pbModalOpen()" (click)="pbModalOpen.set(false)">
+  <div class="cb-modal" (click)="$event.stopPropagation()">
+    <header class="cb-modal-header">
+      <div>
+        <span class="policy-eyebrow">Peer behaviour</span>
+        <h3>Internal sub-weights</h3>
+        <p>These weights split the peer behaviour budget among three signal types. Moving one slider redistributes the rest automatically.</p>
+      </div>
+      <button type="button" class="cb-modal-close" (click)="pbModalOpen.set(false)">✕</button>
+    </header>
+
+    <div class="cb-modal-body">
+      <div class="cb-modal-grid">
+        <div class="cb-modal-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Amount deviation</strong><small>Transaction vs peer group average and z-score.</small></div>
+            <output>{{ percent(pbAmountWeight) }}</output>
+          </div>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="pbAmountWeight" (ngModelChange)="setPbSubWeight('pbAmountWeight', $event)" />
+        </div>
+
+        <div class="cb-modal-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Frequency percentile</strong><small>How rare this transaction rate is within the peer group.</small></div>
+            <output>{{ percent(pbFrequencyWeight) }}</output>
+          </div>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="pbFrequencyWeight" (ngModelChange)="setPbSubWeight('pbFrequencyWeight', $event)" />
+        </div>
+
+        <div class="cb-modal-cell cb-modal-cell-wide">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Expected turnover</strong><small>Transaction amount as a fraction of expected monthly turnover.</small></div>
+            <output>{{ percent(pbExpectedTurnoverWeight) }}</output>
+          </div>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="pbExpectedTurnoverWeight" (ngModelChange)="setPbSubWeight('pbExpectedTurnoverWeight', $event)" />
+        </div>
+      </div>
+    </div>
+
+    <footer class="cb-modal-footer">
+      <div class="cb-modal-total">
+        <span>Total</span>
+        <strong [class.invalid-text]="!validPbSubWeights()">{{ percent(pbSubTotal()) }}</strong>
+        <small *ngIf="!validPbSubWeights()">Must equal 100%</small>
+      </div>
+      <button type="button" (click)="pbModalOpen.set(false)" [disabled]="!validPbSubWeights()">Apply</button>
+    </footer>
+  </div>
+</div>
+
+<!-- Customer behaviour sub-weights modal -->
+<div class="cb-modal-backdrop" *ngIf="cbModalOpen()" (click)="cbModalOpen.set(false)">
+  <div class="cb-modal" (click)="$event.stopPropagation()">
+    <header class="cb-modal-header">
+      <div>
+        <span class="policy-eyebrow">Customer behaviour</span>
+        <h3>Internal sub-weights</h3>
+        <p>These weights split the customer behaviour budget among five signal types. Moving one slider redistributes the rest automatically.</p>
+      </div>
+      <button type="button" class="cb-modal-close" (click)="cbModalOpen.set(false)">✕</button>
+    </header>
+
+    <div class="cb-modal-body">
+      <div class="cb-modal-grid">
+        <div class="cb-modal-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Amount deviation</strong><small>Deviation from 30-day average, median, and z-score.</small></div>
+            <output>{{ percent(cbAmountWeight) }}</output>
+          </div>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="cbAmountWeight" (ngModelChange)="setCbSubWeight('cbAmountWeight', $event)" />
+        </div>
+
+        <div class="cb-modal-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Novelty</strong><small>New beneficiary, location, channel, or device.</small></div>
+            <output>{{ percent(cbNoveltyWeight) }}</output>
+          </div>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="cbNoveltyWeight" (ngModelChange)="setCbSubWeight('cbNoveltyWeight', $event)" />
+        </div>
+
+        <div class="cb-modal-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Frequency burst</strong><small>Too many transactions in a short time window.</small></div>
+            <output>{{ percent(cbFrequencyWeight) }}</output>
+          </div>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="cbFrequencyWeight" (ngModelChange)="setCbSubWeight('cbFrequencyWeight', $event)" />
+        </div>
+
+        <div class="cb-modal-cell">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Rapid time gap</strong><small>Arrived faster than the customer's average pace.</small></div>
+            <output>{{ percent(cbTimeGapWeight) }}</output>
+          </div>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="cbTimeGapWeight" (ngModelChange)="setCbSubWeight('cbTimeGapWeight', $event)" />
+        </div>
+
+        <div class="cb-modal-cell cb-modal-cell-wide">
+          <div class="cb-modal-cell-head">
+            <div class="cb-modal-label"><strong>Unusual hour</strong><small>Outside the customer's known transaction hours.</small></div>
+            <output>{{ percent(cbUnusualHourWeight) }}</output>
+          </div>
+          <input type="range" min="0" max="1" step="0.01" [ngModel]="cbUnusualHourWeight" (ngModelChange)="setCbSubWeight('cbUnusualHourWeight', $event)" />
+        </div>
+      </div>
+    </div>
+
+    <footer class="cb-modal-footer">
+      <div class="cb-modal-total">
+        <span>Total</span>
+        <strong [class.invalid-text]="!validCbSubWeights()">{{ percent(cbSubTotal()) }}</strong>
+        <small *ngIf="!validCbSubWeights()">Must equal 100%</small>
+      </div>
+      <button type="button" (click)="cbModalOpen.set(false)" [disabled]="!validCbSubWeights()">Apply</button>
+    </footer>
+  </div>
+</div>

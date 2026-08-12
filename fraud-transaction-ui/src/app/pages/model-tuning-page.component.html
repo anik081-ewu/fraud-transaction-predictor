@@ -1,0 +1,88 @@
+<section class="page tuning-page">
+  <header class="page-header tuning-header">
+    <div>
+      <span class="tuning-eyebrow">Training controls</span>
+      <h2>Model Tuning</h2>
+      <p>Tune production streaming models and the resource limits used by offline growth analysis.</p>
+    </div>
+    <button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving()">Reload saved values</button>
+  </header>
+
+  <aside class="tuning-note">
+    <div class="note-icon">i</div>
+    <div>
+      <strong>Settings apply to the next training run</strong>
+      <p>Changes here do not overwrite existing trained candidates. Production model selection is configured on the Risk Policy page.</p>
+    </div>
+  </aside>
+
+  <p class="message" *ngIf="message()">{{ message() }}</p>
+
+  <div class="loading-card" *ngIf="loading()">Loading model settings...</div>
+
+  <div class="tuning-groups" *ngIf="!loading()">
+    <section
+      class="panel tuning-card"
+      *ngFor="let group of groups()"
+      [class.optimizer-card]="group.name === 'Evaluation Protocol'"
+    >
+      <header>
+        <div class="model-mark">{{ group.name === 'Evaluation Protocol' ? 'LAB' : abbreviate(group.name) }}</div>
+        <div>
+          <h3>{{ group.name }}</h3>
+          <p>{{ group.description }}</p>
+        </div>
+      </header>
+
+      <div class="settings-grid">
+        <div class="setting-field" *ngFor="let item of group.items; trackBy: trackByKey">
+          <div class="setting-label">
+            <label [for]="item.configKey">{{ item.displayName }}</label>
+          </div>
+
+          <select
+            *ngIf="item.valueType === 'BOOLEAN'"
+            [id]="item.configKey"
+            [(ngModel)]="item.configValue"
+          >
+            <option value="true">Enabled</option>
+            <option value="false">Disabled</option>
+          </select>
+
+          <select
+            *ngIf="item.valueType === 'SELECT'"
+            [id]="item.configKey"
+            [(ngModel)]="item.configValue"
+          >
+            <option *ngFor="let option of item.options" [value]="option">{{ option }}</option>
+          </select>
+
+          <input
+            *ngIf="item.valueType === 'INTEGER' || item.valueType === 'DECIMAL'"
+            [id]="item.configKey"
+            type="number"
+            [min]="item.minValue ?? null"
+            [max]="item.maxValue ?? null"
+            [step]="item.step || 'any'"
+            [(ngModel)]="item.configValue"
+          />
+
+          <small>{{ item.description }}</small>
+          <span class="range" *ngIf="item.minValue !== null && item.minValue !== undefined">
+            Allowed: {{ item.minValue }}–{{ item.maxValue }}
+          </span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="save-bar" *ngIf="!loading()">
+    <div>
+      <strong>Ready to apply these settings?</strong>
+      <span>The next applicable training or research run will read these values from app_config.</span>
+    </div>
+    <button type="button" (click)="save()" [disabled]="saving()">
+      {{ saving() ? 'Saving Settings...' : 'Save Model Tuning' }}
+    </button>
+  </div>
+</section>

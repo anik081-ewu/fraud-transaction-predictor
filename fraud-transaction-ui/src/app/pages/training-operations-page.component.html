@@ -1,0 +1,128 @@
+<section class="training-page">
+  <header class="operations-header">
+    <div>
+      <span class="page-eyebrow">Controlled learning pipeline</span>
+      <h2>Training Operations</h2>
+      <p>Select a date range and start the pipeline. The backend exports the dataset and trains all models automatically. Risk Policy controls which results contribute to scoring decisions.</p>
+    </div>
+    <button class="refresh-button" type="button" (click)="refresh()" [disabled]="loading()">
+      {{ loading() ? 'Refreshing...' : 'Refresh status' }}
+    </button>
+  </header>
+
+  <section class="health-grid">
+    <article [class.healthy]="health()?.status === 'UP'">
+      <span>Application health</span><strong>{{ health()?.status || 'UNKNOWN' }}</strong><small>{{ health()?.architecture || 'Unavailable' }}</small>
+    </article>
+    <article><span>Active pipeline jobs</span><strong>{{ activeCount() }}</strong><small>Queued, exporting, or training</small></article>
+    <article><span>Candidate outputs</span><strong>{{ candidateCount() }}</strong><small>Training completed, models active</small></article>
+    <article [class.attention]="failedCount() > 0"><span>Failed runs</span><strong>{{ failedCount() }}</strong><small>Require operator review</small></article>
+  </section>
+
+  <section class="control-grid">
+    <article class="control-card close-card">
+      <div><span class="step-number">1</span><h3>Seal business date</h3></div>
+      <p>Uploaded data is sealed automatically. Use this to close a specific date for live transaction data ingested through the real-time pipeline.</p>
+      <label for="closeDate">Business date</label>
+      <input id="closeDate" type="date" [(ngModel)]="closeDate" />
+      <button type="button" (click)="closeBusinessDay()">Close day</button>
+    </article>
+
+    <article class="control-card run-card">
+      <div><span class="step-number">2</span><h3>Start training pipeline</h3></div>
+      <button type="button" class="fill-dates-btn" (click)="fillFromUpload()" [disabled]="loadingDates()">
+        {{ loadingDates() ? 'Loading...' : 'Auto-fill dates from latest upload' }}
+      </button>
+      <div class="form-grid">
+        <label>Feature version<input [(ngModel)]="featureVersion" /></label>
+        <label>From date<input type="date" [(ngModel)]="fromBusinessDate" /></label>
+        <label>To date<input type="date" [(ngModel)]="toBusinessDate" /></label>
+        <label class="wide">Cutoff timestamp<input type="datetime-local" [(ngModel)]="cutoffTimestamp" /></label>
+      </div>
+      <aside class="pipeline-plan">
+        <strong>What happens after you click</strong>
+        <ol>
+          <li>A training run is created and locked to the selected date range.</li>
+          <li>Feature rows are exported into an immutable snapshot.</li>
+          <li>All 5 models train on that snapshot automatically.</li>
+        </ol>
+        <small>Risk Policy determines which model scores count toward the fraud decision.</small>
+      </aside>
+      <button
+        type="button"
+        class="start-pipeline-btn"
+        (click)="startPipeline()"
+        [disabled]="loading() || !featureVersion.trim()"
+      >
+        {{ loading() ? 'Starting…' : 'Create & Train' }}
+      </button>
+    </article>
+  </section>
+
+  <section class="runs-panel">
+    <div class="section-title">
+      <div><span class="page-eyebrow">Recent pipeline activity</span><h3>Training runs</h3></div>
+      <span class="run-count" *ngIf="runs().length">
+        Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ runs().length }}
+      </span>
+    </div>
+
+    <div class="runs-table" *ngIf="runs().length; else noRuns">
+      <button class="run-row" type="button" *ngFor="let run of pagedRuns()" (click)="selectedRunId.set(run.trainingRunId)" [class.selected]="selectedRunId() === run.trainingRunId">
+        <span><strong>{{ trainingTypeLabel(run.trainingType) }}</strong><small>{{ run.trainingRunId.slice(0, 8) }} · {{ run.createdAt | date:'medium' }}</small></span>
+        <span><strong>{{ run.fromBusinessDate }} → {{ run.toBusinessDate }}</strong><small>{{ runPurpose(run) }} / {{ run.modelSegment || 'GLOBAL' }}</small></span>
+        <span><strong>{{ (run.exportedRowCount || run.learnedRowCount || 0) | number }}</strong><small>processed rows</small></span>
+        <span class="status-chip" [ngClass]="statusClass(run.status)">{{ run.status.replaceAll('_', ' ') }}</span>
+      </button>
+    </div>
+
+    <!-- Only shown once the list actually overflows a page -->
+    <div class="pager" *ngIf="totalPages() > 1">
+      <button type="button" (click)="previousPage()" [disabled]="currentPage() === 1">Previous</button>
+      <span class="pager-position">Page {{ currentPage() }} of {{ totalPages() }}</span>
+      <button type="button" (click)="nextPage()" [disabled]="currentPage() === totalPages()">Next</button>
+    </div>
+
+    <ng-template #noRuns><p class="empty-state">No training runs have been created yet.</p></ng-template>
+  </section>
+
+  <section class="run-detail" *ngIf="selectedRun() as run">
+    <div class="run-detail-header">
+      <div class="run-meta">
+        <span class="page-eyebrow">Selected run</span>
+        <h3>{{ run.trainingRunId }}</h3>
+        <p *ngIf="run.failureReason" class="failure">{{ run.failureReason }}</p>
+        <p *ngIf="!run.failureReason" class="checksum">
+          <span class="checksum-label">Checksum</span>
+          {{ run.datasetChecksum || 'Generated after export' }}
+        </p>
+      </div>
+      <span class="status-chip" [ngClass]="statusClass(run.status)">{{ run.status.replaceAll('_', ' ') }}</span>
+    </div>
+
+    <div class="progress-panel">
+      <div class="progress-copy">
+        <strong>{{ progressLabel(run) }}</strong>
+        <span *ngIf="progressDetail(run) as detail">{{ detail }}</span>
+        <span *ngIf="progressPercent(run) !== null" class="progress-pct">{{ progressPercent(run) }}%</span>
+      </div>
+      <div class="progress-track"
+        [class.track-indeterminate]="isIndeterminate(run)"
+        [class.track-done]="isComplete(run)"
+        [class.track-partial]="isPartial(run)"
+        [class.track-failed]="isTrainingFailed(run) || run.status.includes('FAILED')">
+        <span class="progress-fill" [style.width.%]="progressPercent(run) ?? 100"></span>
+      </div>
+    </div>
+
+    <button
+      *ngIf="canRetryTraining(run)"
+      class="retry-btn"
+      type="button"
+      (click)="retryTraining(run)"
+      [disabled]="actionRunId() === run.trainingRunId"
+    >
+      {{ actionRunId() === run.trainingRunId ? 'Retrying…' : 'Retry training' }}
+    </button>
+  </section>
+</section>
