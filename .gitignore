@@ -36,3 +36,8 @@ outputs/
 
 fraud-ml-service/models/
 *.pkl
+
+# Downloaded/public data and generated large upload fixtures
+DataSet/supervised-source/fraud-detection-handbook-transformed/
+DataSet/fraud_handbook_bank_compatible.csv
+DataSet/supervised-source/creditcard_openml_42397.csv

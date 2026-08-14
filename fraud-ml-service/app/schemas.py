@@ -105,12 +105,14 @@ class TrainingTransaction(BaseModel):
 class TrainModelRequest(BaseModel):
     source: str
     requestedBy: str
-    transactions: List[TrainingTransaction]
+    transactions: Optional[List[TrainingTransaction]] = None
     hyperparams: Optional[Dict[str, Any]] = None
     modelNames: Optional[List[str]] = None
     outputSubdir: Optional[str] = None
     evaluationTransactions: Optional[List[TrainingTransaction]] = None
     learningMode: str = "UNSUPERVISED"
+    datasetPath: Optional[str] = None
+    datasetChecksum: Optional[str] = None
 
 
 class TrainModelResponse(BaseModel):
@@ -157,6 +159,7 @@ class GrowthAnalysisResponse(BaseModel):
     detectors: List[str]
     methodology: Dict[str, Any]
     results: List[Dict[str, Any]]
+    ensembles: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class ScorePercentilesRequest(BaseModel):

@@ -61,7 +61,7 @@ export class TrainingOperationsPageComponent {
   /** Guards against overlapping background polls piling up on the connection pool. */
   private pollInFlight = false;
 
-  featureVersion = 'AML_FEATURES_V2';
+  featureVersion = 'AML_FEATURES_V3';
   fromBusinessDate = this.today();
   toBusinessDate = this.today();
   cutoffTimestamp = `${this.today()}T23:59`;

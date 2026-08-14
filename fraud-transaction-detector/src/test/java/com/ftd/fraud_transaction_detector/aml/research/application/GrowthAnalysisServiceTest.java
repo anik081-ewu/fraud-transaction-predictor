@@ -41,7 +41,7 @@ class GrowthAnalysisServiceTest {
         when(datasetService.getRun(runId)).thenReturn(run(runId, "DATASET_READY"));
         GrowthAnalysisResponse expected = new GrowthAnalysisResponse(
                 "COMPLETED", 10_000, 12, "AML_FEATURES_V1", List.of(10, 25, 50, 100),
-                List.of("ISOLATION_FOREST"), Map.of(), List.of()
+                List.of("ISOLATION_FOREST"), Map.of(), List.of(), List.of()
         );
         when(client.analyze(org.mockito.ArgumentMatchers.any())).thenReturn(expected);
         defaults();

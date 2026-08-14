@@ -20,6 +20,7 @@ class LoadedModels:
     available_models: dict[str, object]
     supervised_scaler: object | None = None
     supervised_feature_columns: list[str] = field(default_factory=list)
+    supervised_thresholds: dict[str, float] = field(default_factory=dict)
 
 
 def load_models(models_dir: str) -> LoadedModels:
@@ -65,6 +66,13 @@ def load_models(models_dir: str) -> LoadedModels:
     if os.path.exists(supervised_columns_path):
         with open(supervised_columns_path, "rb") as handle:
             supervised_feature_columns = pickle.load(handle)
+    supervised_thresholds_path = os.path.join(models_dir, "supervised_thresholds.json")
+    supervised_thresholds = {}
+    if os.path.exists(supervised_thresholds_path):
+        with open(supervised_thresholds_path, "r", encoding="utf-8") as handle:
+            supervised_thresholds = {
+                str(name): float(value) for name, value in (json.load(handle) or {}).items()
+            }
     return LoadedModels(
         iso_model=iso_model,
         lof_model=lof_model,
@@ -89,4 +97,5 @@ def load_models(models_dir: str) -> LoadedModels:
         }, **supervised_models},
         supervised_scaler=supervised_scaler,
         supervised_feature_columns=supervised_feature_columns,
+        supervised_thresholds=supervised_thresholds,
     )

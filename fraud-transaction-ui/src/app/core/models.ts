@@ -459,8 +459,41 @@ export interface SupervisedGrowthMetric {
   rowsPerSecond: number;
 }
 
+export interface SupervisedEnsembleMetric {
+  partitionPercentage: number;
+  partitionRows: number;
+  trainingRows: number;
+  tuningRows: number;
+  validationRows: number;
+  evaluationRows: number;
+  strategy: string;
+  label: string;
+  memberCount: number;
+  members: string[];
+  scoreType: string;
+  prAuc: number;
+  prAucLift: number;
+  rocAuc: number;
+  accuracy: number;
+  balancedAccuracy: number;
+  precision: number;
+  recall: number;
+  f1: number;
+  brierScore: number;
+  positiveRate: number;
+  trueNegative: number;
+  falsePositive: number;
+  falseNegative: number;
+  truePositive: number;
+  decisionThreshold: number;
+  modelWeights: Record<string, number>;
+  calibrationThresholdPolicy?: Record<string, unknown> | null;
+  rowsPerSecond: number;
+}
+
 export interface SupervisedGrowthReport extends Omit<GrowthAnalysisReport, 'results'> {
   results: SupervisedGrowthMetric[];
+  ensembles?: SupervisedEnsembleMetric[];
 }
 
 export interface SupervisedGrowthStudy {

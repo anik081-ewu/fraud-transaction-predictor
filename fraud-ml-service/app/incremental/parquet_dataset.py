@@ -81,21 +81,34 @@ class PersistedFeatureDataset:
         return islice(self.iter_features(), start, stop)
 
     def iter_labelled_features(self) -> Iterator[tuple[dict[str, float], int]]:
+        for features, label, _label_source in self.iter_labelled_features_with_sources():
+            yield features, label
+
+    def iter_labelled_features_with_sources(self) -> Iterator[tuple[dict[str, float], int, str | None]]:
         for part in self.manifest["files"]:
             part_path = self.path / part["path"]
             source = parquet.ParquetFile(part_path)
+            has_label_source = "label_source" in source.schema_arrow.names
+            columns = ["model_features_json", "fraud_label"]
+            if has_label_source:
+                columns.append("label_source")
             for batch in source.iter_batches(
                 batch_size=self.batch_size,
-                columns=["model_features_json", "fraud_label"],
+                columns=columns,
                 use_threads=True,
             ):
                 features_values = batch.column(0).to_pylist()
                 labels = batch.column(1).to_pylist()
-                for raw, label in zip(features_values, labels):
+                label_sources = batch.column(2).to_pylist() if has_label_source else [None] * len(labels)
+                for raw, label, label_source in zip(features_values, labels, label_sources):
                     if label is None:
                         continue
                     values = json.loads(raw)
-                    yield ({str(name): float(value) for name, value in values.items()}, int(bool(label)))
+                    yield (
+                        {str(name): float(value) for name, value in values.items()},
+                        int(bool(label)),
+                        None if label_source is None else str(label_source),
+                    )
 
     def _validate(self, expected_checksum: str) -> None:
         if self.manifest.get("datasetChecksum") != expected_checksum:

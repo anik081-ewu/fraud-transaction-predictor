@@ -6,6 +6,7 @@ from email.utils import format_datetime
 from typing import Any, Dict
 
 import numpy as np
+import pandas as pd
 from fastapi import FastAPI, Request
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
@@ -242,13 +243,13 @@ def _persisted_feature_matrix(req: PersistedFeaturePredictRequest, loaded_models
     supervised = req.learningMode.strip().upper() == "SUPERVISED"
     feature_columns = loaded_models.supervised_feature_columns if supervised else loaded_models.feature_columns
     scaler = loaded_models.supervised_scaler if supervised else loaded_models.scaler
-    if not feature_columns or scaler is None:
+    if not feature_columns or (not supervised and scaler is None):
         raise HTTPException(status_code=409, detail=f"{req.learningMode} feature contract is unavailable")
-    aligned = np.asarray(
-        [[float(req.features.get(column, 0.0)) for column in feature_columns]],
-        dtype=float,
+    aligned_values = [[float(req.features.get(column, 0.0)) for column in feature_columns]]
+    aligned = pd.DataFrame(aligned_values, columns=feature_columns) if supervised else np.asarray(
+        aligned_values, dtype=float
     )
-    return scaler.transform(aligned)
+    return aligned if supervised and scaler is None else scaler.transform(aligned)
 
 
 def _evaluate_supervised_models(loaded_models, x, selected_models: list[str]):
@@ -257,7 +258,8 @@ def _evaluate_supervised_models(loaded_models, x, selected_models: list[str]):
         started = __import__("time").perf_counter()
         model = loaded_models.available_models[model_name]
         probability = float(model.predict_proba(x)[0, 1])
-        fraud = probability >= 0.5
+        threshold = float(loaded_models.supervised_thresholds.get(model_name, 0.5))
+        fraud = probability >= threshold
         results[model_name] = {
             "fraud": fraud,
             "anomaly": fraud,
@@ -265,8 +267,8 @@ def _evaluate_supervised_models(loaded_models, x, selected_models: list[str]):
             "fraudProbability": probability,
             "normalizedScore": probability,
             "rawScore": probability,
-            "decisionThreshold": 0.5,
-            "normalizationVersion": "SUPERVISED_PROBABILITY_V1",
+            "decisionThreshold": threshold,
+            "normalizationVersion": "SUPERVISED_CALIBRATED_THRESHOLD_V2",
             "predictionDurationMs": round((__import__("time").perf_counter() - started) * 1000),
         }
     return results
@@ -469,13 +471,11 @@ def compare_predict(req: ComparisonPredictRequest) -> ComparisonPredictResponse:
 
 @app.post("/api/v1/models/train", response_model=TrainModelResponse, deprecated=True)
 def train_models_endpoint(req: TrainModelRequest) -> TrainModelResponse:
-    if req.transactions is None or len(req.transactions) == 0:
-        raise HTTPException(status_code=400, detail="transactions must not be empty")
-
     try:
-        # Convert to DataFrame with columns compatible with build_training_features (snake_case)
-        rows = [t.model_dump() for t in req.transactions]
-        df = _normalize_training_df(rows)
+        df = None
+        if req.transactions:
+            rows = [t.model_dump() for t in req.transactions]
+            df = _normalize_training_df(rows)
         evaluation_df = None
         if req.evaluationTransactions:
             evaluation_rows = [t.model_dump() for t in req.evaluationTransactions]
@@ -483,12 +483,26 @@ def train_models_endpoint(req: TrainModelRequest) -> TrainModelResponse:
         target_models_dir = os.path.abspath(MODELS_DIR if not req.outputSubdir else os.path.join(MODELS_DIR, req.outputSubdir))
         learning_mode = req.learningMode.strip().upper()
         if learning_mode == "SUPERVISED":
-            from app.supervised_training import SUPPORTED_MODELS, train_supervised_from_transactions_df
-            selected_models = req.modelNames or SUPPORTED_MODELS
-            trained_rows, feature_count, metrics = train_supervised_from_transactions_df(
-                df, target_models_dir, hyperparams=req.hyperparams, model_names=selected_models
+            from app.supervised_training import (
+                SUPPORTED_MODELS,
+                train_supervised_from_persisted_dataset,
+                train_supervised_from_transactions_df,
             )
+            selected_models = req.modelNames or SUPPORTED_MODELS
+            if req.datasetPath and req.datasetChecksum:
+                trained_rows, feature_count, metrics = train_supervised_from_persisted_dataset(
+                    req.datasetPath, req.datasetChecksum, target_models_dir,
+                    hyperparams=req.hyperparams, model_names=selected_models,
+                )
+            elif df is not None:
+                trained_rows, feature_count, metrics = train_supervised_from_transactions_df(
+                    df, target_models_dir, hyperparams=req.hyperparams, model_names=selected_models
+                )
+            else:
+                raise ValueError("Supervised training requires datasetPath and datasetChecksum")
         elif learning_mode == "UNSUPERVISED":
+            if df is None:
+                raise ValueError("Unsupervised legacy training requires transactions")
             selected_models = req.modelNames or DEFAULT_TRAINING_MODELS
             trained_rows, feature_count, metrics = train_from_transactions_df(
                 df,
@@ -586,11 +600,16 @@ def _build_training_artifacts(models_dir: str, selected_models: list[str]) -> Di
         "RandomForestClassifier": ("randomForestClassifier", "random_forest_classifier.pkl"),
         "LogisticRegression": ("logisticRegression", "logistic_regression.pkl"),
     }
-    artifacts: Dict[str, str] = {
+    supervised = any(name in {"XGBoost", "RandomForestClassifier", "LogisticRegression"} for name in selected_models)
+    artifacts: Dict[str, str] = ({
+        "featureColumns": os.path.join(models_dir, "supervised_feature_columns.pkl"),
+        "decisionThresholds": os.path.join(models_dir, "supervised_thresholds.json"),
+        "learningMode": os.path.join(models_dir, "learning_mode.json"),
+    } if supervised else {
         "scaler": os.path.join(models_dir, "scaler.pkl"),
         "featureColumns": os.path.join(models_dir, "feature_columns.pkl"),
         "trainingHyperparams": os.path.join(models_dir, "training_hyperparams.json"),
-    }
+    })
     for model_name in selected_models:
         artifact_key, file_name = file_map[model_name]
         artifacts[artifact_key] = os.path.join(models_dir, file_name)

@@ -36,6 +36,7 @@ public class HistoricalFeatureMaterializationRepository {
                 FROM dbo.transactions transaction_row
                 LEFT JOIN dbo.aml_transaction_features feature
                     ON feature.transaction_id = transaction_row.transaction_id
+                   AND feature.feature_version = :featureVersion
                 WHERE COALESCE(transaction_row.business_date, CAST(transaction_row.transaction_date AS DATE))
                     BETWEEN :fromDate AND :toDate
                   AND transaction_row.transaction_date <= :cutoffTimestamp
@@ -188,6 +189,7 @@ public class HistoricalFeatureMaterializationRepository {
                 FROM dbo.transactions transaction_row
                 LEFT JOIN dbo.aml_transaction_features feature
                     ON feature.transaction_id = transaction_row.transaction_id
+                   AND feature.feature_version = :featureVersion
                 WHERE COALESCE(transaction_row.business_date, CAST(transaction_row.transaction_date AS DATE))
                     BETWEEN :fromDate AND :toDate
                   AND transaction_row.transaction_date <= :cutoffTimestamp

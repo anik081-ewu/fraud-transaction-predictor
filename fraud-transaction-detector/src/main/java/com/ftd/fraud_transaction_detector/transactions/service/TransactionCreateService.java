@@ -135,7 +135,12 @@ public class TransactionCreateService {
         savePredictionLog(predictionRequest, predictionResponse, featureVector, learningDecision);
         txn.setPredictionStatus("COMPLETED");
         txn.setProcessingStatus("COMPLETED");
-        txn.setUpdatedAt(Instant.now());
+        Instant completedAt = Instant.now();
+        txn.setUpdatedAt(completedAt);
+        txn.setFraudLabel(false);
+        txn.setLabelSource("AUTO_NO_CASE");
+        txn.setLabeledBy("anomaly-engine");
+        txn.setLabeledAt(completedAt);
 
         if (predictionResponse.suspicious()) {
             FraudAlert alert = fraudAlertRepository.save(buildAlert(predictionResponse));

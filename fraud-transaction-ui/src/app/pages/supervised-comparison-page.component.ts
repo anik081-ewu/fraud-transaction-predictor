@@ -5,7 +5,13 @@ import { finalize } from 'rxjs';
 
 import { AlertService } from '../core/alert.service';
 import { AmlTrainingApiService } from '../core/aml-training-api.service';
-import { AmlTrainingRun, SupervisedGrowthMetric, SupervisedGrowthReport, SupervisedGrowthStudy } from '../core/models';
+import {
+  AmlTrainingRun,
+  SupervisedEnsembleMetric,
+  SupervisedGrowthMetric,
+  SupervisedGrowthReport,
+  SupervisedGrowthStudy,
+} from '../core/models';
 
 const SUPERVISED_MODEL_TYPES = new Set([
   'SUPERVISED_ENSEMBLE',
@@ -53,6 +59,25 @@ export class SupervisedComparisonPageComponent implements OnInit, OnDestroy {
     }).sort((a, b) => b.prAuc - a.prAuc || b.f1 - a.f1);
   });
 
+  readonly rankedEnsembles = computed(() => {
+    const rows = this.report()?.ensembles ?? [];
+    const strategies = [...new Set(rows.map((row) => row.strategy))];
+    return strategies.map((strategy) => {
+      const strategyRows = rows.filter((row) => row.strategy === strategy);
+      const average = (key: keyof SupervisedEnsembleMetric) =>
+        strategyRows.reduce((sum, row) => sum + Number(row[key]), 0) / strategyRows.length;
+      return {
+        strategy,
+        label: strategyRows[0]?.label ?? strategy,
+        prAuc: average('prAuc'),
+        precision: average('precision'),
+        recall: average('recall'),
+        f1: average('f1'),
+        balancedAccuracy: average('balancedAccuracy'),
+      };
+    }).sort((a, b) => b.f1 - a.f1 || b.prAuc - a.prAuc);
+  });
+
   ngOnInit(): void {
     this.api.listRuns().subscribe({
       next: (runs) => {
@@ -96,11 +121,17 @@ export class SupervisedComparisonPageComponent implements OnInit, OnDestroy {
     return this.report()?.results.find((row) => row.detector === model && row.partitionPercentage === percentage);
   }
   fullMetric(model: string): SupervisedGrowthMetric | undefined { return this.metric(model, 100); }
+  ensembleMetric(strategy: string, percentage: number): SupervisedEnsembleMetric | undefined {
+    return this.report()?.ensembles?.find((row) => row.strategy === strategy && row.partitionPercentage === percentage);
+  }
+  fullEnsembleMetric(strategy: string): SupervisedEnsembleMetric | undefined {
+    return this.ensembleMetric(strategy, 100);
+  }
   percent(value?: number): string { return value == null ? '—' : `${(value * 100).toFixed(1)}%`; }
-  matrixTotal(metric: SupervisedGrowthMetric): number {
+  matrixTotal(metric: SupervisedGrowthMetric | SupervisedEnsembleMetric): number {
     return metric.trueNegative + metric.falsePositive + metric.falseNegative + metric.truePositive;
   }
-  matrixRate(value: number, metric: SupervisedGrowthMetric): string {
+  matrixRate(value: number, metric: SupervisedGrowthMetric | SupervisedEnsembleMetric): string {
     return this.percent(value / Math.max(1, this.matrixTotal(metric)));
   }
 

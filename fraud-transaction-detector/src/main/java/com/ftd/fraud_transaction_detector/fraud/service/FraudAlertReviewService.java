@@ -3,6 +3,7 @@ package com.ftd.fraud_transaction_detector.fraud.service;
 import com.ftd.fraud_transaction_detector.aml.learning.application.LearningEligibilityService;
 import com.ftd.fraud_transaction_detector.fraud.entity.FraudAlert;
 import com.ftd.fraud_transaction_detector.fraud.repo.FraudAlertRepository;
+import com.ftd.fraud_transaction_detector.transactions.service.TransactionFraudLabelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,13 +14,16 @@ public class FraudAlertReviewService {
 
     private final FraudAlertRepository fraudAlertRepository;
     private final LearningEligibilityService learningEligibilityService;
+    private final TransactionFraudLabelService fraudLabelService;
 
     public FraudAlertReviewService(
             FraudAlertRepository fraudAlertRepository,
-            LearningEligibilityService learningEligibilityService
+            LearningEligibilityService learningEligibilityService,
+            TransactionFraudLabelService fraudLabelService
     ) {
         this.fraudAlertRepository = fraudAlertRepository;
         this.learningEligibilityService = learningEligibilityService;
+        this.fraudLabelService = fraudLabelService;
     }
 
     @Transactional
@@ -32,6 +36,7 @@ public class FraudAlertReviewService {
         alert.setReviewedBy(defaultUser(reviewedBy));
         alert.setReviewedAt(Instant.now());
         learningEligibilityService.releaseFalsePositive(alert.getTransactionId(), defaultUser(reviewedBy));
+        fraudLabelService.markFalsePositive(alert.getTransactionId(), defaultUser(reviewedBy));
         return fraudAlertRepository.save(alert);
     }
 
@@ -50,6 +55,7 @@ public class FraudAlertReviewService {
         learningEligibilityService.rejectAsSuspicious(
                 alert.getTransactionId(), defaultUser(reviewedBy), "STR generated after analyst review"
         );
+        fraudLabelService.markStrGenerated(alert.getTransactionId(), defaultUser(reviewedBy));
         return fraudAlertRepository.save(alert);
     }
 

@@ -29,19 +29,35 @@
     <span *ngIf="currentStudy.status === 'FAILED'">{{ currentStudy.failureReason }}</span>
   </section>
 
-  <section class="panel" *ngIf="rankedModels().length">
-    <div class="section-heading">
-      <div><span class="eyebrow">Overall ranking</span><h3>Fraud-detection quality across growth stages</h3></div>
-      <span>{{ report()?.datasetRows | number }} labelled rows</span>
-    </div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>Rank</th><th>Model</th><th>Avg PR-AUC</th><th>Lift</th><th>Accuracy</th><th>Balanced accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Brier ↓</th></tr></thead>
-      <tbody><tr *ngFor="let row of rankedModels(); index as index">
-        <td><b>{{ index + 1 }}</b></td><td><strong>{{ row.model }}</strong></td><td>{{ percent(row.prAuc) }}</td>
-        <td>{{ row.prAucLift | number:'1.1-1' }}×</td><td>{{ percent(row.accuracy) }}</td><td>{{ percent(row.balancedAccuracy) }}</td>
-        <td>{{ percent(row.precision) }}</td><td>{{ percent(row.recall) }}</td><td>{{ percent(row.f1) }}</td><td>{{ row.brier | number:'1.3-3' }}</td>
-      </tr></tbody>
-    </table></div>
+  <section class="comparison-summary-grid" *ngIf="rankedModels().length">
+    <article class="panel comparison-summary">
+      <div class="section-heading">
+        <div><span class="eyebrow">Individual models</span><h3>Standalone model performance</h3></div>
+        <span>{{ report()?.datasetRows | number }} rows</span>
+      </div>
+      <div class="table-wrap"><table class="summary-table">
+        <thead><tr><th>Rank</th><th>Model</th><th>PR-AUC</th><th>Precision</th><th>Recall</th><th>F1</th><th>Balanced</th></tr></thead>
+        <tbody><tr *ngFor="let row of rankedModels(); index as index">
+          <td><b>{{ index + 1 }}</b></td><td><strong>{{ row.model }}</strong></td><td>{{ percent(row.prAuc) }}</td>
+          <td>{{ percent(row.precision) }}</td><td>{{ percent(row.recall) }}</td><td>{{ percent(row.f1) }}</td><td>{{ percent(row.balancedAccuracy) }}</td>
+        </tr></tbody>
+      </table></div>
+    </article>
+
+    <article class="panel comparison-summary ensemble-summary">
+      <div class="section-heading">
+        <div><span class="eyebrow">Three-model ensemble</span><h3>Combined decision performance</h3></div>
+        <span>Same held-out rows</span>
+      </div>
+      <div class="table-wrap" *ngIf="rankedEnsembles().length; else ensemblePending"><table class="summary-table">
+        <thead><tr><th>Rank</th><th>Decision strategy</th><th>PR-AUC</th><th>Precision</th><th>Recall</th><th>F1</th><th>Balanced</th></tr></thead>
+        <tbody><tr *ngFor="let row of rankedEnsembles(); index as index">
+          <td><b>{{ index + 1 }}</b></td><td><strong>{{ row.label }}</strong></td><td>{{ percent(row.prAuc) }}</td>
+          <td>{{ percent(row.precision) }}</td><td>{{ percent(row.recall) }}</td><td>{{ percent(row.f1) }}</td><td>{{ percent(row.balancedAccuracy) }}</td>
+        </tr></tbody>
+      </table></div>
+      <ng-template #ensemblePending><p class="empty-ensemble">Run the comparison once to calculate ensemble metrics for this cached snapshot.</p></ng-template>
+    </article>
   </section>
 
   <section class="panel" *ngIf="report() as current">
@@ -76,5 +92,18 @@
         </ng-container>
       </article>
     </div>
+    <ng-container *ngIf="rankedEnsembles().length">
+      <div class="matrix-subheading"><span class="eyebrow">Combined decisions</span><h4>Ensemble confusion matrices</h4></div>
+      <div class="matrix-grid ensemble-matrix-grid">
+        <article class="model-matrix ensemble-matrix" *ngFor="let row of rankedEnsembles()">
+          <header><strong>{{ row.label }}</strong><span>Threshold {{ fullEnsembleMetric(row.strategy)?.decisionThreshold | number:'1.3-3' }}</span></header>
+          <ng-container *ngIf="fullEnsembleMetric(row.strategy) as value">
+            <div class="matrix-axis"><span></span><b>Predicted legitimate</b><b>Predicted fraud</b></div>
+            <div class="matrix-row"><b>Actual legitimate</b><span class="correct">TN {{ value.trueNegative | number }}<small>{{ matrixRate(value.trueNegative, value) }}</small></span><span class="wrong">FP {{ value.falsePositive | number }}<small>{{ matrixRate(value.falsePositive, value) }}</small></span></div>
+            <div class="matrix-row"><b>Actual fraud</b><span class="wrong">FN {{ value.falseNegative | number }}<small>{{ matrixRate(value.falseNegative, value) }}</small></span><span class="correct">TP {{ value.truePositive | number }}<small>{{ matrixRate(value.truePositive, value) }}</small></span></div>
+          </ng-container>
+        </article>
+      </div>
+    </ng-container>
   </section>
 </section>

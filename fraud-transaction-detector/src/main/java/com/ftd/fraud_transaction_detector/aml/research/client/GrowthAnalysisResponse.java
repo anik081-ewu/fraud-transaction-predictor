@@ -11,6 +11,7 @@ public record GrowthAnalysisResponse(
         List<Integer> partitionPercentages,
         List<String> detectors,
         Map<String, Object> methodology,
-        List<Map<String, Object>> results
+        List<Map<String, Object>> results,
+        List<Map<String, Object>> ensembles
 ) {
 }

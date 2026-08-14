@@ -52,7 +52,7 @@ class FeaturePersistenceServiceTest {
             assertEquals("T4", parameters.getValue("transactionId"));
             assertEquals("AML_FEATURES_V2", parameters.getValue("featureVersion"));
             assertEquals("test-generator", parameters.getValue("generatorVersion"));
-            assertEquals("LEGACY_MODEL_INPUT_V1", parameters.getValue("modelFeatureSchema"));
+            assertEquals("AML_MODEL_INPUT_V2", parameters.getValue("modelFeatureSchema"));
             assertEquals(Timestamp.from(Instant.parse("2026-08-04T06:00:00Z")), parameters.getValue("generatedAt"));
             assertEquals(Types.TIMESTAMP, parameters.getSqlType("generatedAt"));
             assertEquals(Types.DOUBLE, parameters.getSqlType("peerAverage"));

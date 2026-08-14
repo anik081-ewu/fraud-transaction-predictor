@@ -13,7 +13,9 @@ public record TrainModelRequest(
         List<String> modelNames,
         String outputSubdir,
         List<TrainingTransaction> evaluationTransactions,
-        String learningMode
+        String learningMode,
+        String datasetPath,
+        String datasetChecksum
 ) {
     public TrainModelRequest(
             String source,
@@ -25,7 +27,7 @@ public record TrainModelRequest(
             List<TrainingTransaction> evaluationTransactions
     ) {
         this(source, requestedBy, transactions, hyperparams, modelNames, outputSubdir,
-                evaluationTransactions, "UNSUPERVISED");
+                evaluationTransactions, "UNSUPERVISED", null, null);
     }
 
     public record TrainingTransaction(

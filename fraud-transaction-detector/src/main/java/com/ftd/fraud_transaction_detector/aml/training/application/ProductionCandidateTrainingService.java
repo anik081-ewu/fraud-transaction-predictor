@@ -84,19 +84,22 @@ public class ProductionCandidateTrainingService {
     }
 
     private TrainModelResponse trainModels(AmlTrainingRun snapshot, List<String> models, String requestedBy) {
-        List<Transaction> transactions = transactionRepository.findEligibleForTraining(
-                snapshot.fromBusinessDate(),
-                snapshot.toBusinessDate(),
-                snapshot.cutoffTimestamp()
-        );
-        if (transactions.isEmpty()) {
-            throw new IllegalStateException("No transactions are available inside the selected training window");
-        }
-        List<TrainModelRequest.TrainingTransaction> payload = transactions.stream()
-                .map(this::toTrainingTransaction)
-                .toList();
         String learningMode = appConfigService.getLearningMode();
         Map<String, String> productionModels = productionModels();
+        List<TrainModelRequest.TrainingTransaction> payload = null;
+        String datasetPath = snapshot.datasetPath();
+        String datasetChecksum = snapshot.datasetChecksum();
+        if (!"SUPERVISED".equalsIgnoreCase(learningMode)) {
+            List<Transaction> transactions = transactionRepository.findEligibleForTraining(
+                    snapshot.fromBusinessDate(), snapshot.toBusinessDate(), snapshot.cutoffTimestamp()
+            );
+            if (transactions.isEmpty()) {
+                throw new IllegalStateException("No transactions are available inside the selected training window");
+            }
+            payload = transactions.stream().map(this::toTrainingTransaction).toList();
+            datasetPath = null;
+            datasetChecksum = null;
+        }
         return modelTrainingClient.train(new TrainModelRequest(
                 "AML_TRAINING_RUN_" + snapshot.trainingRunId(),
                 normalizeActor(requestedBy),
@@ -105,7 +108,9 @@ public class ProductionCandidateTrainingService {
                 models.stream().map(productionModels::get).toList(),
                 null,
                 null,
-                learningMode
+                learningMode,
+                datasetPath,
+                datasetChecksum
         ));
     }
 

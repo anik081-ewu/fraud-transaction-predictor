@@ -435,11 +435,20 @@ public class AppConfigService {
         putIfPresent(hp, "ml.xgboost.learning_rate");
         putIfPresent(hp, "ml.xgboost.subsample");
         putIfPresent(hp, "ml.xgboost.colsample_bytree");
+        putIfPresent(hp, "ml.xgboost.min_child_weight");
+        putIfPresent(hp, "ml.xgboost.reg_alpha");
+        putIfPresent(hp, "ml.xgboost.reg_lambda");
         putIfPresent(hp, "ml.random_forest.n_estimators");
         putIfPresent(hp, "ml.random_forest.max_depth");
         putIfPresent(hp, "ml.random_forest.min_samples_leaf");
         putIfPresent(hp, "ml.logistic_regression.c");
         putIfPresent(hp, "ml.logistic_regression.max_iter");
+        putIfPresent(hp, "ml.supervised.tuning_enabled");
+        putIfPresent(hp, "ml.supervised.tuning_candidates");
+        putIfPresent(hp, "ml.supervised.class_weight_multiplier");
+        putIfPresent(hp, "ml.supervised.auto_no_case_weight");
+        putIfPresent(hp, "ml.supervised.threshold_beta");
+        putIfPresent(hp, "ml.supervised.minimum_precision");
         return hp;
     }
 

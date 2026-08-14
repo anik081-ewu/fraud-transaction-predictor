@@ -22,6 +22,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
+import com.ftd.fraud_transaction_detector.fraud.dto.TrainModelRequest;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class ProductionCandidateTrainingServiceTest {
 
@@ -34,13 +37,12 @@ class ProductionCandidateTrainingServiceTest {
         ModelTrainingClient trainingClient = mock(ModelTrainingClient.class);
         AmlTrainingRun snapshot = run(snapshotId, "UNSUPERVISED_ENSEMBLE", "DATASET_READY");
         when(repository.findRequired(snapshotId)).thenReturn(snapshot);
+        when(configService.getLearningMode()).thenReturn("SUPERVISED");
+        when(configService.isSupervisedLearningMode()).thenReturn(true);
         when(configService.isModelTrainingEnabled(anyString(), eq(true))).thenReturn(true);
-        when(transactionRepository.findEligibleForTraining(
-                snapshot.fromBusinessDate(), snapshot.toBusinessDate(), snapshot.cutoffTimestamp()
-        )).thenReturn(List.of(mock(Transaction.class)));
         when(trainingClient.train(org.mockito.ArgumentMatchers.any())).thenReturn(new TrainModelResponse(
-                "SUCCESS", "trained", 1, 2, List.of("LOF"), java.util.Map.of(),
-                "models/run", java.util.Map.of("LOF", java.util.Map.of())
+                "SUCCESS", "trained", 1, 2, List.of("XGBoost"), java.util.Map.of(),
+                "models/run", java.util.Map.of("XGBoost", java.util.Map.of())
         ));
         ProductionCandidateTrainingService service = new ProductionCandidateTrainingService(
                 repository,
@@ -50,11 +52,47 @@ class ProductionCandidateTrainingServiceTest {
                 mock(BatchCandidateRegistrar.class)
         );
 
-        var response = service.start(snapshotId, List.of("LOCAL_OUTLIER_FACTOR"), "test-operator");
+        var response = service.start(snapshotId, List.of("XGBOOST_CLASSIFIER"), "test-operator");
 
-        assertEquals(List.of("LOCAL_OUTLIER_FACTOR"), response.trainedModels());
+        assertEquals(List.of("XGBOOST_CLASSIFIER"), response.trainedModels());
         assertEquals("SUCCESS", response.trainingStatus());
-        verify(trainingClient).train(org.mockito.ArgumentMatchers.any());
+        ArgumentCaptor<TrainModelRequest> request = ArgumentCaptor.forClass(TrainModelRequest.class);
+        verify(trainingClient).train(request.capture());
+        assertEquals(snapshot.datasetPath(), request.getValue().datasetPath());
+        assertEquals(snapshot.datasetChecksum(), request.getValue().datasetChecksum());
+        assertNull(request.getValue().transactions());
+    }
+
+    @Test
+    void keepsRawTransactionCompatibilityForUnsupervisedTraining() {
+        UUID snapshotId = UUID.randomUUID();
+        AmlTrainingRunRepository repository = mock(AmlTrainingRunRepository.class);
+        AppConfigService configService = mock(AppConfigService.class);
+        TransactionRepository transactionRepository = mock(TransactionRepository.class);
+        ModelTrainingClient trainingClient = mock(ModelTrainingClient.class);
+        AmlTrainingRun snapshot = run(snapshotId, "UNSUPERVISED_ENSEMBLE", "DATASET_READY");
+        when(repository.findRequired(snapshotId)).thenReturn(snapshot);
+        when(configService.getLearningMode()).thenReturn("UNSUPERVISED");
+        when(configService.isModelTrainingEnabled(anyString(), eq(true))).thenReturn(true);
+        when(transactionRepository.findEligibleForTraining(
+                snapshot.fromBusinessDate(), snapshot.toBusinessDate(), snapshot.cutoffTimestamp()
+        )).thenReturn(List.of(mock(Transaction.class)));
+        when(trainingClient.train(org.mockito.ArgumentMatchers.any())).thenReturn(new TrainModelResponse(
+                "SUCCESS", "trained", 1, 2, List.of("LOF"), java.util.Map.of(),
+                "models/run", java.util.Map.of("LOF", java.util.Map.of())
+        ));
+        ProductionCandidateTrainingService service = new ProductionCandidateTrainingService(
+                repository, configService, transactionRepository, trainingClient,
+                mock(BatchCandidateRegistrar.class)
+        );
+
+        service.start(snapshotId, List.of("LOCAL_OUTLIER_FACTOR"), "test-operator");
+
+        ArgumentCaptor<TrainModelRequest> request = ArgumentCaptor.forClass(TrainModelRequest.class);
+        verify(trainingClient).train(request.capture());
+        assertEquals(1, request.getValue().transactions().size());
+        assertNull(request.getValue().datasetPath());
+        assertNull(request.getValue().datasetChecksum());
     }
 
     private AmlTrainingRun run(UUID id, String modelType, String status) {

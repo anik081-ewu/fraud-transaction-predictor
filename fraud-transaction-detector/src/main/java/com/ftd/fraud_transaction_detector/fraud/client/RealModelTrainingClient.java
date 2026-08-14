@@ -32,9 +32,11 @@ public class RealModelTrainingClient implements ModelTrainingClient {
     @Override
     public TrainModelResponse train(TrainModelRequest request) {
         try {
-            log.info("Training {} model(s) on {} rows (timeout {}s)",
+            log.info("Training {} model(s) from {} (timeout {}s)",
                     request.modelNames() == null ? 0 : request.modelNames().size(),
-                    request.transactions() == null ? 0 : request.transactions().size(),
+                    request.datasetPath() == null
+                            ? (request.transactions() == null ? "no input" : request.transactions().size() + " raw rows")
+                            : "immutable snapshot " + request.datasetPath(),
                     trainingTimeout.toSeconds());
             TrainModelResponse response = webClient.post()
                     .uri("/api/v1/models/train")

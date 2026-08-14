@@ -10,6 +10,7 @@ import com.ftd.fraud_transaction_detector.fraud.entity.FraudPredictionLog;
 import com.ftd.fraud_transaction_detector.fraud.repo.FraudPredictionLogRepository;
 import com.ftd.fraud_transaction_detector.transactions.entity.Transaction;
 import com.ftd.fraud_transaction_detector.transactions.repo.TransactionRepository;
+import com.ftd.fraud_transaction_detector.transactions.service.TransactionFraudLabelService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
@@ -30,22 +31,26 @@ public class CaseManagementService {
     private final FraudAlertReviewService fraudAlertReviewService;
     private final StrXmlService strXmlService;
     private final FraudPredictionLogRepository predictionLogRepository;
+    private final TransactionFraudLabelService fraudLabelService;
 
     public CaseManagementService(CaseRecordRepository caseRecordRepository, CaseNoteRepository caseNoteRepository,
                                  TransactionRepository transactionRepository,
                                  FraudAlertReviewService fraudAlertReviewService, StrXmlService strXmlService,
-                                 FraudPredictionLogRepository predictionLogRepository) {
+                                 FraudPredictionLogRepository predictionLogRepository,
+                                 TransactionFraudLabelService fraudLabelService) {
         this.caseRecordRepository = caseRecordRepository;
         this.caseNoteRepository = caseNoteRepository;
         this.transactionRepository = transactionRepository;
         this.fraudAlertReviewService = fraudAlertReviewService;
         this.strXmlService = strXmlService;
         this.predictionLogRepository = predictionLogRepository;
+        this.fraudLabelService = fraudLabelService;
     }
 
     @Transactional
     public CaseResponse createCase(CreateCaseRequest request) {
         validateCreate(request);
+        fraudLabelService.markCasePending(request.transactionId().trim());
         CaseRecord existing = request.fraudAlertId() == null
                 ? caseRecordRepository.findFirstByTransactionIdOrderByCreatedAtDescIdDesc(request.transactionId().trim()).orElse(null)
                 : caseRecordRepository.findByFraudAlertId(request.fraudAlertId()).orElse(null);
@@ -130,6 +135,8 @@ public class CaseManagementService {
         String performedBy = defaultUser(request == null ? null : request.performedBy());
         if (record.getFraudAlertId() != null) {
             fraudAlertReviewService.markFalsePositive(record.getFraudAlertId(), performedBy);
+        } else {
+            fraudLabelService.markFalsePositive(record.getTransactionId(), performedBy);
         }
         record.setStatus("FALSE_POSITIVE");
         record.setUpdatedAt(Instant.now());
@@ -151,6 +158,8 @@ public class CaseManagementService {
         byte[] content = strXmlService.generate(record, transaction, performedBy);
         if (record.getFraudAlertId() != null) {
             fraudAlertReviewService.markStrGenerated(record.getFraudAlertId(), performedBy, fileName);
+        } else {
+            fraudLabelService.markStrGenerated(record.getTransactionId(), performedBy);
         }
         record.setStatus("STR_GENERATED");
         record.setUpdatedAt(Instant.now());

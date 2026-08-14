@@ -45,6 +45,7 @@ public class SupervisedGrowthStudyRepository {
                         FROM dbo.aml_supervised_growth_studies
                         WHERE training_run_id = :trainingRunId
                           AND status IN ('QUEUED', 'RUNNING', 'COMPLETED')
+                          AND (status IN ('QUEUED', 'RUNNING') OR JSON_QUERY(result_json, '$.ensembles') IS NOT NULL)
                         ORDER BY CASE status WHEN 'COMPLETED' THEN 0 ELSE 1 END, created_at DESC
                         """, Map.of("trainingRunId", trainingRunId), MAPPER)
                 .stream().findFirst();

@@ -1,0 +1,12 @@
+{
+  "source": "Fraud Detection Handbook simulated-data-transformed",
+  "adaptation": "Selected complete customer histories; preserved transaction chronology, amounts, terminal identity, and original TX_FRAUD labels. TERMINAL_ID is represented as Location so the current application can derive location novelty without label leakage.",
+  "rows": 264500,
+  "fraudRows": 2340,
+  "fraudRate": 0.0088468809073724,
+  "customers": 749,
+  "days": 183,
+  "minimumDate": "2018-04-01T00:00:31",
+  "maximumDate": "2018-09-30T23:58:21",
+  "sha256": "3854f621cb699976eaf03c1a783141749f032031eec8764eac49453adf0ca9c1"
+}

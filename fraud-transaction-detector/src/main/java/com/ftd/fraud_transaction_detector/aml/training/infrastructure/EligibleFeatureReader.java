@@ -61,7 +61,7 @@ public class EligibleFeatureReader {
                     f.new_beneficiary, f.new_location, f.new_channel, f.new_device,
                     f.unusual_transaction_hour, f.peer_group_code, f.peer_avg_amount,
                     f.peer_std_amount, f.amount_vs_peer_avg, f.peer_amount_z_score,
-                    tx.fraud_label
+                    tx.fraud_label, tx.label_source
                 FROM dbo.aml_transaction_features f
                 INNER JOIN dbo.aml_feature_learning_status learning
                     ON learning.transaction_id = f.transaction_id
@@ -118,7 +118,7 @@ public class EligibleFeatureReader {
                 resultSet.getString("peer_group_code"), nullableDouble(resultSet, "peer_avg_amount"),
                 nullableDouble(resultSet, "peer_std_amount"), nullableDouble(resultSet, "amount_vs_peer_avg"),
                 nullableDouble(resultSet, "peer_amount_z_score"),
-                nullableBoolean(resultSet, "fraud_label")
+                nullableBoolean(resultSet, "fraud_label"), resultSet.getString("label_source")
         );
     }
 

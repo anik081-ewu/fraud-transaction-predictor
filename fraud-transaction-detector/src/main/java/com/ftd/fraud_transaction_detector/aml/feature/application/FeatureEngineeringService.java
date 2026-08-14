@@ -2,6 +2,7 @@ package com.ftd.fraud_transaction_detector.aml.feature.application;
 
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.AmountFeatureCalculator;
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.BehaviorFeatureCalculator;
+import com.ftd.fraud_transaction_detector.aml.feature.calculator.ComprehensiveModelFeatureCalculator;
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.NoveltyFeatureCalculator;
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.LegacyModelFeatureCalculator;
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.ProfileConfidenceCalculator;
@@ -28,6 +29,7 @@ public class FeatureEngineeringService {
     private final ProfileConfidenceCalculator profileCalculator;
     private final PeerFeatureCalculator peerCalculator;
     private final LegacyModelFeatureCalculator modelFeatureCalculator;
+    private final ComprehensiveModelFeatureCalculator comprehensiveModelFeatureCalculator;
     private final Clock clock;
 
     public FeatureEngineeringService() {
@@ -44,6 +46,7 @@ public class FeatureEngineeringService {
                 new ProfileConfidenceCalculator(),
                 new PeerFeatureCalculator(),
                 new LegacyModelFeatureCalculator(),
+                new ComprehensiveModelFeatureCalculator(),
                 clock
         );
     }
@@ -57,6 +60,7 @@ public class FeatureEngineeringService {
             ProfileConfidenceCalculator profileCalculator,
             PeerFeatureCalculator peerCalculator,
             LegacyModelFeatureCalculator modelFeatureCalculator,
+            ComprehensiveModelFeatureCalculator comprehensiveModelFeatureCalculator,
             Clock clock
     ) {
         this.amountCalculator = Objects.requireNonNull(amountCalculator);
@@ -67,6 +71,7 @@ public class FeatureEngineeringService {
         this.profileCalculator = Objects.requireNonNull(profileCalculator);
         this.peerCalculator = Objects.requireNonNull(peerCalculator);
         this.modelFeatureCalculator = Objects.requireNonNull(modelFeatureCalculator);
+        this.comprehensiveModelFeatureCalculator = Objects.requireNonNull(comprehensiveModelFeatureCalculator);
         this.clock = Objects.requireNonNull(clock);
     }
 
@@ -79,6 +84,16 @@ public class FeatureEngineeringService {
             throw new IllegalArgumentException("featureVersion is required");
         }
         var current = context.currentTransaction();
+        var amount = amountCalculator.calculate(context);
+        var behavior = behaviorCalculator.calculate(context);
+        var time = timeCalculator.calculate(context);
+        var velocity = velocityCalculator.calculate(context, reportingThreshold);
+        var novelty = noveltyCalculator.calculate(context);
+        var profile = profileCalculator.calculate(context);
+        var peer = peerCalculator.calculate(context);
+        var modelFeatures = comprehensiveModelFeatureCalculator.calculate(
+                modelFeatureCalculator.calculate(context), amount, behavior, time, velocity, novelty, profile, peer
+        );
         return new TransactionFeatureVector(
                 current.transactionId(),
                 current.customerId(),
@@ -86,15 +101,15 @@ public class FeatureEngineeringService {
                 current.transactionDate().toLocalDate(),
                 current.transactionDate(),
                 featureVersion,
-                amountCalculator.calculate(context),
-                behaviorCalculator.calculate(context),
-                timeCalculator.calculate(context),
-                velocityCalculator.calculate(context, reportingThreshold),
-                noveltyCalculator.calculate(context),
-                profileCalculator.calculate(context),
-                peerCalculator.calculate(context),
-                LegacyModelFeatureCalculator.SCHEMA,
-                modelFeatureCalculator.calculate(context),
+                amount,
+                behavior,
+                time,
+                velocity,
+                novelty,
+                profile,
+                peer,
+                ComprehensiveModelFeatureCalculator.SCHEMA,
+                modelFeatures,
                 Instant.now(clock)
         );
     }
