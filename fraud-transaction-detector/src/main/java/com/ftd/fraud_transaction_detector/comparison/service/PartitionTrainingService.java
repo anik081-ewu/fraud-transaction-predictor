@@ -36,10 +36,8 @@ public class PartitionTrainingService {
 
     private static final List<String> DEFAULT_COMPARISON_MODELS = List.of(
             "IsolationForest",
-            "LOF",
-            "OneClassSVM",
-            "EllipticEnvelope",
-            "PCAReconstruction"
+            "Autoencoder",
+            "LOF"
     );
 
     private final DatasetPartitionRepository datasetPartitionRepository;

@@ -5,6 +5,7 @@ import java.util.List;
 
 public record RiskPolicyConfigResponse(
         String policyVersion,
+        String learningMode,
         double customerBehaviourWeight,
         double peerBehaviourWeight,
         double mlEnsembleWeight,
@@ -13,8 +14,6 @@ public record RiskPolicyConfigResponse(
         PeerBehaviourSubWeights peerBehaviourSubWeights,
         AmlRuleThresholds amlRuleThresholds,
         List<RiskPolicyModelConfigResponse> models,
-        String incrementalSchedule,
-        String batchSchedule,
         double lowRiskThreshold,
         double mediumRiskThreshold,
         double highRiskThreshold,

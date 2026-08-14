@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval, switchMap } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
@@ -16,7 +16,7 @@ import { BatchSummaryResponse } from '../core/models';
   templateUrl: './upload-page.component.html',
   styleUrls: ['./page.css', './upload-page.component.css']
 })
-export class UploadPageComponent {
+export class UploadPageComponent implements OnInit {
   private readonly api = inject(ComparisonApiService);
   private readonly authService = inject(AuthService);
   private readonly alerts = inject(AlertService);
@@ -26,8 +26,20 @@ export class UploadPageComponent {
   readonly polling = signal(false);
   readonly batchNo = signal<string | null>(null);
   readonly batchResult = signal<BatchSummaryResponse | null>(null);
+  readonly learningMode = signal<'UNSUPERVISED' | 'SUPERVISED'>('UNSUPERVISED');
 
   selectedFile: File | null = null;
+
+  ngOnInit(): void {
+    this.api.listColdStartConfigs().subscribe({
+      next: (settings) => this.learningMode.set(
+        settings.find((item) => item.configKey === 'system.learning_mode')?.configValue === 'SUPERVISED'
+          ? 'SUPERVISED'
+          : 'UNSUPERVISED'
+      ),
+      error: () => this.alerts.error('Could not load the active system type from Settings.', 'Settings unavailable'),
+    });
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;

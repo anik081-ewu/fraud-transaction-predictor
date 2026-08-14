@@ -2,7 +2,7 @@
 Label-free quality metrics for anomaly detectors.
 
 These are the metrics that let detectors be ranked without confirmed fraud labels.
-Shared by the batch training path and the incremental trainers so a given model's number
+Shared by training and comparison so a given model's number
 means the same thing wherever it is reported.
 """
 from __future__ import annotations
@@ -144,7 +144,7 @@ def uniform_reference_scores(
     score one feature dict at a time.
 
     Uses the same subspace-perturbation scheme — real rows with a few features randomised —
-    so batch and incremental detectors estimate level-set volume the same way and their
+    so all detectors estimate level-set volume the same way and their
     EM-AUC values stay on one scale. Falls back to fully uniform draws only when no real
     rows were captured, which reproduces the high-dimensional saturation and is therefore a
     last resort.

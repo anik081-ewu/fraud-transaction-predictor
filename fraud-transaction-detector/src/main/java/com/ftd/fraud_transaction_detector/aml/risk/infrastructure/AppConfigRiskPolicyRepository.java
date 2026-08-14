@@ -5,6 +5,10 @@ import com.ftd.fraud_transaction_detector.aml.risk.domain.RiskPolicyRepository;
 import com.ftd.fraud_transaction_detector.config.repo.AppConfigRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Repository
 public class AppConfigRiskPolicyRepository implements RiskPolicyRepository {
 
@@ -43,28 +47,36 @@ public class AppConfigRiskPolicyRepository implements RiskPolicyRepository {
 
     @Override
     public RiskPolicy findActive(String customerSegment) {
+        Map<String, String> values = configRepository.findAllById(List.of(
+                        VERSION, CUSTOMER_WEIGHT, PEER_WEIGHT, ML_ENSEMBLE_WEIGHT,
+                        RULES_WEIGHT, LOW_THRESHOLD, MEDIUM_THRESHOLD, HIGH_THRESHOLD
+                )).stream()
+                .collect(Collectors.toMap(
+                        config -> config.getConfigKey(),
+                        config -> config.getConfigValue(),
+                        (_first, second) -> second
+                ));
         return new RiskPolicy(
-                required(VERSION),
-                requiredDouble(CUSTOMER_WEIGHT),
-                requiredDouble(PEER_WEIGHT),
-                requiredDouble(ML_ENSEMBLE_WEIGHT),
-                requiredDouble(RULES_WEIGHT),
-                requiredDouble(LOW_THRESHOLD),
-                requiredDouble(MEDIUM_THRESHOLD),
-                requiredDouble(HIGH_THRESHOLD)
+                required(values, VERSION),
+                requiredDouble(values, CUSTOMER_WEIGHT),
+                requiredDouble(values, PEER_WEIGHT),
+                requiredDouble(values, ML_ENSEMBLE_WEIGHT),
+                requiredDouble(values, RULES_WEIGHT),
+                requiredDouble(values, LOW_THRESHOLD),
+                requiredDouble(values, MEDIUM_THRESHOLD),
+                requiredDouble(values, HIGH_THRESHOLD)
         );
     }
 
-    private String required(String key) {
-        return configRepository.findById(key)
-                .map(config -> config.getConfigValue())
+    private String required(Map<String, String> values, String key) {
+        return java.util.Optional.ofNullable(values.get(key))
                 .map(String::trim)
                 .filter(value -> !value.isBlank())
                 .orElseThrow(() -> new IllegalStateException("Required risk policy config is missing: " + key));
     }
 
-    private double requiredDouble(String key) {
-        String raw = required(key);
+    private double requiredDouble(Map<String, String> values, String key) {
+        String raw = required(values, key);
         try {
             double value = Double.parseDouble(raw);
             if (!Double.isFinite(value)) throw new NumberFormatException();

@@ -32,38 +32,25 @@ export class CasesPageComponent implements OnInit {
   readonly message = signal('');
   readonly loading = signal(false);
   readonly actionInProgress = signal('');
+  readonly pageNumber = signal(0);
+  readonly pageSize = signal(20);
+  readonly totalPages = signal(0);
+  readonly totalElements = signal(0);
+  readonly allCount = signal(0);
+  readonly activeCount = signal(0);
+  readonly strCount = signal(0);
+  readonly falsePositiveCount = signal(0);
 
   readonly searchText = signal('');
   readonly statusFilter = signal('ACTIVE');
   noteText = '';
 
-  readonly filteredCases = computed(() => {
-    const query = this.searchText().trim().toLowerCase();
-    return this.cases().filter((caseRecord) => {
-      const statusFilter = this.statusFilter();
-      const statusMatches = statusFilter === 'ALL'
-        || (statusFilter === 'ACTIVE' && !['FALSE_POSITIVE', 'STR_GENERATED', 'CLOSED'].includes(caseRecord.status))
-        || caseRecord.status === statusFilter;
-      const queryMatches = !query || [
-        caseRecord.caseNo,
-        caseRecord.transactionId,
-        caseRecord.accountId,
-        caseRecord.title,
-      ].some((value) => value.toLowerCase().includes(query));
-      return statusMatches && queryMatches;
-    });
-  });
+  readonly filteredCases = computed(() => this.cases());
 
   readonly selectedCase = computed(() =>
     this.cases().find((item) => item.id === this.selectedCaseId()) ?? null
   );
-  readonly activeCount = computed(() =>
-    this.cases().filter((item) => !['FALSE_POSITIVE', 'STR_GENERATED', 'CLOSED'].includes(item.status)).length
-  );
-  readonly strCount = computed(() => this.cases().filter((item) => item.status === 'STR_GENERATED').length);
-  readonly falsePositiveCount = computed(() =>
-    this.cases().filter((item) => item.status === 'FALSE_POSITIVE').length
-  );
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
   readonly anomalyExplanations = computed(() =>
     this.parseReasonCodes(this.selectedCase()?.predictionEvidence?.reasonCodes)
       .map((code) => this.explainReason(code))
@@ -87,9 +74,18 @@ export class CasesPageComponent implements OnInit {
 
   loadCases(preferredCaseId?: number): void {
     this.loading.set(true);
-    this.caseApi.listCases().subscribe({
-      next: (cases) => {
+    this.caseApi.listCases(
+      this.searchText().trim(), this.statusFilter(), this.pageNumber(), this.pageSize()
+    ).subscribe({
+      next: (response) => {
+        const cases = response.content.map((item) => ({ ...item, notes: item.notes ?? [] }));
         this.cases.set(cases);
+        this.totalPages.set(response.totalPages);
+        this.totalElements.set(response.totalElements);
+        this.allCount.set(response.allElements);
+        this.activeCount.set(response.activeElements);
+        this.strCount.set(response.strGeneratedElements);
+        this.falsePositiveCount.set(response.falsePositiveElements);
         const selectedId = preferredCaseId
           ?? this.selectedCaseId()
           ?? cases[0]?.id
@@ -114,12 +110,27 @@ export class CasesPageComponent implements OnInit {
 
   updateSearchText(value: string): void {
     this.searchText.set(value);
-    this.selectFirstVisibleCaseIfNeeded();
+    this.pageNumber.set(0);
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.loadCases(), 300);
   }
 
   updateStatusFilter(value: string): void {
     this.statusFilter.set(value);
-    this.selectFirstVisibleCaseIfNeeded();
+    this.pageNumber.set(0);
+    this.loadCases();
+  }
+
+  previousPage(): void {
+    if (this.pageNumber() === 0) return;
+    this.pageNumber.update((value) => value - 1);
+    this.loadCases();
+  }
+
+  nextPage(): void {
+    if (this.pageNumber() + 1 >= this.totalPages()) return;
+    this.pageNumber.update((value) => value + 1);
+    this.loadCases();
   }
 
   markFalsePositive(): void {
@@ -211,13 +222,6 @@ export class CasesPageComponent implements OnInit {
         : [caseRecord, ...this.cases()]
     );
     this.selectedCaseId.set(caseRecord.id);
-  }
-
-  private selectFirstVisibleCaseIfNeeded(): void {
-    const visibleCases = this.filteredCases();
-    if (!visibleCases.some((item) => item.id === this.selectedCaseId())) {
-      this.selectedCaseId.set(visibleCases[0]?.id ?? null);
-    }
   }
 
   private parseReasonCodes(raw: string | null | undefined): string[] {

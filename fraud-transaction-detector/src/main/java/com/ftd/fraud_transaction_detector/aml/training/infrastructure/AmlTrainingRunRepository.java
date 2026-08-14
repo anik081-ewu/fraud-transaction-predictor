@@ -217,7 +217,7 @@ public class AmlTrainingRunRepository {
     }
 
     private static String normalizeModelType(String value) {
-        return value == null || value.isBlank() ? "HALF_SPACE_TREES" : value.trim();
+        return value == null || value.isBlank() ? "UNSUPERVISED_ENSEMBLE" : value.trim();
     }
 
     private static String abbreviate(String value, int maxLength) {

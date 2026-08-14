@@ -60,6 +60,18 @@ public class Transaction {
     @Column(name = "upload_batch_id")
     private Long uploadBatchId;
 
+    @Column(name = "fraud_label")
+    private Boolean fraudLabel;
+
+    @Column(name = "label_source", length = 50)
+    private String labelSource;
+
+    @Column(name = "labeled_by", length = 100)
+    private String labeledBy;
+
+    @Column(name = "labeled_at")
+    private Instant labeledAt;
+
     @Column(name = "created_at")
     private Instant createdAt;
 
@@ -197,6 +209,38 @@ public class Transaction {
 
     public void setUploadBatchId(Long uploadBatchId) {
         this.uploadBatchId = uploadBatchId;
+    }
+
+    public Boolean getFraudLabel() {
+        return fraudLabel;
+    }
+
+    public void setFraudLabel(Boolean fraudLabel) {
+        this.fraudLabel = fraudLabel;
+    }
+
+    public String getLabelSource() {
+        return labelSource;
+    }
+
+    public void setLabelSource(String labelSource) {
+        this.labelSource = labelSource;
+    }
+
+    public String getLabeledBy() {
+        return labeledBy;
+    }
+
+    public void setLabeledBy(String labeledBy) {
+        this.labeledBy = labeledBy;
+    }
+
+    public Instant getLabeledAt() {
+        return labeledAt;
+    }
+
+    public void setLabeledAt(Instant labeledAt) {
+        this.labeledAt = labeledAt;
     }
 
     public Instant getCreatedAt() {

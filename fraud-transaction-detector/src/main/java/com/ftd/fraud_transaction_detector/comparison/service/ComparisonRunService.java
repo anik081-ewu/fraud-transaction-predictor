@@ -235,7 +235,7 @@ public class ComparisonRunService {
     }
 
     private static List<String> normalizeModelNames(List<String> modelNames) {
-        List<String> defaults = List.of("IsolationForest", "LOF", "OneClassSVM", "EllipticEnvelope", "PCAReconstruction");
+        List<String> defaults = List.of("IsolationForest", "Autoencoder", "LOF");
         if (modelNames == null || modelNames.isEmpty()) {
             return defaults;
         }

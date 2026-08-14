@@ -1,5 +1,6 @@
 import os
 import math
+from functools import lru_cache
 from datetime import datetime, timezone
 from email.utils import format_datetime
 from typing import Any, Dict
@@ -20,18 +21,11 @@ from app.schemas import (
     ScorePercentilesResponse,
     TrainModelRequest,
     TrainModelResponse,
-    IncrementalTrainingRequest,
-    IncrementalTrainingResponse,
     GrowthAnalysisRequest,
     GrowthAnalysisResponse,
     ModelAgreementRequest,
 )
 from app.training import train_from_transactions_df
-from app.incremental.half_space_trees import load_hst_artifact, train_half_space_trees
-from app.incremental.online_one_class_svm import (
-    load_online_ocsvm_artifact,
-    train_online_one_class_svm,
-)
 from app.research.growth_analysis import GrowthAnalysisOptions, analyze_detector_growth
 
 
@@ -40,15 +34,25 @@ app = FastAPI(title="Fraud ML Service", version="0.1.0")
 MODELS_DIR = os.getenv("MODELS_DIR", os.path.join(os.path.dirname(__file__), "..", "models"))
 MODELS = None
 
-DEFAULT_TRAINING_MODELS = ["IsolationForest", "LOF", "OneClassSVM"]
-PRODUCTION_BATCH_MODELS = {
+DEFAULT_TRAINING_MODELS = ["IsolationForest", "Autoencoder", "LOF"]
+PRODUCTION_MODELS = {
     "IsolationForest",
     "LOF",
-    "OneClassSVM",
-    "EllipticEnvelope",
-    "PCAReconstruction",
     "Autoencoder",
 }
+
+
+@lru_cache(maxsize=32)
+def _cached_models(models_dir: str):
+    return load_models(models_dir)
+
+
+def _models(models_dir: str):
+    return _cached_models(models_dir) if os.path.isdir(models_dir) else load_models(models_dir)
+
+
+def _clear_artifact_caches() -> None:
+    _cached_models.cache_clear()
 LEGACY_API_ENABLED = os.getenv("LEGACY_API_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 LEGACY_API_SUNSET_AT = os.getenv("LEGACY_API_SUNSET_AT", "2026-12-31T23:59:59Z")
 LEGACY_API_PREFIXES = (
@@ -134,17 +138,15 @@ def _evaluate_models(loaded_models, x, selected_models: list[str]) -> Dict[str, 
     for model_name in selected_models:
         started = __import__("time").perf_counter()
         if model_name == "IsolationForest" and loaded_models.iso_model is not None:
-            raw_prediction = int(loaded_models.iso_model.predict(x)[0])
             score_samples = None
             decision = None
             try:
                 score_samples = float(loaded_models.iso_model.score_samples(x)[0])
+                decision = score_samples - float(loaded_models.iso_model.offset_)
             except Exception:
                 pass
-            try:
-                decision = float(loaded_models.iso_model.decision_function(x)[0])
-            except Exception:
-                pass
+            raw_prediction = (-1 if decision < 0.0 else 1) if decision is not None \
+                else int(loaded_models.iso_model.predict(x)[0])
             results[model_name] = {
                 "anomaly": raw_prediction == -1,
                 "rawPrediction": raw_prediction,
@@ -237,20 +239,48 @@ def _persisted_feature_matrix(req: PersistedFeaturePredictRequest, loaded_models
             status_code=400,
             detail=f"Non-finite persisted feature values: {', '.join(sorted(invalid))}",
         )
-    import pandas as pd
+    supervised = req.learningMode.strip().upper() == "SUPERVISED"
+    feature_columns = loaded_models.supervised_feature_columns if supervised else loaded_models.feature_columns
+    scaler = loaded_models.supervised_scaler if supervised else loaded_models.scaler
+    if not feature_columns or scaler is None:
+        raise HTTPException(status_code=409, detail=f"{req.learningMode} feature contract is unavailable")
+    aligned = np.asarray(
+        [[float(req.features.get(column, 0.0)) for column in feature_columns]],
+        dtype=float,
+    )
+    return scaler.transform(aligned)
 
-    feature_row = pd.DataFrame([req.features], dtype=float)
-    aligned = feature_row.reindex(columns=loaded_models.feature_columns, fill_value=0.0)
-    return loaded_models.scaler.transform(aligned.to_numpy(dtype=float))
+
+def _evaluate_supervised_models(loaded_models, x, selected_models: list[str]):
+    results = {}
+    for model_name in selected_models:
+        started = __import__("time").perf_counter()
+        model = loaded_models.available_models[model_name]
+        probability = float(model.predict_proba(x)[0, 1])
+        fraud = probability >= 0.5
+        results[model_name] = {
+            "fraud": fraud,
+            "anomaly": fraud,
+            "rawPrediction": 1 if fraud else 0,
+            "fraudProbability": probability,
+            "normalizedScore": probability,
+            "rawScore": probability,
+            "decisionThreshold": 0.5,
+            "normalizationVersion": "SUPERVISED_PROBABILITY_V1",
+            "predictionDurationMs": round((__import__("time").perf_counter() - started) * 1000),
+        }
+    return results
 
 
 @app.post("/api/v2/fraud/predict", response_model=ComparisonPredictResponse)
 def predict_persisted_features(req: PersistedFeaturePredictRequest) -> ComparisonPredictResponse:
-    loaded_models = MODELS if not req.modelsDir else load_models(os.path.abspath(req.modelsDir))
+    loaded_models = MODELS if not req.modelsDir else _models(os.path.abspath(req.modelsDir))
     if loaded_models is None:
         raise HTTPException(status_code=503, detail="Models are not loaded")
     selected_models = req.modelNames if req.modelNames is not None else ["IsolationForest"]
-    non_production_models = [name for name in selected_models if name not in PRODUCTION_BATCH_MODELS]
+    supervised_models = {"XGBoost", "RandomForestClassifier", "LogisticRegression"}
+    allowed_models = supervised_models if req.learningMode.strip().upper() == "SUPERVISED" else set(PRODUCTION_MODELS)
+    non_production_models = [name for name in selected_models if name not in allowed_models]
     if non_production_models:
         raise HTTPException(
             status_code=409,
@@ -263,100 +293,17 @@ def predict_persisted_features(req: PersistedFeaturePredictRequest) -> Compariso
             detail=f"Requested model artifacts are unavailable: {', '.join(unknown_models)}",
         )
     x = _persisted_feature_matrix(req, loaded_models)
-    model_results = _evaluate_models(loaded_models, x, selected_models)
+    model_results = (_evaluate_supervised_models(loaded_models, x, selected_models)
+                     if req.learningMode.strip().upper() == "SUPERVISED"
+                     else _evaluate_models(loaded_models, x, selected_models))
     summary = dict(req.featureSummary)
     summary.update({
         "featureVersion": req.featureVersion,
         "modelFeatureSchema": req.modelFeatureSchema,
         "persistedFeatureCount": len(req.features),
         "scoringContract": "PERSISTED_FEATURES_V2",
+        "learningMode": req.learningMode.strip().upper(),
     })
-    if req.activeModelsDir:
-        started = __import__("time").perf_counter()
-        active = load_hst_artifact(os.path.abspath(req.activeModelsDir))
-        if active.feature_version != req.featureVersion:
-            raise HTTPException(status_code=409, detail="Active model feature version is incompatible")
-        if req.activeModelVersion and active.model_version != req.activeModelVersion:
-            raise HTTPException(status_code=409, detail="Active model version is incompatible")
-        active_score = active.score(req.features)
-        active_normalized_score = active.normalized_score(req.features)
-        active_anomaly = active_score >= active.threshold
-        model_results["HalfSpaceTrees"] = {
-            "rawPrediction": -1 if active_anomaly else 1,
-            "anomaly": active_anomaly,
-            "score": active_score,
-            "normalizedScore": active_normalized_score,
-            "score100": active_normalized_score * 100.0,
-            "normalizationVersion": "HST_EMPIRICAL_THRESHOLD_V1",
-            "threshold": active.threshold,
-            "modelVersion": active.model_version,
-            "affectsProductionDecision": True,
-        }
-        summary["activeModel"] = {
-            "modelVersion": active.model_version,
-            "modelType": "HALF_SPACE_TREES",
-            "modelSegment": active.model_segment,
-            "score": active_score,
-            "normalizedScore": active_normalized_score,
-            "threshold": active.threshold,
-            "anomaly": active_anomaly,
-            "predictionDurationMs": round((__import__("time").perf_counter() - started) * 1000, 3),
-            "affectsProductionDecision": True,
-        }
-    if req.challengerModelsDir:
-        started = __import__("time").perf_counter()
-        challenger = load_hst_artifact(os.path.abspath(req.challengerModelsDir))
-        if challenger.feature_version != req.featureVersion:
-            raise HTTPException(status_code=409, detail="Silent challenger feature version is incompatible")
-        if req.challengerModelVersion and challenger.model_version != req.challengerModelVersion:
-            raise HTTPException(status_code=409, detail="Silent challenger model version is incompatible")
-        challenger_score = challenger.score(req.features)
-        challenger_normalized_score = challenger.normalized_score(req.features)
-        summary["silentChallenger"] = {
-            "modelVersion": challenger.model_version,
-            "modelType": "HALF_SPACE_TREES",
-            "modelSegment": challenger.model_segment,
-            "score": challenger_score,
-            "normalizedScore": challenger_normalized_score,
-            "score100": challenger_normalized_score * 100.0,
-            "normalizationVersion": "HST_EMPIRICAL_THRESHOLD_V1",
-            "threshold": challenger.threshold,
-            "anomaly": challenger_score >= challenger.threshold,
-            "predictionDurationMs": round((__import__("time").perf_counter() - started) * 1000, 3),
-            "affectsProductionDecision": False,
-        }
-    if req.shadowOnlineSvmDir:
-        started = __import__("time").perf_counter()
-        online_svm = load_online_ocsvm_artifact(os.path.abspath(req.shadowOnlineSvmDir))
-        if online_svm.feature_version != req.featureVersion:
-            raise HTTPException(status_code=409, detail="Shadow Online One-Class SVM feature version is incompatible")
-        if req.shadowOnlineSvmVersion and online_svm.model_version != req.shadowOnlineSvmVersion:
-            raise HTTPException(status_code=409, detail="Shadow Online One-Class SVM model version is incompatible")
-        raw_score = online_svm.raw_score(req.features)
-        normalized_score = online_svm.normalized_score(req.features)
-        anomaly = raw_score >= online_svm.raw_threshold
-        model_results["OnlineOneClassSVM"] = {
-            "rawPrediction": -1 if anomaly else 1,
-            "anomaly": anomaly,
-            "rawScore": raw_score,
-            "normalizedScore": normalized_score,
-            "score100": normalized_score * 100.0,
-            "rawThreshold": online_svm.raw_threshold,
-            "normalizationVersion": "ONLINE_OCSVM_EMPIRICAL_V1",
-            "modelVersion": online_svm.model_version,
-            "affectsProductionDecision": False,
-        }
-        summary["onlineOneClassSvmShadow"] = {
-            "modelVersion": online_svm.model_version,
-            "modelType": "ONLINE_ONE_CLASS_SVM",
-            "modelSegment": online_svm.model_segment,
-            "rawScore": raw_score,
-            "normalizedScore": normalized_score,
-            "rawThreshold": online_svm.raw_threshold,
-            "anomaly": anomaly,
-            "predictionDurationMs": round((__import__("time").perf_counter() - started) * 1000, 3),
-            "affectsProductionDecision": False,
-        }
     return ComparisonPredictResponse(
         transactionId=req.transactionId,
         accountId=req.accountId,
@@ -534,15 +481,25 @@ def train_models_endpoint(req: TrainModelRequest) -> TrainModelResponse:
             evaluation_rows = [t.model_dump() for t in req.evaluationTransactions]
             evaluation_df = _normalize_training_df(evaluation_rows)
         target_models_dir = os.path.abspath(MODELS_DIR if not req.outputSubdir else os.path.join(MODELS_DIR, req.outputSubdir))
-        selected_models = req.modelNames or DEFAULT_TRAINING_MODELS
-
-        trained_rows, feature_count, metrics = train_from_transactions_df(
-            df,
-            target_models_dir,
-            hyperparams=req.hyperparams,
-            model_names=selected_models,
-            evaluation_transactions_df=evaluation_df,
-        )
+        learning_mode = req.learningMode.strip().upper()
+        if learning_mode == "SUPERVISED":
+            from app.supervised_training import SUPPORTED_MODELS, train_supervised_from_transactions_df
+            selected_models = req.modelNames or SUPPORTED_MODELS
+            trained_rows, feature_count, metrics = train_supervised_from_transactions_df(
+                df, target_models_dir, hyperparams=req.hyperparams, model_names=selected_models
+            )
+        elif learning_mode == "UNSUPERVISED":
+            selected_models = req.modelNames or DEFAULT_TRAINING_MODELS
+            trained_rows, feature_count, metrics = train_from_transactions_df(
+                df,
+                target_models_dir,
+                hyperparams=req.hyperparams,
+                model_names=selected_models,
+                evaluation_transactions_df=evaluation_df,
+            )
+        else:
+            raise ValueError("learningMode must be SUPERVISED or UNSUPERVISED")
+        _clear_artifact_caches()
 
         # Reload in-memory models so predict uses latest artifacts without restart
         global MODELS
@@ -567,40 +524,15 @@ def train_models_endpoint(req: TrainModelRequest) -> TrainModelResponse:
         raise HTTPException(status_code=500, detail=f"Training failed: {ex}")
 
 
-@app.post("/api/v1/aml/training/incremental", response_model=IncrementalTrainingResponse)
-def train_incremental_endpoint(req: IncrementalTrainingRequest) -> IncrementalTrainingResponse:
-    trainers = {
-        "HALF_SPACE_TREES": train_half_space_trees,
-        "ONLINE_ONE_CLASS_SVM": train_online_one_class_svm,
-    }
-    trainer = trainers.get(req.modelType)
-    if trainer is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Incremental training supports HALF_SPACE_TREES and ONLINE_ONE_CLASS_SVM",
-        )
-    try:
-        result = trainer(
-            dataset_path=req.datasetPath,
-            dataset_checksum=req.datasetChecksum,
-            artifact_base_path=req.artifactBasePath,
-            model_version=req.modelVersion,
-            model_segment=req.modelSegment,
-            feature_version=req.featureVersion,
-            training_run_id=req.trainingRunId,
-            base_model_path=req.baseModelPath,
-            parameters=req.parameters,
-        )
-        return IncrementalTrainingResponse(**result)
-    except ValueError as exception:
-        raise HTTPException(status_code=400, detail=str(exception))
-    except Exception as exception:
-        raise HTTPException(status_code=500, detail=f"Incremental training failed: {exception}")
-
-
 @app.post("/api/v1/aml/research/growth-analysis", response_model=GrowthAnalysisResponse)
 def growth_analysis_endpoint(req: GrowthAnalysisRequest) -> GrowthAnalysisResponse:
     try:
+        if req.learningMode.strip().upper() == "SUPERVISED":
+            from app.research.supervised_growth_analysis import analyze_supervised_growth
+            return GrowthAnalysisResponse(**analyze_supervised_growth(
+                req.datasetPath, req.datasetChecksum, req.percentages, req.minimumRows,
+                req.maximumEvaluationRows, req.randomSeed, req.hyperparams
+            ))
         result = analyze_detector_growth(
             req.datasetPath,
             req.datasetChecksum,
@@ -612,9 +544,10 @@ def growth_analysis_endpoint(req: GrowthAnalysisRequest) -> GrowthAnalysisRespon
                 isolation_forest_max_training_rows=req.isolationForestMaximumTrainingRows,
                 isolation_forest_estimators=req.isolationForestEstimators,
                 autoencoder_max_training_rows=req.autoencoderMaxTrainingRows,
+                lof_max_training_rows=req.localOutlierFactorMaxTrainingRows,
+                lof_n_neighbors=req.localOutlierFactorNeighbors,
+                lof_contamination=req.localOutlierFactorContamination,
                 random_seed=req.randomSeed,
-                half_space_trees_parameters=req.halfSpaceTreesParameters,
-                online_one_class_svm_parameters=req.onlineOneClassSvmParameters,
             ),
         )
         return GrowthAnalysisResponse(**result)
@@ -633,9 +566,7 @@ def model_agreement_endpoint(req: ModelAgreementRequest) -> Dict[str, Any]:
         return analyze_model_agreement(
             dataset_path=req.datasetPath,
             dataset_checksum=req.datasetChecksum,
-            batch_models_dir=req.batchModelsDir,
-            hst_bundle_path=req.hstBundlePath,
-            online_ocsvm_bundle_path=req.onlineOcsvmBundlePath,
+            model_bundle_path=req.modelBundlePath,
         )
     except ValueError as exception:
         raise HTTPException(status_code=400, detail=str(exception))
@@ -651,6 +582,9 @@ def _build_training_artifacts(models_dir: str, selected_models: list[str]) -> Di
         "EllipticEnvelope": ("ellipticEnvelope", "elliptic_envelope.pkl"),
         "PCAReconstruction": ("pcaReconstruction", "pca_reconstruction.pkl"),
         "Autoencoder": ("autoencoder", "autoencoder.pkl"),
+        "XGBoost": ("xgboost", "xgboost_classifier.pkl"),
+        "RandomForestClassifier": ("randomForestClassifier", "random_forest_classifier.pkl"),
+        "LogisticRegression": ("logisticRegression", "logistic_regression.pkl"),
     }
     artifacts: Dict[str, str] = {
         "scaler": os.path.join(models_dir, "scaler.pkl"),
@@ -677,6 +611,7 @@ def _normalize_training_df(rows: list[dict]) -> "pd.DataFrame":
         "accountBalance": "account_balance",
         "customerAge": "customer_age",
         "customerOccupation": "customer_occupation",
+        "fraudLabel": "fraud_label",
     }
     df = df.rename(columns=rename_map)
     # Ensure required columns exist

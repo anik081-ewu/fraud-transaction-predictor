@@ -65,11 +65,7 @@ public class AgreementStudyService {
             Map<String, Object> request = new HashMap<>();
             request.put("datasetPath", run.datasetPath());
             request.put("datasetChecksum", run.datasetChecksum());
-            // All batch models share one artifact bundle, so any of their registry entries
-            // resolves the same directory.
-            request.put("batchModelsDir", batchArtifactDirectory(run));
-            request.put("hstBundlePath", artifactPath("HALF_SPACE_TREES", run));
-            request.put("onlineOcsvmBundlePath", artifactPath("ONLINE_ONE_CLASS_SVM", run));
+            request.put("modelBundlePath", modelArtifactDirectory(run));
 
             Map<String, Object> result = client.analyze(request);
             repository.complete(
@@ -98,8 +94,8 @@ public class AgreementStudyService {
         return repository.listRecent(20);
     }
 
-    private String batchArtifactDirectory(AmlTrainingRun run) {
-        for (String modelType : List.of("ISOLATION_FOREST", "ONE_CLASS_SVM", "AUTOENCODER")) {
+    private String modelArtifactDirectory(AmlTrainingRun run) {
+        for (String modelType : List.of("ISOLATION_FOREST", "AUTOENCODER", "LOCAL_OUTLIER_FACTOR")) {
             String path = artifactPath(modelType, run);
             if (path != null) return path;
         }

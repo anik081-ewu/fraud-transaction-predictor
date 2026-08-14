@@ -13,8 +13,24 @@ public record GrowthAnalysisRequest(
         int isolationForestMaximumTrainingRows,
         int isolationForestEstimators,
         int autoencoderMaxTrainingRows,
+        int localOutlierFactorMaxTrainingRows,
+        int localOutlierFactorNeighbors,
+        double localOutlierFactorContamination,
         int randomSeed,
-        Map<String, Object> halfSpaceTreesParameters,
-        Map<String, Object> onlineOneClassSvmParameters
+        String learningMode,
+        Map<String, Object> hyperparams
 ) {
+    public GrowthAnalysisRequest(
+            String datasetPath, String datasetChecksum, List<Integer> percentages, int minimumRows,
+            double holdoutFraction, int maximumEvaluationRows, int isolationForestMaximumTrainingRows,
+            int isolationForestEstimators, int autoencoderMaxTrainingRows,
+            int localOutlierFactorMaxTrainingRows, int localOutlierFactorNeighbors,
+            double localOutlierFactorContamination, int randomSeed
+    ) {
+        this(datasetPath, datasetChecksum, percentages, minimumRows, holdoutFraction,
+                maximumEvaluationRows, isolationForestMaximumTrainingRows,
+                isolationForestEstimators, autoencoderMaxTrainingRows,
+                localOutlierFactorMaxTrainingRows, localOutlierFactorNeighbors,
+                localOutlierFactorContamination, randomSeed, "UNSUPERVISED", Map.of());
+    }
 }

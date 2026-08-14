@@ -6,24 +6,20 @@ from dataclasses import dataclass
 from typing import Any, Iterable, NamedTuple
 
 import numpy as np
-from river import anomaly, preprocessing, stats
 from scipy.stats import skew as scipy_skew
 from sklearn.ensemble import IsolationForest
 from sklearn.neural_network import MLPRegressor
+from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import OneClassSVM
 
-from app.incremental.online_one_class_svm import _new_pipeline as new_online_ocsvm
 from app.incremental.parquet_dataset import PersistedFeatureDataset
 from app.quality_metrics import excess_mass_auc, uniform_reference_matrix
 
 
 DETECTORS = (
     "ISOLATION_FOREST",
-    "ONE_CLASS_SVM",
     "AUTOENCODER",
-    "HALF_SPACE_TREES",
-    "ONLINE_ONE_CLASS_SVM",
+    "LOCAL_OUTLIER_FACTOR",
 )
 
 
@@ -52,15 +48,13 @@ class GrowthAnalysisOptions:
     isolation_forest_max_training_rows: int = 100_000
     isolation_forest_estimators: int = 200
     isolation_forest_max_samples: int = 10_000
-    ocsvm_max_training_rows: int = 1_000_000
-    ocsvm_nu: float = 0.05
     autoencoder_max_training_rows: int = 50_000
     autoencoder_hidden_layer_sizes: tuple[int, ...] = (32, 8, 32)
     autoencoder_max_iter: int = 200
-    half_space_trees_n_trees: int = 50
+    lof_max_training_rows: int = 50_000
+    lof_n_neighbors: int = 35
+    lof_contamination: float = 0.05
     random_seed: int = 42
-    half_space_trees_parameters: dict[str, Any] | None = None
-    online_one_class_svm_parameters: dict[str, Any] | None = None
 
 
 def analyze_detector_growth(
@@ -103,6 +97,8 @@ def analyze_detector_growth(
             "isolationForestEstimators": options.isolation_forest_estimators,
             "autoencoderMaxTrainingRows": options.autoencoder_max_training_rows,
             "autoencoderHiddenLayers": list(options.autoencoder_hidden_layer_sizes),
+            "localOutlierFactorMaxTrainingRows": options.lof_max_training_rows,
+            "localOutlierFactorNeighbors": options.lof_n_neighbors,
             "labelsAvailable": False,
             "scoringVersion": "2.0",
             "qualityStatement": (
@@ -131,14 +127,10 @@ def _evaluate_detector(
     reference = uniform_reference_matrix(evaluation, seed=options.random_seed)
     if detector == "ISOLATION_FOREST":
         result = _isolation_forest(dataset, columns, training_rows, evaluation, reference, options)
-    elif detector == "ONE_CLASS_SVM":
-        result = _one_class_svm(dataset, columns, training_rows, evaluation, reference, options)
     elif detector == "AUTOENCODER":
         result = _autoencoder(dataset, columns, training_rows, evaluation, reference, options)
-    elif detector == "HALF_SPACE_TREES":
-        result = _half_space_trees(dataset, columns, training_rows, evaluation, reference, options)
     else:
-        result = _online_ocsvm(dataset, columns, training_rows, evaluation, reference, options)
+        result = _local_outlier_factor(dataset, columns, training_rows, evaluation, reference, options)
     scores, threshold, learned_rows = result.scores, result.threshold, result.learned_rows
     duration_ms = (time.perf_counter() - started) * 1000.0
     anomaly_flags = scores >= threshold
@@ -193,7 +185,7 @@ def _isolation_forest(
     )
 
 
-def _one_class_svm(
+def _local_outlier_factor(
     dataset: PersistedFeatureDataset,
     columns: list[str],
     training_rows: int,
@@ -201,16 +193,25 @@ def _one_class_svm(
     reference: np.ndarray,
     options: GrowthAnalysisOptions,
 ) -> DetectorScores:
-    learned_rows = min(training_rows, options.ocsvm_max_training_rows)
+    learned_rows = min(training_rows, options.lof_max_training_rows)
     training = _matrix(dataset.iter_feature_range(0, learned_rows), columns)
     scaler = StandardScaler().fit(training)
-    model = OneClassSVM(kernel="rbf", nu=options.ocsvm_nu, gamma="auto")
-    model.fit(scaler.transform(training))
-    training_scores = -model.score_samples(scaler.transform(training))
-    scores = -model.score_samples(scaler.transform(evaluation))
-    reference_scores = -model.score_samples(scaler.transform(reference))
+    scaled_training = scaler.transform(training)
+    neighbors = max(2, min(options.lof_n_neighbors, learned_rows - 1))
+    model = LocalOutlierFactor(
+        n_neighbors=neighbors,
+        contamination=options.lof_contamination,
+        novelty=True,
+        n_jobs=-1,
+    ).fit(scaled_training)
+    training_scores = -model.decision_function(scaled_training)
+    scores = -model.decision_function(scaler.transform(evaluation))
+    reference_scores = -model.decision_function(scaler.transform(reference))
     return DetectorScores(
-        scores, float(np.quantile(training_scores, 0.99)), learned_rows, reference_scores
+        scores,
+        float(np.quantile(training_scores, 1.0 - options.lof_contamination)),
+        learned_rows,
+        reference_scores,
     )
 
 
@@ -251,67 +252,6 @@ def _autoencoder(
         reconstruction_error(reference),
     )
 
-
-def _half_space_trees(
-    dataset: PersistedFeatureDataset,
-    columns: list[str],
-    training_rows: int,
-    evaluation: np.ndarray,
-    reference: np.ndarray,
-    options: GrowthAnalysisOptions,
-) -> DetectorScores:
-    parameters = options.half_space_trees_parameters or {}
-    window_size = int(parameters.get("windowSize", 250))
-    pipeline = preprocessing.MinMaxScaler() | anomaly.HalfSpaceTrees(
-        n_trees=int(parameters.get("nTrees", options.half_space_trees_n_trees)),
-        height=int(parameters.get("height", 8)),
-        window_size=window_size,
-        seed=int(parameters.get("seed", options.random_seed)),
-    )
-    threshold_estimator = stats.Quantile(float(parameters.get("thresholdQuantile", 0.99)))
-    calibration_rows = 0
-    warmup = min(window_size, max(20, training_rows // 3))
-    for row_number, features in enumerate(dataset.iter_feature_range(0, training_rows)):
-        aligned = _aligned(features, columns)
-        if row_number >= warmup:
-            threshold_estimator.update(float(pipeline.score_one(aligned)))
-            calibration_rows += 1
-        pipeline.learn_one(aligned)
-    threshold = _streaming_quantile(threshold_estimator, calibration_rows)
-    scores = np.asarray([pipeline.score_one(_row(columns, row)) for row in evaluation], dtype=float)
-    reference_scores = np.asarray(
-        [pipeline.score_one(_row(columns, row)) for row in reference], dtype=float
-    )
-    return DetectorScores(scores, threshold, training_rows, reference_scores)
-
-
-def _online_ocsvm(
-    dataset: PersistedFeatureDataset,
-    columns: list[str],
-    training_rows: int,
-    evaluation: np.ndarray,
-    reference: np.ndarray,
-    options: GrowthAnalysisOptions,
-) -> DetectorScores:
-    parameters = dict(options.online_one_class_svm_parameters or {})
-    parameters.setdefault("seed", options.random_seed)
-    pipeline = new_online_ocsvm(parameters)
-    for features in dataset.iter_feature_range(0, training_rows):
-        pipeline.learn_one(_aligned(features, columns))
-    threshold_estimator = stats.Quantile(float(parameters.get("thresholdQuantile", 0.99)))
-    calibration_rows = 0
-    for features in dataset.iter_feature_range(0, training_rows):
-        threshold_estimator.update(float(pipeline.score_one(_aligned(features, columns))))
-        calibration_rows += 1
-    scores = np.asarray([pipeline.score_one(_row(columns, row)) for row in evaluation], dtype=float)
-    reference_scores = np.asarray(
-        [pipeline.score_one(_row(columns, row)) for row in reference], dtype=float
-    )
-    return DetectorScores(
-        scores, _streaming_quantile(threshold_estimator, calibration_rows), training_rows, reference_scores
-    )
-
-
 def _partition_sizes(total: int, percentages: tuple[int, ...], minimum: int) -> list[tuple[int, int]]:
     if total < minimum:
         raise ValueError(f"At least {minimum} eligible rows are required for growth analysis")
@@ -332,36 +272,6 @@ def _matrix(rows: Iterable[dict[str, float]], columns: list[str]) -> np.ndarray:
     if matrix.ndim != 2 or matrix.shape[0] == 0:
         raise ValueError("Growth-analysis partition contains no rows")
     return matrix
-
-
-def _batches(
-    rows: Iterable[dict[str, float]], columns: list[str], batch_size: int
-) -> Iterable[np.ndarray]:
-    pending: list[list[float]] = []
-    for features in rows:
-        pending.append([float(features.get(name, 0.0)) for name in columns])
-        if len(pending) >= batch_size:
-            yield np.asarray(pending, dtype=float)
-            pending = []
-    if pending:
-        yield np.asarray(pending, dtype=float)
-
-
-def _aligned(features: dict[str, float], columns: list[str]) -> dict[str, float]:
-    return {name: float(features.get(name, 0.0)) for name in columns}
-
-
-def _row(columns: list[str], values: np.ndarray) -> dict[str, float]:
-    return {name: float(value) for name, value in zip(columns, values, strict=True)}
-
-
-def _streaming_quantile(estimator: stats.Quantile, observed_rows: int) -> float:
-    value = estimator.get()
-    if observed_rows == 0 or value is None or not math.isfinite(float(value)):
-        raise ValueError("Detector produced insufficient finite calibration scores")
-    return float(value)
-
-
 
 
 def _score_skewness_normalized(scores: np.ndarray) -> float:

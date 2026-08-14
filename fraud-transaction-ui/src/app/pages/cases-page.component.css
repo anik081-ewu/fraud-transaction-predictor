@@ -120,6 +120,10 @@
   padding: 0 10px 14px;
 }
 
+.queue-pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-top: 1px solid #e2e8f0; }
+.queue-pagination button { width: auto; margin: 0; padding: 7px 10px; color: #1d4ed8; border-color: #bfdbfe; background: #fff; }
+.queue-pagination span { color: #64748b; font-size: .75rem; text-align: center; }
+
 .case-list-item {
   width: 100%;
   display: flex;

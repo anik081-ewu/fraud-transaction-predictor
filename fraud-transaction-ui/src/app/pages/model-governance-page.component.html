@@ -91,8 +91,6 @@
         <div><span>Reviewed precision</span><strong>{{ rate(report.metrics.reviewedPrecision) }}</strong></div>
         <div><span>P95 latency</span><strong>{{ report.metrics.predictionLatencyP95Ms == null ? '—' : (report.metrics.predictionLatencyP95Ms | number:'1.0-1') + ' ms' }}</strong></div>
         <div><span>Score P50 / P95</span><strong>{{ rate(report.metrics.layeredScoreP50) }} / {{ rate(report.metrics.layeredScoreP95) }}</strong></div>
-        <div><span>HST availability</span><strong>{{ rate(report.metrics.hstAvailabilityRate) }}</strong></div>
-        <div><span>Online OCSVM availability</span><strong>{{ rate(report.metrics.onlineOcSvmAvailabilityRate) }}</strong></div>
       </div>
 
       <div class="validation-failure" *ngIf="report.blockingReasons.length">
@@ -136,7 +134,7 @@
         <span class="page-eyebrow">Production routing</span>
         <h3>Active model pointers</h3>
       </div>
-      <span class="fallback-note">Isolation Forest is the batch fallback for unavailable incremental models</span>
+      <span class="fallback-note">Approved models use one governed deployment workflow</span>
     </div>
     <div class="active-scope-grid" *ngIf="activeModels().length; else noChampions">
       <article *ngFor="let pointer of activeModels()">
@@ -162,7 +160,7 @@
       <div class="section-title">
         <div>
           <span class="page-eyebrow">Registry</span>
-          <h3>Half-Space Trees versions</h3>
+          <h3>Unsupervised model versions</h3>
         </div>
         <span>{{ models().length }} versions</span>
       </div>
@@ -186,7 +184,7 @@
         </button>
       </div>
       <ng-template #noModels>
-        <div class="empty-governance-state">No governed HST model has been registered.</div>
+        <div class="empty-governance-state">No governed unsupervised model has been registered.</div>
       </ng-template>
     </section>
 

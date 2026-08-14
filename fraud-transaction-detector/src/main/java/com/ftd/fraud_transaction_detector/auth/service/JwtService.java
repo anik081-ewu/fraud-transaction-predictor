@@ -54,6 +54,10 @@ public class JwtService {
             if (parts.length != 3) {
                 throw new IllegalArgumentException("Invalid token format");
             }
+            Map<String, Object> header = objectMapper.readValue(Base64.getUrlDecoder().decode(parts[0]), Map.class);
+            if (!"HS256".equals(header.get("alg"))) {
+                throw new IllegalArgumentException("Unsupported token algorithm");
+            }
             String expectedSignature = sign(parts[0] + "." + parts[1]);
             if (!MessageDigest.isEqual(
                     expectedSignature.getBytes(StandardCharsets.UTF_8),
@@ -62,6 +66,9 @@ public class JwtService {
                 throw new IllegalArgumentException("Invalid token signature");
             }
             Map<String, Object> payload = objectMapper.readValue(Base64.getUrlDecoder().decode(parts[1]), Map.class);
+            if (payload.get("sub") == null || String.valueOf(payload.get("sub")).isBlank()) {
+                throw new IllegalArgumentException("Token subject is missing");
+            }
             Number expiry = (Number) payload.get("exp");
             if (expiry == null || Instant.now().getEpochSecond() > expiry.longValue()) {
                 throw new IllegalArgumentException("Token expired");

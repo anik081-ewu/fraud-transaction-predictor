@@ -297,32 +297,14 @@ public class TransactionCreateService {
         log.setLearningDecision(learningDecision.status().name());
         log.setLearningDecisionReason(learningDecision.reason());
         log.setReasonCodes(toJsonSafe(response.reasons()));
-        applyIncrementalModelMetadata(response, log);
-        applyBatchBenchmark(response, log);
+        applyIsolationForestBenchmark(response, log);
         applyLayeredRiskMetadata(response, log);
         log.setRequestJson(toJsonSafe(request));
         log.setResponseJson(toJsonSafe(response));
         fraudPredictionLogRepository.save(log);
     }
 
-    private void applyIncrementalModelMetadata(FraudPredictionResponse response, FraudPredictionLog log) {
-        if (response.featureSummary() == null) return;
-        Map<?, ?> model;
-        Object active = response.featureSummary().get("activeModel");
-        if (active instanceof Map<?, ?> activeModel) {
-            model = activeModel;
-        } else {
-            Object silent = response.featureSummary().get("silentChallenger");
-            if (!(silent instanceof Map<?, ?> challenger)) return;
-            model = challenger;
-        }
-        Object modelVersion = model.get("modelVersion");
-        Object score = model.get("score");
-        if (modelVersion != null) log.setModelVersion(modelVersion.toString());
-        if (score instanceof Number number) log.setIncrementalModelScore(number.doubleValue());
-    }
-
-    private void applyBatchBenchmark(FraudPredictionResponse response, FraudPredictionLog log) {
+    private void applyIsolationForestBenchmark(FraudPredictionResponse response, FraudPredictionLog log) {
         if (response.modelResults() == null) return;
         Object raw = response.modelResults().get("IsolationForest");
         if (!(raw instanceof Map<?, ?> result)) return;

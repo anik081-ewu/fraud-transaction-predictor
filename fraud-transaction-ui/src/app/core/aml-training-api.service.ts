@@ -8,6 +8,8 @@ import {
   GrowthStudy,
   LayerAblationReport,
   SystemHealth,
+  SupervisedGrowthReport,
+  SupervisedGrowthStudy,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +40,21 @@ export class AmlTrainingApiService {
     return this.http.post<AmlTrainingRun>(`${this.baseUrl}/api/v1/aml/training-runs/${trainingRunId}/dataset`, {});
   }
 
+  runSupervisedGrowthAnalysis(trainingRunId: string) {
+    return this.http.post<SupervisedGrowthStudy>(
+      `${this.baseUrl}/api/v1/aml/supervised-growth-studies/training-runs/${trainingRunId}?requestedBy=supervised-comparison-ui`,
+      { percentages: [10, 25, 50, 100], minimumRows: 200, maximumEvaluationRows: 200000 }
+    );
+  }
+
+  latestSupervisedGrowthStudy() {
+    return this.http.get<SupervisedGrowthStudy | null>(`${this.baseUrl}/api/v1/aml/supervised-growth-studies/latest`);
+  }
+
+  getSupervisedGrowthStudy(studyId: string) {
+    return this.http.get<SupervisedGrowthStudy>(`${this.baseUrl}/api/v1/aml/supervised-growth-studies/${studyId}`);
+  }
+
   startPipeline(payload: {
     featureVersion: string;
     modelSegment: string | null;
@@ -45,27 +62,20 @@ export class AmlTrainingApiService {
     toBusinessDate: string;
     cutoffTimestamp: string;
     requestedBy: string;
+    learningMode: 'UNSUPERVISED' | 'SUPERVISED';
+    selectedModels: string[];
   }) {
     return this.http.post<AmlTrainingRun>(`${this.baseUrl}/api/v1/aml/training-runs/pipeline/start`, payload);
   }
 
   trainProductionCandidates(trainingRunId: string, requestedBy: string, selectedModels: string[]) {
     return this.http.post<{
-      trainingRuns: AmlTrainingRun[];
-      incrementalModels: string[];
-      batchModels: string[];
-      batchTrainingStatus?: string | null;
-      batchTrainingMessage?: string | null;
+      trainedModels: string[];
+      trainingStatus?: string | null;
+      trainingMessage?: string | null;
     }>(
       `${this.baseUrl}/api/v1/aml/training-runs/${trainingRunId}/production-candidates`,
       { requestedBy, selectedModels }
-    );
-  }
-
-  retryIncrementalTraining(trainingRunId: string, requestedBy: string) {
-    return this.http.post<AmlTrainingRun>(
-      `${this.baseUrl}/api/v1/aml/training-runs/${trainingRunId}/incremental-training`,
-      { requestedBy }
     );
   }
 

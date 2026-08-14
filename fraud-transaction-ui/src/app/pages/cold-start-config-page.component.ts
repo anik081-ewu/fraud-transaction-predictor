@@ -7,13 +7,13 @@ import { AlertService } from '../core/alert.service';
 import { ColdStartConfigItem } from '../core/models';
 
 @Component({
-  selector: 'app-cold-start-config-page',
+  selector: 'app-settings-page',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './cold-start-config-page.component.html',
   styleUrl: './page.css'
 })
-export class ColdStartConfigPageComponent implements OnInit {
+export class SettingsPageComponent implements OnInit {
   private readonly api = inject(ComparisonApiService);
   private readonly alerts = inject(AlertService);
 
@@ -26,7 +26,7 @@ export class ColdStartConfigPageComponent implements OnInit {
   load(): void {
     this.api.listColdStartConfigs().subscribe({
       next: (items) => this.items.set(items),
-      error: (error) => this.alerts.error(this.extractMessage(error), 'Cold start settings unavailable'),
+      error: (error) => this.alerts.error(this.extractMessage(error), 'Settings unavailable'),
     });
   }
 
@@ -38,9 +38,9 @@ export class ColdStartConfigPageComponent implements OnInit {
     this.api.updateColdStartConfigs(values).subscribe({
       next: (items) => {
         this.items.set(items);
-        this.alerts.success('Cold start saved', 'Updated settings are now active.');
+        this.alerts.success('Settings saved', 'The selected system type and cold start policy are now active.');
       },
-      error: (error) => this.alerts.error(this.extractMessage(error), 'Cold start not saved'),
+      error: (error) => this.alerts.error(this.extractMessage(error), 'Settings not saved'),
     });
   }
 
@@ -48,12 +48,25 @@ export class ColdStartConfigPageComponent implements OnInit {
     const labels: Record<string, string> = {
       'ml.cold_start.enabled': 'Cold Start Handling',
       'ml.min_transaction_count_before_predict': 'Minimum Transaction History',
+      'system.learning_mode': 'System Type',
     };
     return labels[configKey] ?? configKey;
   }
 
   isBoolean(item: ColdStartConfigItem): boolean {
     return item.configKey === 'ml.cold_start.enabled';
+  }
+
+  isSystemType(item: ColdStartConfigItem): boolean {
+    return item.configKey === 'system.learning_mode';
+  }
+
+  systemTypeItem(): ColdStartConfigItem | undefined {
+    return this.items().find((item) => this.isSystemType(item));
+  }
+
+  coldStartItems(): ColdStartConfigItem[] {
+    return this.items().filter((item) => !this.isSystemType(item));
   }
 
   private extractMessage(error: unknown): string {

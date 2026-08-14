@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -26,11 +28,22 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        String violations = Stream.concat(
+                        ex.getBindingResult().getFieldErrors().stream()
+                                .map(error -> error.getField() + " " + error.getDefaultMessage()),
+                        ex.getBindingResult().getGlobalErrors().stream()
+                                .map(error -> error.getDefaultMessage() == null
+                                        ? error.getObjectName() + " is invalid"
+                                        : error.getDefaultMessage())
+                )
+                .sorted()
+                .collect(Collectors.joining("; "));
+        String message = violations.isBlank() ? "Validation failed" : "Validation failed: " + violations;
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiError(
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "Validation failed",
+                message,
                 request.getRequestURI()
         ));
     }

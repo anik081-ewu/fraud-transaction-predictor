@@ -3,6 +3,7 @@ package com.ftd.fraud_transaction_detector.uploads.service;
 import com.opencsv.CSVReader;
 import com.ftd.fraud_transaction_detector.comparison.dto.UploadedDatasetResponse;
 import com.ftd.fraud_transaction_detector.comparison.service.UploadedDatasetService;
+import com.ftd.fraud_transaction_detector.config.service.AppConfigService;
 import com.ftd.fraud_transaction_detector.fraud.service.ModelTrainingService;
 import com.ftd.fraud_transaction_detector.transactions.entity.Transaction;
 import com.ftd.fraud_transaction_detector.transactions.repo.TransactionRepository;
@@ -56,6 +57,7 @@ public class ExcelBulkUploadService {
     private final TaskExecutor taskExecutor;
     private final Environment environment;
     private final BulkUploadAsyncProcessor asyncProcessor;
+    private final AppConfigService appConfigService;
 
     public ExcelBulkUploadService(
             BulkUploadBatchRepository batchRepository,
@@ -64,7 +66,8 @@ public class ExcelBulkUploadService {
             ModelTrainingService modelTrainingService,
             TaskExecutor taskExecutor,
             Environment environment,
-            BulkUploadAsyncProcessor asyncProcessor
+            BulkUploadAsyncProcessor asyncProcessor,
+            AppConfigService appConfigService
     ) {
         this.batchRepository = batchRepository;
         this.transactionRepository = transactionRepository;
@@ -73,6 +76,7 @@ public class ExcelBulkUploadService {
         this.taskExecutor = taskExecutor;
         this.environment = environment;
         this.asyncProcessor = asyncProcessor;
+        this.appConfigService = appConfigService;
     }
 
     public BulkUploadStartResponse startUpload(MultipartFile file, String uploadedBy) throws java.io.IOException {
@@ -234,6 +238,7 @@ public class ExcelBulkUploadService {
             }
             Map<String, Integer> headerIndex = buildHeaderIndex(headerRow);
             validateRequiredColumns(headerIndex);
+            validateLearningModeColumns(headerIndex, appConfigService.getLearningMode());
 
             for (int r = 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
@@ -265,6 +270,7 @@ public class ExcelBulkUploadService {
             }
             Map<String, Integer> headerIndex = buildHeaderIndex(header);
             validateRequiredColumns(headerIndex);
+            validateLearningModeColumns(headerIndex, appConfigService.getLearningMode());
 
             String[] row;
             int rowNumber = 1;
@@ -290,6 +296,14 @@ public class ExcelBulkUploadService {
             if (!headerIndex.containsKey(required)) {
                 throw new IllegalArgumentException("Missing required column: " + required);
             }
+        }
+    }
+
+    static void validateLearningModeColumns(Map<String, Integer> headerIndex, String learningMode) {
+        if ("SUPERVISED".equalsIgnoreCase(learningMode) && !headerIndex.containsKey("fraud_label")) {
+            throw new IllegalArgumentException(
+                    "Supervised Learning requires a FraudLabel column containing 1, 0, or blank values"
+            );
         }
     }
 
@@ -366,6 +380,7 @@ public class ExcelBulkUploadService {
         txn.setSourceType("BULK_UPLOAD");
         txn.setUploadBatchId(uploadBatchId);
         txn.setCreatedAt(Instant.now());
+        applyFraudLabel(txn, readOptionalInt(row, headerIndex, "fraud_label"));
         return txn;
     }
 
@@ -390,7 +405,19 @@ public class ExcelBulkUploadService {
         txn.setSourceType("BULK_UPLOAD");
         txn.setUploadBatchId(uploadBatchId);
         txn.setCreatedAt(Instant.now());
+        applyFraudLabel(txn, readOptionalInt(row, headerIndex, "fraud_label"));
         return txn;
+    }
+
+    private static void applyFraudLabel(Transaction transaction, Integer label) {
+        if (label == null) return;
+        if (label != 0 && label != 1) {
+            throw new IllegalArgumentException("fraud_label must be 0, 1, or blank");
+        }
+        transaction.setFraudLabel(label == 1);
+        transaction.setLabelSource("IMPORTED_DATASET");
+        transaction.setLabeledBy("bulk-upload");
+        transaction.setLabeledAt(Instant.now());
     }
 
     static String readRequiredString(Row row, Map<String, Integer> headerIndex, String col) {

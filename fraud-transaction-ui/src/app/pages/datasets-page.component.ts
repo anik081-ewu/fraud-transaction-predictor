@@ -16,10 +16,8 @@ import {
 
 const MODEL_TYPES = [
   'ISOLATION_FOREST',
-  'ONE_CLASS_SVM',
   'AUTOENCODER',
-  'HALF_SPACE_TREES',
-  'ONLINE_ONE_CLASS_SVM',
+  'LOCAL_OUTLIER_FACTOR',
 ] as const;
 
 const STATUS_RANK: Record<string, number> = {
@@ -336,11 +334,6 @@ export class DatasetsPageComponent implements OnInit {
       .find((m) => m.detector === detector && m.partitionPercentage === partition);
   }
 
-  /** True for detectors that forget older data, so a falling curve is window behaviour. */
-  isStreamingDetector(detector: string): boolean {
-    return detector === 'HALF_SPACE_TREES' || detector === 'ONLINE_ONE_CLASS_SVM';
-  }
-
   hasBoundedCells(detector: string): boolean {
     return this.partitions().some((p) => this.metricFor(detector, p)?.boundedTrainingSample);
   }
@@ -388,16 +381,10 @@ export class DatasetsPageComponent implements OnInit {
   label(modelType: string): string {
     const labels: Record<string, string> = {
       ISOLATION_FOREST: 'Isolation Forest',
-      ONE_CLASS_SVM: 'One-Class SVM',
       AUTOENCODER: 'Autoencoder',
-      HALF_SPACE_TREES: 'Half-Space Trees',
-      ONLINE_ONE_CLASS_SVM: 'Online One-Class SVM',
+      LOCAL_OUTLIER_FACTOR: 'Local Outlier Factor',
     };
     return labels[modelType] ?? modelType.replaceAll('_', ' ');
-  }
-
-  family(modelType: string): string {
-    return ['HALF_SPACE_TREES', 'ONLINE_ONE_CLASS_SVM'].includes(modelType) ? 'Incremental' : 'Batch';
   }
 
   private metrics(entry: AmlModelRegistryEntry): Record<string, unknown> | null {

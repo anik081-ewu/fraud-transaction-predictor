@@ -3,7 +3,7 @@
     <div>
       <span class="page-eyebrow">Controlled learning pipeline</span>
       <h2>Training Operations</h2>
-      <p>Select a date range and start the pipeline. The backend exports the dataset and trains all models automatically. Risk Policy controls which results contribute to scoring decisions.</p>
+      <p>Select a date range and the models needed for this run. The backend creates one immutable snapshot so every selected model learns from exactly the same data.</p>
     </div>
     <button class="refresh-button" type="button" (click)="refresh()" [disabled]="loading()">
       {{ loading() ? 'Refreshing...' : 'Refresh status' }}
@@ -39,12 +39,39 @@
         <label>To date<input type="date" [(ngModel)]="toBusinessDate" /></label>
         <label class="wide">Cutoff timestamp<input type="datetime-local" [(ngModel)]="cutoffTimestamp" /></label>
       </div>
+      <div class="model-selection-heading">
+        <div><strong>Choose models for this run</strong><small>{{ learningMode() === 'SUPERVISED' ? 'Supervised mode — only labelled rows are used.' : 'Unsupervised mode — confirmed fraud labels are not required.' }}</small></div>
+        <span>{{ selectedModelKeys().length }} selected</span>
+      </div>
+      <div class="model-selector">
+        <label
+          class="model-check"
+          *ngFor="let model of availableModels()"
+          [class.selected]="isModelSelected(model.modelKey)"
+          [class.disabled]="isModelDisabled(model.modelKey)"
+        >
+          <input
+            type="checkbox"
+            [checked]="isModelSelected(model.modelKey)"
+            [disabled]="isModelDisabled(model.modelKey)"
+            (change)="toggleModel(model.modelKey)"
+          />
+          <span>
+            <strong>{{ model.displayName }} <em>{{ learningMode() === 'SUPERVISED' ? 'Supervised' : 'Unsupervised' }}</em></strong>
+            <small>{{ isModelDisabled(model.modelKey) ? 'Disabled in Model Tuning.' : model.purpose }}</small>
+          </span>
+        </label>
+      </div>
+      <aside class="supervised-note" *ngIf="learningMode() === 'SUPERVISED'">
+        <strong>FraudLabel is required</strong>
+        <span>Rows marked 1 are confirmed suspicious/fraud, rows marked 0 are confirmed legitimate, and blank labels are excluded from supervised training.</span>
+      </aside>
       <aside class="pipeline-plan">
         <strong>What happens after you click</strong>
         <ol>
           <li>A training run is created and locked to the selected date range.</li>
           <li>Feature rows are exported into an immutable snapshot.</li>
-          <li>All 5 models train on that snapshot automatically.</li>
+          <li>{{ selectedModelKeys().length }} selected model{{ selectedModelKeys().length === 1 ? '' : 's' }} train independently on that snapshot.</li>
         </ol>
         <small>Risk Policy determines which model scores count toward the fraud decision.</small>
       </aside>
@@ -52,7 +79,7 @@
         type="button"
         class="start-pipeline-btn"
         (click)="startPipeline()"
-        [disabled]="loading() || !featureVersion.trim()"
+        [disabled]="loading() || !featureVersion.trim() || selectedModelKeys().length === 0"
       >
         {{ loading() ? 'Starting…' : 'Create & Train' }}
       </button>
@@ -71,7 +98,10 @@
       <button class="run-row" type="button" *ngFor="let run of pagedRuns()" (click)="selectedRunId.set(run.trainingRunId)" [class.selected]="selectedRunId() === run.trainingRunId">
         <span><strong>{{ trainingTypeLabel(run.trainingType) }}</strong><small>{{ run.trainingRunId.slice(0, 8) }} · {{ run.createdAt | date:'medium' }}</small></span>
         <span><strong>{{ run.fromBusinessDate }} → {{ run.toBusinessDate }}</strong><small>{{ runPurpose(run) }} / {{ run.modelSegment || 'GLOBAL' }}</small></span>
-        <span><strong>{{ (run.exportedRowCount || run.learnedRowCount || 0) | number }}</strong><small>processed rows</small></span>
+        <span>
+          <strong>{{ (run.learnedRowCount || run.exportedRowCount || 0) | number }}</strong>
+          <small>{{ run.learnedRowCount ? 'learned rows' : 'snapshot rows' }}</small>
+        </span>
         <span class="status-chip" [ngClass]="statusClass(run.status)">{{ run.status.replaceAll('_', ' ') }}</span>
       </button>
     </div>
@@ -115,14 +145,5 @@
       </div>
     </div>
 
-    <button
-      *ngIf="canRetryTraining(run)"
-      class="retry-btn"
-      type="button"
-      (click)="retryTraining(run)"
-      [disabled]="actionRunId() === run.trainingRunId"
-    >
-      {{ actionRunId() === run.trainingRunId ? 'Retrying…' : 'Retry training' }}
-    </button>
   </section>
 </section>

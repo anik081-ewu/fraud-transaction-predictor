@@ -28,7 +28,7 @@ class LayeredProductionResponseFactoryTest {
         );
         FinalRiskResult layered = new FinalRiskResult(
                 "AML_RISK_POLICY_V2", 0.82, RiskBand.HIGH, true, false,
-                new ComponentScores(0.8, 0.7, 0.6, 0.9, 0.8, 0.85), List.of("HIGH_LAYERED_RISK")
+                new ComponentScores(0.8, 0.7, 0.85, 0.9), List.of("HIGH_LAYERED_RISK")
         );
         LayeredShadowComparison comparison = mock(LayeredShadowComparison.class);
         when(comparison.layeredResult()).thenReturn(layered);

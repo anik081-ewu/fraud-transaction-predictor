@@ -32,7 +32,7 @@ public class RealModelTrainingClient implements ModelTrainingClient {
     @Override
     public TrainModelResponse train(TrainModelRequest request) {
         try {
-            log.info("Training {} batch model(s) on {} rows (timeout {}s)",
+            log.info("Training {} model(s) on {} rows (timeout {}s)",
                     request.modelNames() == null ? 0 : request.modelNames().size(),
                     request.transactions() == null ? 0 : request.transactions().size(),
                     trainingTimeout.toSeconds());

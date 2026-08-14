@@ -10,6 +10,7 @@ import {
   DatasetPartition,
   ModelVersion,
   ModelTuningItem,
+  LearningModelCatalog,
   RiskPolicyConfig,
   RiskPolicyConfigUpdateRequest,
   UploadedDataset,
@@ -82,12 +83,12 @@ export class ComparisonApiService {
   }
 
   listColdStartConfigs() {
-    return this.http.get<ColdStartConfigItem[]>(`${this.baseUrl}/anomaly-model-comparisons/cold-start-config`);
+    return this.http.get<ColdStartConfigItem[]>(`${this.baseUrl}/anomaly-model-comparisons/settings`);
   }
 
   updateColdStartConfigs(values: Record<string, string>) {
     return this.http.put<ColdStartConfigItem[]>(
-      `${this.baseUrl}/anomaly-model-comparisons/cold-start-config`,
+      `${this.baseUrl}/anomaly-model-comparisons/settings`,
       { values }
     );
   }
@@ -95,6 +96,12 @@ export class ComparisonApiService {
   listModelTuning() {
     return this.http.get<ModelTuningItem[]>(
       `${this.baseUrl}/anomaly-model-comparisons/model-tuning`
+    );
+  }
+
+  getModelCatalog() {
+    return this.http.get<LearningModelCatalog[]>(
+      `${this.baseUrl}/anomaly-model-comparisons/model-catalog`
     );
   }
 

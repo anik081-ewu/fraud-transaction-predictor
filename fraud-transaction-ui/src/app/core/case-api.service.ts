@@ -1,15 +1,17 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { CaseRecord, PageResponse, TransactionRecord } from './models';
+import { CasePageResponse, CaseRecord, PageResponse, TransactionRecord } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class CaseApiService {
   private readonly http = inject(HttpClient);
   private readonly backendBaseUrl = 'http://localhost:8080';
 
-  listCases() {
-    return this.http.get<CaseRecord[]>(`${this.backendBaseUrl}/api/cases`);
+  listCases(query = '', status = 'ACTIVE', page = 0, size = 20) {
+    return this.http.get<CasePageResponse>(`${this.backendBaseUrl}/api/cases`, {
+      params: { query, status, page, size },
+    });
   }
 
   getCase(caseId: number) {

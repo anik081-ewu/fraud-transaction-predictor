@@ -1,6 +1,8 @@
 package com.ftd.fraud_transaction_detector.aml.feature.application;
 
 import com.ftd.fraud_transaction_detector.aml.profile.infrastructure.CustomerProfileRepository;
+import com.ftd.fraud_transaction_detector.aml.peer.application.PeerContextLoader;
+import com.ftd.fraud_transaction_detector.aml.feature.domain.PeerContext;
 import com.ftd.fraud_transaction_detector.transactions.entity.Transaction;
 import com.ftd.fraud_transaction_detector.transactions.repo.TransactionRepository;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ class FeatureContextLoaderTest {
     void loadsOnlyTransactionsBeforeTheCurrentEventTime() {
         TransactionRepository repository = mock(TransactionRepository.class);
         CustomerProfileRepository profileRepository = mock(CustomerProfileRepository.class);
+        PeerContextLoader peerContextLoader = mock(PeerContextLoader.class);
         LocalDateTime currentTime = LocalDateTime.of(2026, 8, 4, 12, 0);
         Transaction current = transaction("T4", 400, currentTime);
         current.setCustomerId("ACCOUNT-1");
@@ -30,8 +33,12 @@ class FeatureContextLoaderTest {
         when(repository.findTop30ByAccountIdAndTransactionDateLessThanOrderByTransactionDateDesc(
                 "ACCOUNT-1", currentTime
         )).thenReturn(List.of(prior));
+        when(peerContextLoader.load(
+                current.getCustomerOccupation(), current.getCustomerAge(), "ACCOUNT-1",
+                null, currentTime
+        )).thenReturn(PeerContext.empty());
 
-        var context = new FeatureContextLoader(repository, profileRepository).load(current);
+        var context = new FeatureContextLoader(repository, profileRepository, peerContextLoader).load(current);
 
         assertEquals("T4", context.currentTransaction().transactionId());
         assertEquals(List.of("T3"), context.recentTransactions().stream()

@@ -5,7 +5,6 @@ import com.ftd.fraud_transaction_detector.cases.service.CaseManagementService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,7 +17,15 @@ public class CaseManagementController {
     }
 
     @PostMapping public CaseResponse createCase(@RequestBody CreateCaseRequest request) { return caseManagementService.createCase(request); }
-    @GetMapping public List<CaseResponse> listCases() { return caseManagementService.listCases(); }
+    @GetMapping
+    public CasePageResponse listCases(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "ACTIVE") String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return caseManagementService.listCases(query, status, page, size);
+    }
     @GetMapping("/{caseId}") public CaseResponse getCase(@PathVariable Long caseId) { return caseManagementService.getCase(caseId); }
     @PutMapping("/{caseId}/status") public CaseResponse updateStatus(@PathVariable Long caseId, @RequestBody UpdateCaseStatusRequest request) { return caseManagementService.updateStatus(caseId, request); }
     @PostMapping("/{caseId}/notes") public CaseResponse addNote(@PathVariable Long caseId, @RequestBody AddCaseNoteRequest request) { return caseManagementService.addNote(caseId, request); }

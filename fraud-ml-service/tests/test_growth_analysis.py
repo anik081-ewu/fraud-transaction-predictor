@@ -37,7 +37,7 @@ class GrowthAnalysisTest(unittest.TestCase):
             )
 
         self.assertEqual(list(DETECTORS), report["detectors"])
-        self.assertEqual(4, len(report["results"]))
+        self.assertEqual(len(DETECTORS), len(report["results"]))
         evaluation_counts = [(result["detector"], result["evaluationRows"]) for result in report["results"]]
         self.assertTrue(all(count == 30 for _, count in evaluation_counts), evaluation_counts)
         isolation_forest = next(result for result in report["results"] if result["detector"] == "ISOLATION_FOREST")

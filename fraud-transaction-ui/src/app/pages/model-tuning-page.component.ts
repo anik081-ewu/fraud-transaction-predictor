@@ -1,27 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 import { ComparisonApiService } from '../core/comparison-api.service';
 import { AlertService } from '../core/alert.service';
 import { ModelTuningItem } from '../core/models';
 
-const GROUP_ORDER = [
-  'Evaluation Protocol',
-  'Half-Space Trees',
-  'Online One-Class SVM',
-  'Isolation Forest',
-  'One-Class SVM',
-  'Autoencoder',
-];
-
 const GROUP_DESCRIPTIONS: Record<string, string> = {
   'Evaluation Protocol': 'Controls chronological holdout size, evaluation row cap, minimum partition data, and the shared reproducibility seed used across all training and comparison runs.',
-  'Half-Space Trees': 'Incremental streaming model — updated continuously on live transaction windows. Hyperparameters apply to both production training and model comparison runs.',
-  'Online One-Class SVM': 'Incremental streaming model using bounded random Fourier features. Hyperparameters apply to both production training and model comparison runs.',
-  'Isolation Forest': 'Batch model trained on historical snapshots. Max samples per tree controls how many rows each tree sees — increasing it significantly improves anomaly signal on large datasets.',
-  'One-Class SVM': 'Batch RBF kernel model using gamma="auto" (1/n_features) for well-calibrated boundaries on high-dimensional data. Trains on all available rows by default.',
-  'Autoencoder': 'Batch neural reconstruction model — learns normal behaviour and flags high reconstruction error as anomalies. The bottleneck layer size controls compression strength.',
+  'Isolation Forest': 'Tree-based anomaly detector trained on the selected immutable transaction snapshot.',
+  'Autoencoder': 'Neural reconstruction detector that learns normal behaviour and flags high reconstruction error.',
+  'Local Outlier Factor': 'Local-density detector that identifies transactions unlike their nearest neighbours.',
+  'XGBoost': 'Gradient-boosted decision trees optimized for nonlinear fraud classification on labelled transactions.',
+  'Random Forest': 'Class-balanced tree ensemble providing a robust supervised benchmark.',
+  'Logistic Regression': 'Regularized, interpretable probability baseline for labelled fraud detection.',
 };
 
 @Component({
@@ -39,7 +32,8 @@ export class ModelTuningPageComponent implements OnInit {
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly message = signal('');
-  readonly groups = computed(() => GROUP_ORDER
+  readonly learningMode = signal<'UNSUPERVISED' | 'SUPERVISED'>('UNSUPERVISED');
+  readonly groups = computed(() => this.groupOrder()
     .map((name) => ({
       name,
       description: GROUP_DESCRIPTIONS[name],
@@ -54,8 +48,12 @@ export class ModelTuningPageComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.message.set('');
-    this.api.listModelTuning().subscribe({
-      next: (items) => this.items.set(items),
+    forkJoin({ tuning: this.api.listModelTuning(), settings: this.api.listColdStartConfigs() }).subscribe({
+      next: ({ tuning, settings }) => {
+        this.learningMode.set(settings.find((item) => item.configKey === 'system.learning_mode')?.configValue === 'SUPERVISED'
+          ? 'SUPERVISED' : 'UNSUPERVISED');
+        this.items.set(tuning);
+      },
       error: (error) => {
         this.alerts.error(this.extractMessage(error), 'Model settings unavailable');
         this.loading.set(false);
@@ -97,6 +95,12 @@ export class ModelTuningPageComponent implements OnInit {
 
   trackByKey(_index: number, item: ModelTuningItem): string {
     return item.configKey;
+  }
+
+  private groupOrder(): string[] {
+    return this.learningMode() === 'SUPERVISED'
+      ? ['Evaluation Protocol', 'XGBoost', 'Random Forest', 'Logistic Regression']
+      : ['Evaluation Protocol', 'Isolation Forest', 'Autoencoder', 'Local Outlier Factor'];
   }
 
   private extractMessage(error: unknown): string {

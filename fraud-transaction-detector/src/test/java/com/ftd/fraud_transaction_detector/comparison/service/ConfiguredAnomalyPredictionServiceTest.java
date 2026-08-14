@@ -8,9 +8,6 @@ import com.ftd.fraud_transaction_detector.comparison.repo.AnomalyConfigRepositor
 import com.ftd.fraud_transaction_detector.fraud.client.PersistedFeaturePredictionClient;
 import com.ftd.fraud_transaction_detector.fraud.dto.FraudPredictionResponse;
 import com.ftd.fraud_transaction_detector.fraud.dto.PersistedFeaturePredictRequest;
-import com.ftd.fraud_transaction_detector.aml.training.infrastructure.AmlModelRegistryRepository;
-import com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry;
-import com.ftd.fraud_transaction_detector.aml.deployment.infrastructure.ModelDeploymentRepository;
 import com.ftd.fraud_transaction_detector.config.service.AppConfigService;
 import org.junit.jupiter.api.Test;
 
@@ -38,8 +35,6 @@ class ConfiguredAnomalyPredictionServiceTest {
         AppConfigService configService = mock(AppConfigService.class);
         when(configRepository.findFirstByIsActiveTrueOrderByUpdatedAtDescIdDesc()).thenReturn(Optional.empty());
         when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of("ISOLATION_FOREST", 1.0));
-        when(configService.isHstEnabled(true)).thenReturn(false);
-        when(configService.isOnlineOneClassSvmEnabled(true)).thenReturn(false);
         when(persistedClient.predict(any())).thenReturn(new ComparisonPredictResponse(
                 "T4", "ACCOUNT-1",
                 Map.of(
@@ -51,8 +46,7 @@ class ConfiguredAnomalyPredictionServiceTest {
                 List.of()
         ));
         var service = new ConfiguredAnomalyPredictionService(
-                configRepository, persistedClient, mock(AmlModelRegistryRepository.class),
-                mock(ModelDeploymentRepository.class), configService
+                configRepository, persistedClient, configService
         );
 
         FraudPredictionResponse response = service.predict(vector());
@@ -83,69 +77,32 @@ class ConfiguredAnomalyPredictionServiceTest {
     }
 
     @Test
-    void routesOnlineOneClassSvmAsShadowWithoutChangingProductionDecision() {
+    void includesSelectedLocalOutlierFactorInProductionDecision() {
         AnomalyConfigRepository configRepository = mock(AnomalyConfigRepository.class);
         PersistedFeaturePredictionClient persistedClient = mock(PersistedFeaturePredictionClient.class);
-        AmlModelRegistryRepository registryRepository = mock(AmlModelRegistryRepository.class);
-        ModelDeploymentRepository deploymentRepository = mock(ModelDeploymentRepository.class);
         AppConfigService configService = mock(AppConfigService.class);
-        AmlModelRegistryEntry onlineModel = mock(AmlModelRegistryEntry.class);
         when(configRepository.findFirstByIsActiveTrueOrderByUpdatedAtDescIdDesc()).thenReturn(Optional.empty());
-        when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of("ONLINE_ONE_CLASS_SVM", 1.0));
-        when(configService.isHstEnabled(true)).thenReturn(false);
-        when(configService.isOnlineOneClassSvmEnabled(true)).thenReturn(true);
-        when(registryRepository.findLatestCompatible(
-                "ONLINE_ONE_CLASS_SVM", "AML_FEATURES_V2", null
-        )).thenReturn(Optional.of(onlineModel));
-        when(onlineModel.artifactPath()).thenReturn("target/model-artifacts/OCSVM-2");
-        when(onlineModel.modelVersion()).thenReturn("OCSVM-2");
+        when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of("LOCAL_OUTLIER_FACTOR", 1.0));
         when(persistedClient.predict(any())).thenReturn(new ComparisonPredictResponse(
                 "T4", "ACCOUNT-1",
                 Map.of(
                         "IsolationForest", Map.of("anomaly", false),
-                        "OnlineOneClassSVM", Map.of("anomaly", true, "affectsProductionDecision", false)
+                        "LOF", Map.of("anomaly", true)
                 ),
-                Map.of("onlineOneClassSvmShadow", Map.of("modelVersion", "OCSVM-2")),
+                Map.of(),
                 List.of()
         ));
         var service = new ConfiguredAnomalyPredictionService(
-                configRepository, persistedClient, registryRepository, deploymentRepository, configService
+                configRepository, persistedClient, configService
         );
 
         FraudPredictionResponse response = service.predict(vector());
 
-        assertFalse(response.suspicious());
-        assertEquals("NORMAL", response.riskLevel());
+        assertTrue(response.suspicious());
+        assertEquals("HIGH", response.riskLevel());
         ArgumentCaptor<PersistedFeaturePredictRequest> request = ArgumentCaptor.forClass(PersistedFeaturePredictRequest.class);
         verify(persistedClient).predict(request.capture());
-        assertEquals("target/model-artifacts/OCSVM-2", request.getValue().shadowOnlineSvmDir());
-        assertEquals("OCSVM-2", request.getValue().shadowOnlineSvmVersion());
-    }
-
-    @Test
-    void rollbackFallbackOmitsActiveHstChampionFromProductionRequest() {
-        AnomalyConfigRepository configRepository = mock(AnomalyConfigRepository.class);
-        PersistedFeaturePredictionClient persistedClient = mock(PersistedFeaturePredictionClient.class);
-        AmlModelRegistryRepository registryRepository = mock(AmlModelRegistryRepository.class);
-        ModelDeploymentRepository deploymentRepository = mock(ModelDeploymentRepository.class);
-        AppConfigService configService = mock(AppConfigService.class);
-        when(configRepository.findFirstByIsActiveTrueOrderByUpdatedAtDescIdDesc()).thenReturn(Optional.empty());
-        when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of("ISOLATION_FOREST", 1.0));
-        when(configService.isHstEnabled(true)).thenReturn(true);
-        when(persistedClient.predict(any())).thenReturn(new ComparisonPredictResponse(
-                "T4", "ACCOUNT-1", Map.of("IsolationForest", Map.of("anomaly", false)),
-                Map.of(), List.of()
-        ));
-        var service = new ConfiguredAnomalyPredictionService(
-                configRepository, persistedClient, registryRepository, deploymentRepository, configService
-        );
-
-        service.predictBatchFallback(vector());
-
-        ArgumentCaptor<PersistedFeaturePredictRequest> request = ArgumentCaptor.forClass(PersistedFeaturePredictRequest.class);
-        verify(persistedClient).predict(request.capture());
-        assertEquals(null, request.getValue().activeModelsDir());
-        assertEquals(null, request.getValue().activeModelVersion());
+        assertEquals(List.of("LOF"), request.getValue().modelNames());
     }
 
     private ConfiguredAnomalyPredictionService service(
@@ -155,8 +112,6 @@ class ConfiguredAnomalyPredictionServiceTest {
         return new ConfiguredAnomalyPredictionService(
                 configRepository,
                 persistedClient,
-                mock(AmlModelRegistryRepository.class),
-                mock(ModelDeploymentRepository.class),
                 mock(AppConfigService.class)
         );
     }

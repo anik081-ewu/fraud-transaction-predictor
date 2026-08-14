@@ -3,7 +3,7 @@ package com.ftd.fraud_transaction_detector.fraud.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * @param trainingTimeoutSeconds ceiling for the batch model training call. Training all batch
+ * @param trainingTimeoutSeconds ceiling for the model training call. Training all
  *                               models on a full snapshot takes minutes — One-Class SVM alone
  *                               is O(n^2) in row count — so this must be far larger than a
  *                               normal request timeout.

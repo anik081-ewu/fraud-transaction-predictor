@@ -1,0 +1,12 @@
+{
+  "seed": 20260812,
+  "sourceFraudRows": 492,
+  "sourceLegitimateRows": 284315,
+  "syntheticRows": 25000,
+  "syntheticFraudRows": 1250,
+  "syntheticLegitimateRows": 23750,
+  "accounts": 600,
+  "minimumDate": "2023-01-01T00:10:27",
+  "maximumDate": "2025-12-31T23:36:44",
+  "outputSha256": "1a085863e0c35697d9ace00a0fe0f220a9006e7666c5a96d1206cfeafa8ecd0a"
+}

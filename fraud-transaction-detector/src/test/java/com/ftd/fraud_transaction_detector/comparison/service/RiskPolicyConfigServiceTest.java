@@ -31,20 +31,24 @@ class RiskPolicyConfigServiceTest {
 
         var response = service.update(new RiskPolicyConfigUpdateRequest(
                 0.20, 0.15, 0.40, 0.25,
+                null, null, null,
                 java.util.List.of(
                         new RiskPolicyModelConfigRequest("ISOLATION_FOREST", true, 0.50),
-                        new RiskPolicyModelConfigRequest("HALF_SPACE_TREES", true, 0.30),
-                        new RiskPolicyModelConfigRequest("ONLINE_ONE_CLASS_SVM", true, 0.20)
+                        new RiskPolicyModelConfigRequest("LOCAL_OUTLIER_FACTOR", true, 0.30),
+                        new RiskPolicyModelConfigRequest("AUTOENCODER", true, 0.20)
                 ),
-                "DAILY", "WEEKLY",
-                0.40, 0.65, 0.80, true, true
+                0.40, 0.65, 0.80
         ));
 
         assertThat(response.policyVersion()).isEqualTo("AML_RISK_POLICY_20260806060000000");
         assertThat(response.mlEnsembleWeight()).isEqualTo(0.40);
         assertThat(response.mediumRiskThreshold()).isEqualTo(0.65);
         assertThat(response.updatedAt()).isEqualTo(now);
-        assertThat(values).hasSize(15);
+        assertThat(values).containsKeys(
+                "aml.risk.policy.version",
+                "aml.risk.weight.ml_ensemble",
+                "aml.risk.ml_model_allocations_json"
+        );
     }
 
     @Test
@@ -55,12 +59,12 @@ class RiskPolicyConfigServiceTest {
 
         assertThatThrownBy(() -> service.update(new RiskPolicyConfigUpdateRequest(
                 0.20, 0.15, 0.40, 0.25,
+                null, null, null,
                 java.util.List.of(
                         new RiskPolicyModelConfigRequest("ISOLATION_FOREST", true, 0.60),
-                        new RiskPolicyModelConfigRequest("HALF_SPACE_TREES", true, 0.30)
+                        new RiskPolicyModelConfigRequest("LOCAL_OUTLIER_FACTOR", true, 0.30)
                 ),
-                "DAILY", "WEEKLY",
-                0.40, 0.65, 0.80, true, true
+                0.40, 0.65, 0.80
         )))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("total exactly 1.0");
@@ -74,16 +78,43 @@ class RiskPolicyConfigServiceTest {
 
         assertThatThrownBy(() -> service.update(new RiskPolicyConfigUpdateRequest(
                 0.20, 0.15, 0.40, 0.25,
+                null, null, null,
                 java.util.List.of(
                         new RiskPolicyModelConfigRequest("ISOLATION_FOREST", true, 0.50),
-                        new RiskPolicyModelConfigRequest("HALF_SPACE_TREES", true, 0.30),
-                        new RiskPolicyModelConfigRequest("ONLINE_ONE_CLASS_SVM", true, 0.20)
+                        new RiskPolicyModelConfigRequest("LOCAL_OUTLIER_FACTOR", true, 0.30),
+                        new RiskPolicyModelConfigRequest("AUTOENCODER", true, 0.20)
                 ),
-                "DAILY", "WEEKLY",
-                0.70, 0.65, 0.80, true, true
+                0.70, 0.65, 0.80
         )))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("thresholds must be ordered");
+    }
+
+    @Test
+    void migratesLegacyFiveModelAllocationToThreeSupportedModels() {
+        Map<String, AppConfig> values = new HashMap<>();
+        AppConfig allocation = new AppConfig();
+        allocation.setConfigKey("aml.risk.ml_model_allocations_json");
+        allocation.setConfigValue("""
+                [
+                  {"modelKey":"ISOLATION_FOREST","enabled":true,"weight":0.2},
+                  {"modelKey":"ONE_CLASS_SVM","enabled":true,"weight":0.2},
+                  {"modelKey":"AUTOENCODER","enabled":true,"weight":0.2},
+                  {"modelKey":"HALF_SPACE_TREES","enabled":true,"weight":0.2},
+                  {"modelKey":"ONLINE_ONE_CLASS_SVM","enabled":true,"weight":0.2}
+                ]
+                """);
+        allocation.setValueType("JSON");
+        values.put(allocation.getConfigKey(), allocation);
+        RiskPolicyConfigService service = new RiskPolicyConfigService(
+                repository(values), new ObjectMapper(), Clock.systemUTC()
+        );
+
+        var response = service.get();
+
+        assertThat(response.models()).extracting(model -> model.modelKey())
+                .containsExactlyInAnyOrder("ISOLATION_FOREST", "AUTOENCODER", "LOCAL_OUTLIER_FACTOR");
+        assertThat(response.models().stream().mapToDouble(model -> model.weight()).sum()).isEqualTo(1.0);
     }
 
     private AppConfigRepository repository(Map<String, AppConfig> values) {

@@ -14,7 +14,13 @@ export class AuthService {
 
   readonly token = signal<string | null>(localStorage.getItem(TOKEN_KEY));
   readonly currentUser = signal<AuthUser | null>(this.readStoredUser());
-  readonly isAuthenticated = computed(() => !!this.token());
+  readonly isAuthenticated = computed(() => this.isTokenUsable(this.token()));
+
+  constructor() {
+    if (!this.isTokenUsable(this.token())) {
+      this.logout();
+    }
+  }
 
   login(request: LoginRequest) {
     return this.http.post<AuthResponse>(`${this.backendBaseUrl}/api/auth/login`, request).pipe(
@@ -59,5 +65,24 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  private isTokenUsable(token: string | null): boolean {
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(this.decodeBase64Url(token.split('.')[1])) as { exp?: number };
+      return typeof payload.exp === 'number' && payload.exp > Math.floor(Date.now() / 1000);
+    } catch {
+      return false;
+    }
+  }
+
+  private decodeBase64Url(value: string | undefined): string {
+    if (!value) throw new Error('Token payload is missing');
+    const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - normalized.length % 4) % 4);
+    return decodeURIComponent(Array.from(atob(normalized + padding))
+      .map((character) => `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`)
+      .join(''));
   }
 }

@@ -28,6 +28,8 @@
 .weight-card p { min-height: 56px; margin: 0; color: #64748b; font-size: .74rem; line-height: 1.45; }
 .weight-card input[type='range'] { width: 100%; accent-color: #2563eb; }
 .weight-card input[type='number'] { min-height: 38px; margin: 0; padding: 7px 9px; }
+.component-normalize { width: 100%; margin: 0; padding: 8px 10px; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 9px; background: #eff6ff; font-size: .7rem; font-weight: 800; cursor: pointer; }
+.component-normalize:hover { border-color: #60a5fa; background: #dbeafe; }
 .ensemble-card { border-color: #bfdbfe; box-shadow: inset 0 0 0 1px rgba(37, 99, 235, .06); }
 .layer-icon { width: 30px; height: 30px; display: grid; place-items: center; color: #fff; border-radius: 9px; font-size: .65rem; font-weight: 900; }
 .layer-icon.behaviour { background: #2563eb; }
@@ -116,6 +118,8 @@
 .rules-threshold-cell input[type='number']:focus { border-color: #2563eb; box-shadow: 0 0 0 2px #bfdbfe; }
 .rules-modal { max-width: 900px; }
 .rules-modal-grid { grid-template-columns: repeat(4, 1fr); }
+.ml-model-modal { max-width: 1080px; max-height: calc(100vh - 48px); }
+.ml-model-modal-body { overflow-y: auto; padding-bottom: 20px; }
 @media (max-width: 1100px) {
   .top-level-grid, .model-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -127,3 +131,6 @@
   .policy-activation button { width: 100%; }
   .model-toggle, .weight-meta { align-items: flex-start; flex-direction: column; }
 }
+.budget-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.budget-tools button, .normalize-button { width: auto; margin: 0; padding: 7px 11px; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 8px; background: #fff; font-size: .7rem; font-weight: 800; }
+.budget-tools button:hover, .normalize-button:hover { background: #eff6ff; }

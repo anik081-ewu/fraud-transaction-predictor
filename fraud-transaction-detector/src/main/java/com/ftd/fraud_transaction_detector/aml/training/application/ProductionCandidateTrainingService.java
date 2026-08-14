@@ -26,19 +26,20 @@ import java.util.UUID;
 @Service
 public class ProductionCandidateTrainingService {
 
-    private static final String HALF_SPACE_TREES = "HALF_SPACE_TREES";
-    private static final String ONLINE_ONE_CLASS_SVM = "ONLINE_ONE_CLASS_SVM";
-    // Values are the model names the Python service accepts.
-    private static final Map<String, String> BATCH_MODELS = Map.of(
+    private static final Map<String, String> UNSUPERVISED_MODELS = Map.of(
             "ISOLATION_FOREST", "IsolationForest",
-            "ONE_CLASS_SVM", "OneClassSVM",
-            "AUTOENCODER", "Autoencoder"
+            "AUTOENCODER", "Autoencoder",
+            "LOCAL_OUTLIER_FACTOR", "LOF"
+    );
+    private static final Map<String, String> SUPERVISED_MODELS = Map.of(
+            "XGBOOST_CLASSIFIER", "XGBoost",
+            "RANDOM_FOREST_CLASSIFIER", "RandomForestClassifier",
+            "LOGISTIC_REGRESSION", "LogisticRegression"
     );
 
     private static final Logger log = LoggerFactory.getLogger(ProductionCandidateTrainingService.class);
 
     private final AmlTrainingRunRepository runRepository;
-    private final IncrementalTrainingService trainingService;
     private final AppConfigService appConfigService;
     private final TransactionRepository transactionRepository;
     private final ModelTrainingClient modelTrainingClient;
@@ -46,14 +47,12 @@ public class ProductionCandidateTrainingService {
 
     public ProductionCandidateTrainingService(
             AmlTrainingRunRepository runRepository,
-            IncrementalTrainingService trainingService,
             AppConfigService appConfigService,
             TransactionRepository transactionRepository,
             ModelTrainingClient modelTrainingClient,
             BatchCandidateRegistrar batchCandidateRegistrar
     ) {
         this.runRepository = runRepository;
-        this.trainingService = trainingService;
         this.appConfigService = appConfigService;
         this.transactionRepository = transactionRepository;
         this.modelTrainingClient = modelTrainingClient;
@@ -68,47 +67,23 @@ public class ProductionCandidateTrainingService {
             throw new IllegalStateException("Production candidate training requires a DATASET_READY snapshot");
         }
 
-        List<String> enabledModels = enabledModels();
+        List<String> enabledModels = enabledModels(selectedModels);
 
-        List<String> batchModels = enabledModels.stream()
-                .filter(BATCH_MODELS::containsKey)
-                .toList();
-        String batchStatus = null;
-        String batchMessage = null;
-        if (!batchModels.isEmpty()) {
-            TrainModelResponse batchResponse = trainBatchModels(snapshot, batchModels, requestedBy);
-            batchStatus = batchResponse.status();
-            batchMessage = batchResponse.message();
-            if (!"SUCCESS".equalsIgnoreCase(batchStatus)) {
-                throw new IllegalStateException(batchMessage == null || batchMessage.isBlank()
-                        ? "Batch model training failed"
-                        : batchMessage);
-            }
-            registerBatchCandidates(snapshot, batchModels, batchResponse, requestedBy);
+        TrainModelResponse response = trainModels(snapshot, enabledModels, requestedBy);
+        if (!"SUCCESS".equalsIgnoreCase(response.status())) {
+            throw new IllegalStateException(response.message() == null || response.message().isBlank()
+                    ? "Model training failed"
+                    : response.message());
         }
-
-        List<AmlTrainingRun> prepared = new ArrayList<>();
-        List<String> incrementalModels = enabledModels.stream()
-                .filter(modelType -> HALF_SPACE_TREES.equals(modelType) || ONLINE_ONE_CLASS_SVM.equals(modelType))
-                .toList();
-        for (String modelType : incrementalModels) {
-            prepared.add(modelType.equals(snapshot.modelType())
-                    ? snapshot
-                    : runRepository.createReadySibling(snapshot, modelType));
-        }
-        List<AmlTrainingRun> trainingRuns = prepared.stream()
-                .map(run -> trainingService.start(run.trainingRunId(), null))
-                .toList();
+        registerCandidates(snapshot, enabledModels, response, requestedBy);
         return new ProductionCandidateTrainingResponse(
-                trainingRuns,
-                incrementalModels,
-                batchModels,
-                batchStatus,
-                batchMessage
+                enabledModels,
+                response.status(),
+                response.message()
         );
     }
 
-    private TrainModelResponse trainBatchModels(AmlTrainingRun snapshot, List<String> batchModels, String requestedBy) {
+    private TrainModelResponse trainModels(AmlTrainingRun snapshot, List<String> models, String requestedBy) {
         List<Transaction> transactions = transactionRepository.findEligibleForTraining(
                 snapshot.fromBusinessDate(),
                 snapshot.toBusinessDate(),
@@ -120,45 +95,46 @@ public class ProductionCandidateTrainingService {
         List<TrainModelRequest.TrainingTransaction> payload = transactions.stream()
                 .map(this::toTrainingTransaction)
                 .toList();
+        String learningMode = appConfigService.getLearningMode();
+        Map<String, String> productionModels = productionModels();
         return modelTrainingClient.train(new TrainModelRequest(
                 "AML_TRAINING_RUN_" + snapshot.trainingRunId(),
                 normalizeActor(requestedBy),
                 payload,
                 appConfigService.getMlHyperparams(),
-                batchModels.stream().map(BATCH_MODELS::get).toList(),
+                models.stream().map(productionModels::get).toList(),
                 null,
-                null
+                null,
+                learningMode
         ));
     }
 
     /**
-     * Gives every batch model its own run and registry entry, so the model registry — and the
-     * comparison page built on it — reflects all trained models rather than only the
-     * incremental ones. Each entry points at the shared artifact bundle that /train produced,
-     * which is the same bundle live scoring loads.
+     * Gives every selected model its own registry entry while all three artifacts remain in
+     * the shared bundle produced by the unified training request.
      *
      * A failure here must not fail the pipeline: the models are trained and serving
      * regardless, so registration problems are logged and skipped.
      */
-    private void registerBatchCandidates(
+    private void registerCandidates(
             AmlTrainingRun snapshot,
-            List<String> batchModels,
+            List<String> models,
             TrainModelResponse response,
             String requestedBy
     ) {
         String artifactPath = response.artifactBasePath();
         if (artifactPath == null || artifactPath.isBlank()) {
-            log.warn("Batch training returned no artifact path; skipping registry entries");
+            log.warn("Training returned no artifact path; skipping registry entries");
             return;
         }
-        for (String modelType : batchModels) {
-            String pythonName = BATCH_MODELS.get(modelType);
+        for (String modelType : models) {
+            String pythonName = productionModels().get(modelType);
             Map<String, Object> metrics = response.metrics() == null
                     ? Map.of()
                     : response.metrics().getOrDefault(pythonName, Map.of());
             try {
                 batchCandidateRegistrar.register(snapshot, modelType, new RegisterBatchCandidateRequest(
-                        batchModelVersion(snapshot, modelType),
+                        modelVersion(snapshot, modelType),
                         artifactPath,
                         learnedRowCount(response, metrics),
                         doubleValue(metrics, "anomalyRate"),
@@ -172,7 +148,7 @@ public class ProductionCandidateTrainingService {
                         normalizeActor(requestedBy)
                 ));
             } catch (Exception exception) {
-                log.error("Could not register batch candidate {}: {}", modelType, exception.getMessage());
+                log.error("Could not register candidate {}: {}", modelType, exception.getMessage());
             }
         }
     }
@@ -183,13 +159,13 @@ public class ProductionCandidateTrainingService {
         return evaluated == null ? 0L : evaluated;
     }
 
-    private String batchModelVersion(AmlTrainingRun snapshot, String modelType) {
+    private String modelVersion(AmlTrainingRun snapshot, String modelType) {
         String segment = snapshot.modelSegment() == null ? "GLOBAL" : snapshot.modelSegment();
         segment = segment.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]+", "-");
         String prefix = switch (modelType) {
             case "ISOLATION_FOREST" -> "IF";
-            case "ONE_CLASS_SVM" -> "OCSVM-BATCH";
             case "AUTOENCODER" -> "AE";
+            case "LOCAL_OUTLIER_FACTOR" -> "LOF";
             default -> modelType.replaceAll("[^A-Z0-9]+", "-");
         };
         String date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
@@ -215,22 +191,39 @@ public class ProductionCandidateTrainingService {
      * contribute to a scoring decision, which is a separate question from which models are
      * worth building at all.
      */
-    private List<String> enabledModels() {
-        List<String> all = new ArrayList<>(BATCH_MODELS.keySet());
-        all.add(HALF_SPACE_TREES);
-        all.add(ONLINE_ONE_CLASS_SVM);
-        List<String> enabled = all.stream()
+    private List<String> enabledModels(List<String> selectedModels) {
+        List<String> all = new ArrayList<>(productionModels().keySet());
+        List<String> trainable = all.stream()
                 .filter(modelType -> appConfigService.isModelTrainingEnabled(modelType, true))
                 .toList();
-        if (enabled.isEmpty()) {
+        if (trainable.isEmpty()) {
             throw new IllegalStateException(
                     "Every model is disabled in Model Tuning; enable at least one before training");
         }
-        if (enabled.size() < all.size()) {
-            List<String> skipped = all.stream().filter(model -> !enabled.contains(model)).toList();
-            log.info("Skipping models disabled in Model Tuning: {}", skipped);
+        if (selectedModels == null || selectedModels.isEmpty()) {
+            return trainable;
         }
-        return enabled;
+        List<String> requested = selectedModels.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(value -> value.trim().toUpperCase(Locale.ROOT))
+                .distinct()
+                .toList();
+        List<String> unsupported = requested.stream().filter(model -> !all.contains(model)).toList();
+        if (!unsupported.isEmpty()) {
+            throw new IllegalArgumentException("Unsupported production training models: " + unsupported);
+        }
+        List<String> disabled = requested.stream().filter(model -> !trainable.contains(model)).toList();
+        if (!disabled.isEmpty()) {
+            throw new IllegalStateException("Selected models are disabled in Model Tuning: " + disabled);
+        }
+        if (requested.isEmpty()) {
+            throw new IllegalArgumentException("Select at least one model to train");
+        }
+        if (requested.size() < all.size()) {
+            List<String> skipped = all.stream().filter(model -> !requested.contains(model)).toList();
+            log.info("Skipping models not selected or disabled for this run: {}", skipped);
+        }
+        return requested;
     }
 
     private TrainModelRequest.TrainingTransaction toTrainingTransaction(Transaction transaction) {
@@ -245,8 +238,13 @@ public class ProductionCandidateTrainingService {
                 transaction.getCustomerAge(),
                 transaction.getCustomerOccupation(),
                 transaction.getLoginAttempts(),
-                transaction.getAccountBalance()
+                transaction.getAccountBalance(),
+                transaction.getFraudLabel()
         );
+    }
+
+    private Map<String, String> productionModels() {
+        return appConfigService.isSupervisedLearningMode() ? SUPERVISED_MODELS : UNSUPERVISED_MODELS;
     }
 
     private String normalizeActor(String requestedBy) {

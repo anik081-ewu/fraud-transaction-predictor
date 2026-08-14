@@ -20,7 +20,7 @@
         <span>Final score</span>
         <strong>Top-level layers plus a nested ML ensemble</strong>
       </div>
-      <p>Medium starts at {{ percent(mediumRiskThreshold) }} and creates a case automatically. The page keeps both the layer budget and the ML budget balanced to exactly 100%.</p>
+      <p>Medium starts at {{ percent(mediumRiskThreshold) }} and creates a case automatically. Use a component's remaining-budget button to make only that component complete the 100% total.</p>
     </section>
 
     <section class="panel policy-section">
@@ -28,9 +28,9 @@
         <span>1</span>
         <div>
           <h3>Allocate Rule Weights</h3>
-          <p>Moving one layer automatically redistributes the remaining percentage across the others.</p>
+          <p>Edit layers independently. Saving is available when the total reaches exactly 100%.</p>
         </div>
-        <strong class="total-badge" [class.invalid]="!validTopLevelWeights()">{{ percent(topLevelTotal()) }}</strong>
+        <div class="budget-tools"><strong class="total-badge" [class.invalid]="!validTopLevelWeights()">{{ percent(topLevelTotal()) }}</strong></div>
       </header>
 
       <div class="weight-grid top-level-grid">
@@ -39,6 +39,7 @@
           <p>Stable customer-specific behavior features and long-term personal transaction patterns.</p>
           <input type="range" min="0" max="1" step="0.01" [ngModel]="customerBehaviourWeight" (ngModelChange)="setLayerWeight('customerBehaviourWeight', $event)" />
           <input type="number" min="0" max="1" step="0.01" [ngModel]="customerBehaviourWeight" (ngModelChange)="setLayerWeight('customerBehaviourWeight', $event)" />
+          <button type="button" class="component-normalize" (click)="normalizeLayerWeight('customerBehaviourWeight')">{{ normalizeLabel(remainingLayerWeight('customerBehaviourWeight')) }}</button>
           <button type="button" class="cb-sub-btn" [class.cb-sub-invalid]="!validCbSubWeights()" (click)="cbModalOpen.set(true)">
             Configure sub-weights <span class="cb-sub-pill">{{ percent(cbAmountWeight) }} · {{ percent(cbNoveltyWeight) }} · {{ percent(cbFrequencyWeight) }} · {{ percent(cbTimeGapWeight) }} · {{ percent(cbUnusualHourWeight) }}</span>
           </button>
@@ -49,6 +50,7 @@
           <p>Deviation from similar customers, accounts, peer groups, and expected turnover bands.</p>
           <input type="range" min="0" max="1" step="0.01" [ngModel]="peerBehaviourWeight" (ngModelChange)="setLayerWeight('peerBehaviourWeight', $event)" />
           <input type="number" min="0" max="1" step="0.01" [ngModel]="peerBehaviourWeight" (ngModelChange)="setLayerWeight('peerBehaviourWeight', $event)" />
+          <button type="button" class="component-normalize" (click)="normalizeLayerWeight('peerBehaviourWeight')">{{ normalizeLabel(remainingLayerWeight('peerBehaviourWeight')) }}</button>
           <button type="button" class="cb-sub-btn" [class.cb-sub-invalid]="!validPbSubWeights()" (click)="pbModalOpen.set(true)">
             Configure sub-weights <span class="cb-sub-pill">{{ percent(pbAmountWeight) }} · {{ percent(pbFrequencyWeight) }} · {{ percent(pbExpectedTurnoverWeight) }}</span>
           </button>
@@ -59,6 +61,10 @@
           <p>Selected production detectors inside the ensemble share this budget among themselves.</p>
           <input type="range" min="0" max="1" step="0.01" [ngModel]="mlEnsembleWeight" (ngModelChange)="setLayerWeight('mlEnsembleWeight', $event)" />
           <input type="number" min="0" max="1" step="0.01" [ngModel]="mlEnsembleWeight" (ngModelChange)="setLayerWeight('mlEnsembleWeight', $event)" />
+          <button type="button" class="component-normalize" (click)="normalizeLayerWeight('mlEnsembleWeight')">{{ normalizeLabel(remainingLayerWeight('mlEnsembleWeight')) }}</button>
+          <button type="button" class="cb-sub-btn" [class.cb-sub-invalid]="!validModelWeights()" (click)="mlModalOpen.set(true)">
+            Configure ML models <span class="cb-sub-pill">{{ enabledModelCount() }} selected · {{ percent(modelWeightTotal()) }}</span>
+          </button>
         </article>
 
         <article class="weight-card">
@@ -66,6 +72,7 @@
           <p>Deterministic structuring, velocity, amount, sanctions, and location override controls.</p>
           <input type="range" min="0" max="1" step="0.01" [ngModel]="rulesWeight" (ngModelChange)="setLayerWeight('rulesWeight', $event)" />
           <input type="number" min="0" max="1" step="0.01" [ngModel]="rulesWeight" (ngModelChange)="setLayerWeight('rulesWeight', $event)" />
+          <button type="button" class="component-normalize" (click)="normalizeLayerWeight('rulesWeight')">{{ normalizeLabel(remainingLayerWeight('rulesWeight')) }}</button>
           <button type="button" class="cb-sub-btn" [class.cb-sub-invalid]="!validRulesThresholds()" (click)="rulesModalOpen.set(true)">
             Configure thresholds <span class="cb-sub-pill">{{ rulesReportingThreshold | number }} · {{ rulesRapidTxCount10m }}@10m · {{ rulesHighTxCount1h }}@1h</span>
           </button>
@@ -76,47 +83,6 @@
     <section class="panel policy-section">
       <header class="section-header">
         <span>2</span>
-        <div>
-          <h3>Choose the production ML models</h3>
-          <p>Only enabled models participate in the ensemble. Their internal weights also auto-balance to 100%.</p>
-        </div>
-        <strong class="total-badge" [class.invalid]="!validModelWeights()">{{ percent(modelWeightTotal()) }}</strong>
-      </header>
-
-      <div class="model-grid">
-        <article class="model-card" *ngFor="let model of models" [class.disabled]="!model.enabled">
-          <button type="button" class="model-toggle" (click)="toggleModel(model.modelKey)">
-            <span class="model-head">
-              <span class="layer-icon" [class.batch]="model.family === 'BATCH'" [class.incremental]="model.family === 'INCREMENTAL'">
-                {{ model.family === 'BATCH' ? 'BT' : 'IN' }}
-              </span>
-              <span>
-                <strong>{{ model.displayName }}</strong>
-                <small>{{ model.family === 'BATCH' ? 'Batch detector' : 'Incremental detector' }}</small>
-              </span>
-            </span>
-            <span class="selection-badge">{{ model.enabled ? 'Selected' : 'Not selected' }}</span>
-          </button>
-
-          <p>{{ familyDescription(model.family) }}</p>
-
-          <div class="model-weight" *ngIf="model.enabled">
-            <div class="weight-meta">
-              <span>{{ percent(model.weight) }} of ML ensemble</span>
-              <strong>{{ percent(effectiveWeight(model)) }} of total score</strong>
-            </div>
-            <input type="range" min="0" max="1" step="0.01" [ngModel]="model.weight" (ngModelChange)="setModelWeight(model.modelKey, $event)" />
-            <input type="number" min="0" max="1" step="0.01" [ngModel]="model.weight" (ngModelChange)="setModelWeight(model.modelKey, $event)" />
-          </div>
-        </article>
-      </div>
-
-      <p class="validation-message" *ngIf="!validModelWeights()">Enabled ML models must total exactly 100% inside the ensemble.</p>
-    </section>
-
-    <section class="panel policy-section">
-      <header class="section-header">
-        <span>3</span>
         <div>
           <h3>Define risk and rollout thresholds</h3>
           <p>Medium is the suspicious boundary and automatically creates a case.</p>
@@ -149,6 +115,60 @@
     </section>
   </ng-container>
 </section>
+
+<!-- Production ML model modal -->
+<div class="cb-modal-backdrop" *ngIf="mlModalOpen()" (click)="mlModalOpen.set(false)">
+  <div class="cb-modal ml-model-modal" (click)="$event.stopPropagation()">
+    <header class="cb-modal-header">
+      <div>
+        <span class="policy-eyebrow">ML ensemble</span>
+        <h3>Choose the production ML models</h3>
+        <p>Choose participating {{ learningMode === 'SUPERVISED' ? 'fraud classifiers' : 'anomaly detectors' }} for the active {{ learningMode.toLowerCase() }} system and assign their internal share.</p>
+      </div>
+      <button type="button" class="cb-modal-close" (click)="mlModalOpen.set(false)">✕</button>
+    </header>
+
+    <div class="cb-modal-body ml-model-modal-body">
+      <div class="model-grid">
+        <article class="model-card" *ngFor="let model of models" [class.disabled]="!model.enabled">
+          <button type="button" class="model-toggle" (click)="toggleModel(model.modelKey)">
+            <span class="model-head">
+              <span class="layer-icon">ML</span>
+              <span>
+                <strong>{{ model.displayName }}</strong>
+                <small>{{ learningMode === 'SUPERVISED' ? 'Supervised fraud classifier' : 'Unsupervised anomaly detector' }}</small>
+              </span>
+            </span>
+            <span class="selection-badge">{{ model.enabled ? 'Selected' : 'Not selected' }}</span>
+          </button>
+
+          <p>Trained from the same immutable transaction snapshot and available for weighted production scoring.</p>
+
+          <div class="model-weight" *ngIf="model.enabled">
+            <div class="weight-meta">
+              <span>{{ percent(model.weight) }} of ML ensemble</span>
+              <strong>{{ percent(effectiveWeight(model)) }} of total score</strong>
+            </div>
+            <input type="range" min="0" max="1" step="0.01" [ngModel]="model.weight" (ngModelChange)="setModelWeight(model.modelKey, $event)" />
+            <input type="number" min="0" max="1" step="0.01" [ngModel]="model.weight" (ngModelChange)="setModelWeight(model.modelKey, $event)" />
+            <button type="button" class="component-normalize" (click)="normalizeModelWeight(model.modelKey)">{{ normalizeLabel(remainingModelWeight(model.modelKey)) }}</button>
+          </div>
+        </article>
+      </div>
+
+      <p class="validation-message" *ngIf="!validModelWeights()">Enabled ML models must total exactly 100% inside the ensemble.</p>
+    </div>
+
+    <footer class="cb-modal-footer">
+      <div class="cb-modal-total">
+        <span>ML model total</span>
+        <strong [class.invalid-text]="!validModelWeights()">{{ percent(modelWeightTotal()) }}</strong>
+        <small *ngIf="!validModelWeights()">Adjust one model using its remaining budget.</small>
+      </div>
+      <button type="button" (click)="mlModalOpen.set(false)" [disabled]="!validModelWeights()">Done</button>
+    </footer>
+  </div>
+</div>
 
 <!-- AML rule thresholds modal -->
 <div class="cb-modal-backdrop" *ngIf="rulesModalOpen()" (click)="rulesModalOpen.set(false)">
@@ -254,7 +274,7 @@
       <div>
         <span class="policy-eyebrow">Peer behaviour</span>
         <h3>Internal sub-weights</h3>
-        <p>These weights split the peer behaviour budget among three signal types. Moving one slider redistributes the rest automatically.</p>
+        <p>These weights split the peer behaviour budget. Values remain independent while you edit them.</p>
       </div>
       <button type="button" class="cb-modal-close" (click)="pbModalOpen.set(false)">✕</button>
     </header>
@@ -293,6 +313,7 @@
         <strong [class.invalid-text]="!validPbSubWeights()">{{ percent(pbSubTotal()) }}</strong>
         <small *ngIf="!validPbSubWeights()">Must equal 100%</small>
       </div>
+      <button type="button" class="normalize-button" (click)="normalizePbSubWeights()">Normalize</button>
       <button type="button" (click)="pbModalOpen.set(false)" [disabled]="!validPbSubWeights()">Apply</button>
     </footer>
   </div>
@@ -305,7 +326,7 @@
       <div>
         <span class="policy-eyebrow">Customer behaviour</span>
         <h3>Internal sub-weights</h3>
-        <p>These weights split the customer behaviour budget among five signal types. Moving one slider redistributes the rest automatically.</p>
+        <p>These weights split the customer behaviour budget. Values remain independent while you edit them.</p>
       </div>
       <button type="button" class="cb-modal-close" (click)="cbModalOpen.set(false)">✕</button>
     </header>
@@ -360,6 +381,7 @@
         <strong [class.invalid-text]="!validCbSubWeights()">{{ percent(cbSubTotal()) }}</strong>
         <small *ngIf="!validCbSubWeights()">Must equal 100%</small>
       </div>
+      <button type="button" class="normalize-button" (click)="normalizeCbSubWeights()">Normalize</button>
       <button type="button" (click)="cbModalOpen.set(false)" [disabled]="!validCbSubWeights()">Apply</button>
     </footer>
   </div>

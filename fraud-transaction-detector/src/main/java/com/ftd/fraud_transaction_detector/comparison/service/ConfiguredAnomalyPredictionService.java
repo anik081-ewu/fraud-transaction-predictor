@@ -7,8 +7,6 @@ import com.ftd.fraud_transaction_detector.fraud.client.PersistedFeaturePredictio
 import com.ftd.fraud_transaction_detector.fraud.dto.FraudPredictionResponse;
 import com.ftd.fraud_transaction_detector.fraud.dto.PersistedFeaturePredictRequest;
 import com.ftd.fraud_transaction_detector.aml.feature.domain.TransactionFeatureVector;
-import com.ftd.fraud_transaction_detector.aml.training.infrastructure.AmlModelRegistryRepository;
-import com.ftd.fraud_transaction_detector.aml.deployment.infrastructure.ModelDeploymentRepository;
 import com.ftd.fraud_transaction_detector.config.service.AppConfigService;
 import org.springframework.stereotype.Service;
 
@@ -27,75 +25,62 @@ public class ConfiguredAnomalyPredictionService {
     private static final Map<String, String> CONFIG_MODEL_TO_RESPONSE_MODEL = Map.of(
             "ISOLATION_FOREST", "IsolationForest",
             "LOCAL_OUTLIER_FACTOR", "LOF",
-            "ONE_CLASS_SVM", "OneClassSVM",
-            "ELLIPTIC_ENVELOPE", "EllipticEnvelope",
-            "PCA_RECONSTRUCTION", "PCAReconstruction",
             "AUTOENCODER", "Autoencoder",
-            "HALF_SPACE_TREES", "HalfSpaceTrees",
-            "ONLINE_ONE_CLASS_SVM", "OnlineOneClassSVM"
+            "XGBOOST_CLASSIFIER", "XGBoost",
+            "RANDOM_FOREST_CLASSIFIER", "RandomForestClassifier",
+            "LOGISTIC_REGRESSION", "LogisticRegression"
     );
 
     private static final Map<String, String> CONFIG_MODEL_TO_BATCH_MODEL = Map.of(
             "ISOLATION_FOREST", "IsolationForest",
             "LOCAL_OUTLIER_FACTOR", "LOF",
-            "ONE_CLASS_SVM", "OneClassSVM",
-            "ELLIPTIC_ENVELOPE", "EllipticEnvelope",
-            "PCA_RECONSTRUCTION", "PCAReconstruction",
-            "AUTOENCODER", "Autoencoder"
+            "AUTOENCODER", "Autoencoder",
+            "XGBOOST_CLASSIFIER", "XGBoost",
+            "RANDOM_FOREST_CLASSIFIER", "RandomForestClassifier",
+            "LOGISTIC_REGRESSION", "LogisticRegression"
     );
 
     private final AnomalyConfigRepository anomalyConfigRepository;
     private final PersistedFeaturePredictionClient persistedFeaturePredictionClient;
-    private final AmlModelRegistryRepository modelRegistryRepository;
-    private final ModelDeploymentRepository modelDeploymentRepository;
     private final AppConfigService appConfigService;
 
     public ConfiguredAnomalyPredictionService(
             AnomalyConfigRepository anomalyConfigRepository,
             PersistedFeaturePredictionClient persistedFeaturePredictionClient,
-            AmlModelRegistryRepository modelRegistryRepository,
-            ModelDeploymentRepository modelDeploymentRepository,
             AppConfigService appConfigService
     ) {
         this.anomalyConfigRepository = anomalyConfigRepository;
         this.persistedFeaturePredictionClient = persistedFeaturePredictionClient;
-        this.modelRegistryRepository = modelRegistryRepository;
-        this.modelDeploymentRepository = modelDeploymentRepository;
         this.appConfigService = appConfigService;
     }
 
     public FraudPredictionResponse predict(TransactionFeatureVector featureVector) {
-        return predict(featureVector, true);
+        return predictConfigured(featureVector);
     }
 
     public FraudPredictionResponse predictBatchFallback(TransactionFeatureVector featureVector) {
-        return predict(featureVector, false);
+        return predictConfigured(featureVector);
     }
 
-    private FraudPredictionResponse predict(
-            TransactionFeatureVector featureVector,
-            boolean allowIncrementalChampion
-    ) {
+    private FraudPredictionResponse predictConfigured(TransactionFeatureVector featureVector) {
         AnomalyConfig config = anomalyConfigRepository.findFirstByIsActiveTrueOrderByUpdatedAtDescIdDesc()
                 .orElse(null);
         boolean configured = config != null
                 && config.getArtifactBasePath() != null
                 && !config.getArtifactBasePath().isBlank();
         Map<String, Double> configuredModels = appConfigService.getEnabledRiskPolicyModelWeights();
-        List<String> enabledBatchModels = resolveEnabledBatchModels(configuredModels);
+        List<String> enabledModels = resolveEnabledModels(configuredModels);
 
         ComparisonPredictResponse response = persistedFeaturePredictionClient.predict(
                 persistedRequest(
                         featureVector, configured ? config.getArtifactBasePath() : null,
-                        enabledBatchModels, configuredModels, allowIncrementalChampion
+                        enabledModels
                 )
         );
         if (response.modelResults() == null || response.modelResults().isEmpty()) {
             return unavailable(featureVector);
         }
 
-        boolean incrementalChampion = response.featureSummary() != null
-                && response.featureSummary().get("activeModel") instanceof Map<?, ?>;
         List<Map<String, Object>> decisionResults = decisionResults(response.modelResults(), configuredModels);
         if (decisionResults.isEmpty()) {
             return unavailable(featureVector);
@@ -115,9 +100,6 @@ public class ConfiguredAnomalyPredictionService {
         reasons.add(configured
                 ? "Persisted feature vector scored with active anomaly config " + config.getConfigName()
                 : "Persisted feature vector scored with the default production model set");
-        if (incrementalChampion) {
-            reasons.add("Segment routed to the active Half-Space Trees champion while the selected batch detectors remain in the vote set");
-        }
 
         Map<String, Object> modelResults = new LinkedHashMap<>();
         response.modelResults().forEach(modelResults::put);
@@ -130,9 +112,7 @@ public class ConfiguredAnomalyPredictionService {
     private PersistedFeaturePredictRequest persistedRequest(
             TransactionFeatureVector vector,
             String modelsDir,
-            List<String> modelNames,
-            Map<String, Double> configuredModels,
-            boolean allowIncrementalChampion
+            List<String> modelNames
     ) {
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("featureVersion", vector.featureVersion());
@@ -143,32 +123,12 @@ public class ConfiguredAnomalyPredictionService {
         summary.put("amountZScoreLast30", vector.amount().amountZScoreLast30());
         summary.put("newLocation", vector.novelty().newLocation());
         summary.put("transactionCount24Hours", vector.velocity().transactionCount24Hours());
-        boolean hstSelected = configuredModels.containsKey("HALF_SPACE_TREES");
-        boolean onlineSelected = configuredModels.containsKey("ONLINE_ONE_CLASS_SVM");
-        var activePointer = allowIncrementalChampion && hstSelected && appConfigService.isHstEnabled(true)
-                ? modelDeploymentRepository.findCompatiblePointer("HALF_SPACE_TREES", vector.peer().peerGroupCode())
-                : java.util.Optional.<com.ftd.fraud_transaction_detector.aml.deployment.domain.ActiveModelPointer>empty();
-        var active = activePointer
-                .map(pointer -> modelRegistryRepository.findRequired(pointer.activeModelVersion()))
-                .filter(model -> vector.featureVersion().equals(model.featureVersion()));
-        var challenger = hstSelected && appConfigService.isHstEnabled(true)
-                ? modelRegistryRepository.findLatestCompatibleHst(vector.featureVersion(), vector.peer().peerGroupCode())
-                : java.util.Optional.<com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry>empty();
-        var onlineOneClassSvm = onlineSelected && appConfigService.isOnlineOneClassSvmEnabled(true)
-                ? modelRegistryRepository.findLatestCompatible(
-                        "ONLINE_ONE_CLASS_SVM", vector.featureVersion(), vector.peer().peerGroupCode()
-                )
-                : java.util.Optional.<com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry>empty();
         return new PersistedFeaturePredictRequest(
                 vector.transactionId(), vector.accountId(), vector.featureVersion(),
                 vector.modelFeatureSchema(), vector.modelFeatures(), summary,
                 List.of(), modelsDir, modelNames,
-                active.map(com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry::artifactPath).orElse(null),
-                active.map(com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry::modelVersion).orElse(null),
-                challenger.map(com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry::artifactPath).orElse(null),
-                challenger.map(com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry::modelVersion).orElse(null),
-                onlineOneClassSvm.map(com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry::artifactPath).orElse(null),
-                onlineOneClassSvm.map(com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry::modelVersion).orElse(null)
+                null, null, null, null, null, null,
+                appConfigService.getLearningMode()
         );
     }
 
@@ -182,7 +142,7 @@ public class ConfiguredAnomalyPredictionService {
         return votes > 0 ? "LOW" : "NORMAL";
     }
 
-    private List<String> resolveEnabledBatchModels(Map<String, Double> configuredModels) {
+    private List<String> resolveEnabledModels(Map<String, Double> configuredModels) {
         // distinct(): guards against two config keys resolving to one Python model, which
         // would otherwise request it twice and double-count its vote.
         return configuredModels.entrySet().stream()

@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 @Service
 public class AppConfigService {
 
+    public static final String SYSTEM_LEARNING_MODE = "system.learning_mode";
+
     public static final String MIN_TXN_COUNT_BEFORE_PREDICT = "ml.min_transaction_count_before_predict";
     public static final String ISO_N_ESTIMATORS = "ml.iso.n_estimators";
     public static final String ISO_MAX_SAMPLES = "ml.iso.max_samples";
@@ -43,23 +45,6 @@ public class AppConfigService {
     public static final String AML_EXPORT_CHUNK_SIZE = "aml.export.chunk_size";
     public static final String AML_EXPORT_ROWS_PER_FILE = "aml.export.rows_per_file";
     public static final String AML_MODEL_ARTIFACT_BASE_PATH = "aml.model.artifact_base_path";
-    public static final String AML_HST_ENABLED = "aml.hst.enabled";
-    public static final String AML_HST_N_TREES = "aml.hst.n_trees";
-    public static final String AML_HST_HEIGHT = "aml.hst.height";
-    public static final String AML_HST_WINDOW_SIZE = "aml.hst.window_size";
-    public static final String AML_HST_THRESHOLD_QUANTILE = "aml.hst.threshold_quantile";
-    public static final String AML_HST_PARQUET_BATCH_SIZE = "aml.hst.parquet_batch_size";
-    public static final String AML_HST_SEED = "aml.hst.seed";
-    public static final String AML_ONLINE_OCSVM_ENABLED = "aml.online_ocsvm.enabled";
-    public static final String AML_ONLINE_OCSVM_NU = "aml.online_ocsvm.nu";
-    public static final String AML_ONLINE_OCSVM_LEARNING_RATE = "aml.online_ocsvm.learning_rate";
-    public static final String AML_ONLINE_OCSVM_INTERCEPT_LEARNING_RATE = "aml.online_ocsvm.intercept_learning_rate";
-    public static final String AML_ONLINE_OCSVM_GAMMA = "aml.online_ocsvm.gamma";
-    public static final String AML_ONLINE_OCSVM_N_COMPONENTS = "aml.online_ocsvm.n_components";
-    public static final String AML_ONLINE_OCSVM_THRESHOLD_QUANTILE = "aml.online_ocsvm.threshold_quantile";
-    public static final String AML_ONLINE_OCSVM_MIN_CALIBRATION_ROWS = "aml.online_ocsvm.min_calibration_rows";
-    public static final String AML_ONLINE_OCSVM_PARQUET_BATCH_SIZE = "aml.online_ocsvm.parquet_batch_size";
-    public static final String AML_ONLINE_OCSVM_SEED = "aml.online_ocsvm.seed";
     public static final String AML_VALIDATION_MIN_ROWS = "aml.validation.min_rows";
     public static final String AML_VALIDATION_MIN_ANOMALY_RATE = "aml.validation.min_anomaly_rate";
     public static final String AML_VALIDATION_MAX_ANOMALY_RATE = "aml.validation.max_anomaly_rate";
@@ -91,10 +76,9 @@ public class AppConfigService {
     public static final String AML_RESEARCH_ISOLATION_FOREST_MAX_TRAINING_ROWS = "aml.research.isolation_forest_max_training_rows";
     public static final String AML_RESEARCH_AUTOENCODER_MAX_TRAINING_ROWS = "aml.research.autoencoder_max_training_rows";
     private static final TypeReference<List<ProductionModelAllocation>> MODEL_ALLOCATIONS = new TypeReference<>() {};
-    private static final Set<String> BATCH_MODEL_KEYS = Set.of(
-            "ISOLATION_FOREST",
-            "ONE_CLASS_SVM",
-            "AUTOENCODER"
+    private static final Set<String> PRODUCTION_MODEL_KEYS = Set.of(
+            "ISOLATION_FOREST", "AUTOENCODER", "LOCAL_OUTLIER_FACTOR",
+            "XGBOOST_CLASSIFIER", "RANDOM_FOREST_CLASSIFIER", "LOGISTIC_REGRESSION"
     );
 
     private final AppConfigRepository appConfigRepository;
@@ -109,6 +93,17 @@ public class AppConfigService {
         return appConfigRepository.findById("ml.cold_start.enabled")
                 .map(c -> Boolean.parseBoolean(c.getConfigValue()))
                 .orElse(defaultValue);
+    }
+
+    public String getLearningMode() {
+        return appConfigRepository.findById(SYSTEM_LEARNING_MODE)
+                .map(config -> config.getConfigValue().trim().toUpperCase())
+                .filter(value -> Set.of("UNSUPERVISED", "SUPERVISED").contains(value))
+                .orElse("UNSUPERVISED");
+    }
+
+    public boolean isSupervisedLearningMode() {
+        return "SUPERVISED".equals(getLearningMode());
     }
 
     public int getMinTransactionCountBeforePredict(int defaultValue) {
@@ -139,12 +134,6 @@ public class AppConfigService {
         return getString(AML_MODEL_ARTIFACT_BASE_PATH, defaultValue);
     }
 
-    public boolean isHstEnabled(boolean defaultValue) {
-        return appConfigRepository.findById(AML_HST_ENABLED)
-                .map(config -> Boolean.parseBoolean(config.getConfigValue().trim()))
-                .orElse(defaultValue);
-    }
-
     /**
      * Config key behind each model's "Training enabled" switch on the Model Tuning page.
      *
@@ -153,10 +142,11 @@ public class AppConfigService {
      */
     private static final Map<String, String> MODEL_TRAINING_ENABLED_KEYS = Map.of(
             "ISOLATION_FOREST", "aml.isolation_forest.enabled",
-            "ONE_CLASS_SVM", "aml.ocsvm_batch.enabled",
             "AUTOENCODER", "aml.autoencoder.enabled",
-            "HALF_SPACE_TREES", AML_HST_ENABLED,
-            "ONLINE_ONE_CLASS_SVM", AML_ONLINE_OCSVM_ENABLED
+            "LOCAL_OUTLIER_FACTOR", "aml.lof.enabled",
+            "XGBOOST_CLASSIFIER", "ml.xgboost.enabled",
+            "RANDOM_FOREST_CLASSIFIER", "ml.random_forest.enabled",
+            "LOGISTIC_REGRESSION", "ml.logistic_regression.enabled"
     );
 
     /** Whether a model type should produce new candidates during a training run. */
@@ -166,37 +156,6 @@ public class AppConfigService {
         return appConfigRepository.findById(key)
                 .map(config -> Boolean.parseBoolean(config.getConfigValue().trim()))
                 .orElse(defaultValue);
-    }
-
-    public Map<String, Object> getHstParameters() {
-        Map<String, Object> parameters = new LinkedHashMap<>();
-        parameters.put("nTrees", positiveInt(AML_HST_N_TREES, 25));
-        parameters.put("height", positiveInt(AML_HST_HEIGHT, 8));
-        parameters.put("windowSize", positiveInt(AML_HST_WINDOW_SIZE, 250));
-        parameters.put("thresholdQuantile", doubleValue(AML_HST_THRESHOLD_QUANTILE, 0.99));
-        parameters.put("batchSize", positiveInt(AML_HST_PARQUET_BATCH_SIZE, 65_536));
-        parameters.put("seed", positiveInt(AML_HST_SEED, 42));
-        return parameters;
-    }
-
-    public boolean isOnlineOneClassSvmEnabled(boolean defaultValue) {
-        return appConfigRepository.findById(AML_ONLINE_OCSVM_ENABLED)
-                .map(config -> Boolean.parseBoolean(config.getConfigValue().trim()))
-                .orElse(defaultValue);
-    }
-
-    public Map<String, Object> getOnlineOneClassSvmParameters() {
-        Map<String, Object> parameters = new LinkedHashMap<>();
-        parameters.put("nu", doubleValue(AML_ONLINE_OCSVM_NU, 0.05));
-        parameters.put("learningRate", doubleValue(AML_ONLINE_OCSVM_LEARNING_RATE, 0.01));
-        parameters.put("interceptLearningRate", doubleValue(AML_ONLINE_OCSVM_INTERCEPT_LEARNING_RATE, 0.01));
-        parameters.put("gamma", doubleValue(AML_ONLINE_OCSVM_GAMMA, 0.5));
-        parameters.put("nComponents", positiveInt(AML_ONLINE_OCSVM_N_COMPONENTS, 64));
-        parameters.put("thresholdQuantile", doubleValue(AML_ONLINE_OCSVM_THRESHOLD_QUANTILE, 0.99));
-        parameters.put("minimumCalibrationRows", positiveInt(AML_ONLINE_OCSVM_MIN_CALIBRATION_ROWS, 200));
-        parameters.put("batchSize", positiveInt(AML_ONLINE_OCSVM_PARQUET_BATCH_SIZE, 65_536));
-        parameters.put("seed", positiveInt(AML_ONLINE_OCSVM_SEED, 42));
-        return parameters;
     }
 
     public boolean isLayeredShadowEnabled(boolean defaultValue) {
@@ -323,6 +282,14 @@ public class AppConfigService {
         return positiveInt(AML_RESEARCH_AUTOENCODER_MAX_TRAINING_ROWS, 50_000);
     }
 
+    public int getLofNeighbors() {
+        return positiveInt(LOF_N_NEIGHBORS, 35);
+    }
+
+    public double getLofContamination() {
+        return doubleValue(LOF_CONTAMINATION, 0.05);
+    }
+
     public Map<String, Double> getEnabledRiskPolicyModelWeights() {
         String raw = getString(AML_RISK_MODEL_ALLOCATIONS_JSON, "[]");
         if (!raw.isBlank() && !"[]".equals(raw)) {
@@ -331,6 +298,7 @@ public class AppConfigService {
                         .filter(Objects::nonNull)
                         .filter(ProductionModelAllocation::enabled)
                         .filter(allocation -> allocation.modelKey() != null && !allocation.modelKey().isBlank())
+                        .filter(allocation -> PRODUCTION_MODEL_KEYS.contains(allocation.modelKey().trim().toUpperCase()))
                         .filter(allocation -> Double.isFinite(allocation.weight()) && allocation.weight() > 0.0)
                         .collect(Collectors.toMap(
                                 allocation -> allocation.modelKey().trim().toUpperCase(),
@@ -339,15 +307,14 @@ public class AppConfigService {
                                 LinkedHashMap::new
                         ));
                 if (!parsed.isEmpty()) {
-                    return Map.copyOf(parsed);
+                    return normalizeWeights(parsed);
                 }
             } catch (Exception ignored) {
             }
         }
         Map<String, Double> legacy = new LinkedHashMap<>();
         putIfPositive(legacy, "ISOLATION_FOREST", doubleValue("aml.risk.weight.isolation_forest", 0.0));
-        putIfPositive(legacy, "HALF_SPACE_TREES", doubleValue("aml.risk.weight.half_space_trees", 0.0));
-        putIfPositive(legacy, "ONLINE_ONE_CLASS_SVM", doubleValue("aml.risk.weight.online_ocsvm", 0.0));
+        putIfPositive(legacy, "LOCAL_OUTLIER_FACTOR", doubleValue("aml.risk.weight.local_outlier_factor", 0.0));
         if (legacy.isEmpty()) {
             legacy.put("ISOLATION_FOREST", 1.0);
         }
@@ -355,14 +322,7 @@ public class AppConfigService {
     }
 
     public Map<String, Double> getEnabledBatchRiskPolicyModelWeights() {
-        return getEnabledRiskPolicyModelWeights().entrySet().stream()
-                .filter(entry -> BATCH_MODEL_KEYS.contains(entry.getKey()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (_first, second) -> second,
-                        LinkedHashMap::new
-                ));
+        return getEnabledRiskPolicyModelWeights();
     }
 
     private String getString(String key, String defaultValue) {
@@ -447,8 +407,8 @@ public class AppConfigService {
 
     public Map<String, Object> getMlHyperparams() {
         Map<String, Object> hp = new LinkedHashMap<>();
-        putIfPresent(hp, ISO_N_ESTIMATORS);
-        putIfPresent(hp, ISO_MAX_SAMPLES);
+        putResolved(hp, ISO_N_ESTIMATORS, AML_RESEARCH_ISOLATION_FOREST_N_ESTIMATORS, "200");
+        putResolved(hp, ISO_MAX_SAMPLES, "aml.research.isolation_forest_max_samples", "10000");
         putIfPresent(hp, ISO_CONTAMINATION);
         putIfPresent(hp, LOF_N_NEIGHBORS);
         putIfPresent(hp, LOF_CONTAMINATION);
@@ -459,6 +419,8 @@ public class AppConfigService {
         putIfPresent(hp, ELLIPTIC_SUPPORT_FRACTION);
         putIfPresent(hp, PCA_N_COMPONENTS);
         putIfPresent(hp, PCA_RECONSTRUCTION_PERCENTILE);
+        putResolved(hp, "ml.autoencoder.hidden_layer_sizes", "aml.research.autoencoder_hidden_layer_sizes", "32,8,32");
+        putResolved(hp, "ml.autoencoder.max_iter", "aml.research.autoencoder_max_iter", "200");
         putIfPresent(hp, ML_RANDOM_STATE);
         putIfPresent(hp, GATING_ENABLED);
         putIfPresent(hp, GATING_LOF_DEC_MEDIUM);
@@ -468,7 +430,28 @@ public class AppConfigService {
         putIfPresent(hp, OPTIMIZATION_TARGET_ANOMALY_RATE);
         putIfPresent(hp, OPTIMIZATION_MIN_ROWS);
         putIfPresent(hp, OPTIMIZATION_MAX_TRAINING_ROWS);
+        putIfPresent(hp, "ml.xgboost.n_estimators");
+        putIfPresent(hp, "ml.xgboost.max_depth");
+        putIfPresent(hp, "ml.xgboost.learning_rate");
+        putIfPresent(hp, "ml.xgboost.subsample");
+        putIfPresent(hp, "ml.xgboost.colsample_bytree");
+        putIfPresent(hp, "ml.random_forest.n_estimators");
+        putIfPresent(hp, "ml.random_forest.max_depth");
+        putIfPresent(hp, "ml.random_forest.min_samples_leaf");
+        putIfPresent(hp, "ml.logistic_regression.c");
+        putIfPresent(hp, "ml.logistic_regression.max_iter");
         return hp;
+    }
+
+    private void putResolved(Map<String, Object> target, String targetKey, String tuningKey, String defaultValue) {
+        String value = appConfigRepository.findById(tuningKey)
+                .map(config -> config.getConfigValue())
+                .filter(configValue -> configValue != null && !configValue.isBlank())
+                .orElseGet(() -> appConfigRepository.findById(targetKey)
+                        .map(config -> config.getConfigValue())
+                        .filter(configValue -> configValue != null && !configValue.isBlank())
+                        .orElse(defaultValue));
+        target.put(targetKey, value.trim());
     }
 
     private void putIfPresent(Map<String, Object> target, String key) {

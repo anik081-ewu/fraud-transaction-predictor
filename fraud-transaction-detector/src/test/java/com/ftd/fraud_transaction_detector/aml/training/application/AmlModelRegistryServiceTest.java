@@ -9,6 +9,7 @@ import com.ftd.fraud_transaction_detector.aml.training.infrastructure.AmlModelRe
 import com.ftd.fraud_transaction_detector.aml.training.infrastructure.AmlTrainingRunRepository;
 import com.ftd.fraud_transaction_detector.aml.training.infrastructure.FileChecksumService;
 import com.ftd.fraud_transaction_detector.config.service.AppConfigService;
+import com.ftd.fraud_transaction_detector.aml.deployment.application.ModelDeploymentService;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -56,7 +57,8 @@ class AmlModelRegistryServiceTest {
         }).when(registryRepository).insertCandidate(any());
         when(registryRepository.findRequired("HST-RETAIL-20260804-01")).thenAnswer(invocation -> inserted.get());
         AmlModelRegistryService service = new AmlModelRegistryService(
-                runRepository, registryRepository, checksumService, configService, new ObjectMapper()
+                runRepository, registryRepository, checksumService, configService, new ObjectMapper(),
+                mock(ModelDeploymentService.class)
         );
 
         AmlModelRegistryEntry result = service.registerCandidate(runId, request(checksum));
@@ -82,7 +84,8 @@ class AmlModelRegistryServiceTest {
         when(runRepository.findRequired(runId)).thenReturn(run(runId, "TRAINING", 250L));
         when(configService.getModelArtifactBasePath("outputs/model-artifacts")).thenReturn(artifactBase.toString());
         AmlModelRegistryService service = new AmlModelRegistryService(
-                runRepository, registryRepository, new FileChecksumService(), configService, new ObjectMapper()
+                runRepository, registryRepository, new FileChecksumService(), configService, new ObjectMapper(),
+                mock(ModelDeploymentService.class)
         );
 
         assertThrows(IllegalArgumentException.class,
@@ -103,7 +106,7 @@ class AmlModelRegistryServiceTest {
         when(runRepository.startTraining(runId, null)).thenReturn(true);
         AmlModelRegistryService service = new AmlModelRegistryService(
                 runRepository, registryRepository, new FileChecksumService(), mock(AppConfigService.class),
-                new ObjectMapper()
+                new ObjectMapper(), mock(ModelDeploymentService.class)
         );
 
         assertEquals("TRAINING", service.startTraining(runId, null).status());
@@ -141,7 +144,7 @@ class AmlModelRegistryServiceTest {
                 LocalDateTime.of(2026, 8, 4, 23, 59, 59),
                 exportedRows, exportedRows, null, "outputs/dataset", "d".repeat(64),
                 null, null, status, null, Instant.parse("2026-08-05T00:00:00Z"),
-                null, Instant.parse("2026-08-05T00:00:00Z")
+                null, Instant.parse("2026-08-05T00:00:00Z"), null, null, null
         );
     }
 }

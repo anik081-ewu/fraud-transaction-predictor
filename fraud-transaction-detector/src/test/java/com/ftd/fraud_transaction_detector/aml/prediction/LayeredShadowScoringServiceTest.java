@@ -58,8 +58,8 @@ class LayeredShadowScoringServiceTest {
         when(configService.getStructuringReportingThreshold(any())).thenReturn(BigDecimal.valueOf(10_000));
         when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of(
                 "ISOLATION_FOREST", 0.25,
-                "HALF_SPACE_TREES", 0.375,
-                "ONLINE_ONE_CLASS_SVM", 0.375
+                "AUTOENCODER", 0.375,
+                "LOCAL_OUTLIER_FACTOR", 0.375
         ));
         FraudPredictionResponse legacy = legacyResponse(Map.of(
                 "IsolationForest", Map.of(
@@ -67,25 +67,19 @@ class LayeredShadowScoringServiceTest {
                         "scoreSamples", -0.55,
                         "anomaly", true
                 ),
-                "HalfSpaceTrees", Map.of(
-                        "score", 14.0,
-                        "normalizedScore", 0.90,
-                        "normalizationVersion", "HST_EMPIRICAL_THRESHOLD_V1",
-                        "modelVersion", "HST-7",
-                        "anomaly", true
-                ),
-                "OnlineOneClassSVM", Map.of(
-                        "rawScore", 3.2,
-                        "normalizedScore", 0.70,
-                        "normalizationVersion", "ONLINE_OCSVM_EMPIRICAL_V1",
-                        "modelVersion", "OCSVM-4",
-                        "anomaly", false
-                ),
                 "Autoencoder", Map.of(
-                        "decisionFunction", -46.80,
-                        "scoreSamples", 47.90,
-                        "threshold", 1.10,
+                        "scoreSamples", 14.0,
+                        "normalizedScore", 0.90,
+                        "normalizationVersion", "AUTOENCODER_RECONSTRUCTION_MARGIN_PROXY_V1",
+                        "modelVersion", "AE-7",
                         "anomaly", true
+                ),
+                "LOF", Map.of(
+                        "decisionFunction", -3.2,
+                        "normalizedScore", 0.70,
+                        "normalizationVersion", "LOF_MARGIN_PROXY_V1",
+                        "modelVersion", "LOF-4",
+                        "anomaly", false
                 )
         ));
         LayeredShadowScoringService service = new LayeredShadowScoringService(
@@ -99,10 +93,9 @@ class LayeredShadowScoringServiceTest {
         assertEquals(0.706683, result.layeredResult().finalRiskScore(), 0.000001);
         assertEquals(RiskBand.MEDIUM, result.layeredResult().riskLevel());
         assertEquals(0.916828, result.modelScores().get("ISOLATION_FOREST").score().normalizedScore(), 0.000001);
-        assertEquals("HST-7", result.modelScores().get("HALF_SPACE_TREES").modelVersion());
-        assertEquals(0.90, result.modelScores().get("HALF_SPACE_TREES").score().normalizedScore());
-        assertEquals(0.70, result.modelScores().get("ONLINE_ONE_CLASS_SVM").score().normalizedScore());
-        assertEquals(1.0, result.modelScores().get("AUTOENCODER").score().normalizedScore());
+        assertEquals("AE-7", result.modelScores().get("AUTOENCODER").modelVersion());
+        assertEquals(0.90, result.modelScores().get("AUTOENCODER").score().normalizedScore());
+        assertEquals(0.70, result.modelScores().get("LOCAL_OUTLIER_FACTOR").score().normalizedScore());
         assertTrue(result.modelScores().get("AUTOENCODER").reasonCodes().contains("AUTOENCODER_HIGH_ANOMALY_SCORE"));
         assertFalse(result.suspiciousChanged());
         assertTrue(result.riskLevelChanged());
@@ -128,8 +121,8 @@ class LayeredShadowScoringServiceTest {
         when(configService.getStructuringReportingThreshold(any())).thenReturn(BigDecimal.valueOf(10_000));
         when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of(
                 "ISOLATION_FOREST", 0.25,
-                "HALF_SPACE_TREES", 0.375,
-                "ONLINE_ONE_CLASS_SVM", 0.375
+                "AUTOENCODER", 0.375,
+                "LOCAL_OUTLIER_FACTOR", 0.375
         ));
         LayeredShadowScoringService service = new LayeredShadowScoringService(
                 customerScorer, peerScorer, ruleEngine, new WeightedRiskAggregationEngine(),
@@ -137,13 +130,11 @@ class LayeredShadowScoringServiceTest {
                 Clock.fixed(EVALUATED_AT, ZoneOffset.UTC)
         );
 
-        LayeredShadowComparison result = service.evaluateAndPersist(features(), legacyResponse(Map.of(
-                "HalfSpaceTrees", Map.of("score", 14.0, "modelVersion", "HST-7", "anomaly", true)
-        )));
+        LayeredShadowComparison result = service.evaluateAndPersist(features(), legacyResponse(Map.of()));
 
         assertTrue(result.layeredResult().reasonCodes().contains("ISOLATION_FOREST_SCORE_UNAVAILABLE"));
-        assertFalse(result.layeredResult().reasonCodes().contains("HALF_SPACE_TREES_SCORE_UNAVAILABLE"));
-        assertTrue(result.layeredResult().reasonCodes().contains("ONLINE_ONE_CLASS_SVM_SCORE_UNAVAILABLE"));
+        assertTrue(result.layeredResult().reasonCodes().contains("AUTOENCODER_SCORE_UNAVAILABLE"));
+        assertTrue(result.layeredResult().reasonCodes().contains("LOCAL_OUTLIER_FACTOR_SCORE_UNAVAILABLE"));
         assertTrue(result.suspiciousChanged());
         assertFalse(result.alertOverlap());
     }

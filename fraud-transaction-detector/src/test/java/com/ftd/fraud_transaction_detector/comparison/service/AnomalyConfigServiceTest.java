@@ -16,11 +16,11 @@ import static org.mockito.Mockito.verify;
 class AnomalyConfigServiceTest {
 
     @Test
-    void rejectsOfflineOnlyModelFromProductionConfiguration() {
+    void rejectsUnsupportedModelFromProductionConfiguration() {
         AnomalyConfigRepository repository = mock(AnomalyConfigRepository.class);
         AnomalyConfigService service = new AnomalyConfigService(repository, new ObjectMapper());
         AnomalyConfigRequest request = new AnomalyConfigRequest(
-                "Production anomaly policy", List.of("LOF"), "SIMPLE_COUNT",
+                "Production anomaly policy", List.of("OneClassSVM"), "SIMPLE_COUNT",
                 1, 1, 1, false, Map.of(), 1L, "models/bundle", true, "admin"
         );
 

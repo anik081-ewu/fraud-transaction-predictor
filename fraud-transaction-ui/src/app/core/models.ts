@@ -120,6 +120,7 @@ export interface AmlRuleThresholds {
 
 export interface RiskPolicyConfig {
   policyVersion: string;
+  learningMode: 'UNSUPERVISED' | 'SUPERVISED';
   customerBehaviourWeight: number;
   peerBehaviourWeight: number;
   mlEnsembleWeight: number;
@@ -128,8 +129,6 @@ export interface RiskPolicyConfig {
   peerBehaviourSubWeights: PeerBehaviourSubWeights;
   amlRuleThresholds: AmlRuleThresholds;
   models: RiskPolicyModelConfig[];
-  incrementalSchedule: 'DAILY' | 'WEEKLY';
-  batchSchedule: 'DAILY' | 'WEEKLY';
   lowRiskThreshold: number;
   mediumRiskThreshold: number;
   highRiskThreshold: number;
@@ -139,7 +138,7 @@ export interface RiskPolicyConfig {
 export interface RiskPolicyModelConfig {
   modelKey: string;
   displayName: string;
-  family: 'BATCH' | 'INCREMENTAL';
+  family: 'UNSUPERVISED';
   enabled: boolean;
   weight: number;
   effectiveWeight: number;
@@ -161,8 +160,6 @@ export interface RiskPolicyConfigUpdateRequest {
   peerBehaviourSubWeights: PeerBehaviourSubWeights;
   amlRuleThresholds: AmlRuleThresholds;
   models: RiskPolicyModelConfigUpdate[];
-  incrementalSchedule: 'DAILY' | 'WEEKLY';
-  batchSchedule: 'DAILY' | 'WEEKLY';
   lowRiskThreshold: number;
   mediumRiskThreshold: number;
   highRiskThreshold: number;
@@ -178,7 +175,7 @@ export interface ColdStartConfigItem {
 export interface ModelTuningItem {
   configKey: string;
   configValue: string;
-  valueType: 'BOOLEAN' | 'INTEGER' | 'DECIMAL' | 'SELECT';
+  valueType: 'BOOLEAN' | 'INTEGER' | 'DECIMAL' | 'SELECT' | 'TEXT';
   groupName: string;
   displayName: string;
   description: string;
@@ -186,6 +183,21 @@ export interface ModelTuningItem {
   maxValue?: number | null;
   step?: string | null;
   options: string[];
+}
+
+export interface LearningModelCatalog {
+  mode: 'UNSUPERVISED' | 'SUPERVISED';
+  labelsRequired: boolean;
+  primaryMetrics: string[];
+  models: LearningModelDefinition[];
+}
+
+export interface LearningModelDefinition {
+  modelKey: string;
+  displayName: string;
+  trainingStyle: 'UNSUPERVISED' | 'SUPERVISED';
+  recommended: boolean;
+  purpose: string;
 }
 
 export interface AmlModelRegistryEntry {
@@ -421,6 +433,48 @@ export interface GrowthAnalysisReport {
   results: DetectorGrowthMetric[];
 }
 
+export interface SupervisedGrowthMetric {
+  partitionPercentage: number;
+  partitionRows: number;
+  trainingRows: number;
+  validationRows: number;
+  evaluationRows: number;
+  detector: string;
+  prAuc: number;
+  prAucLift: number;
+  rocAuc: number;
+  accuracy: number;
+  balancedAccuracy: number;
+  precision: number;
+  recall: number;
+  f1: number;
+  brierScore: number;
+  positiveRate: number;
+  trueNegative: number;
+  falsePositive: number;
+  falseNegative: number;
+  truePositive: number;
+  decisionThreshold: number;
+  trainingDurationMs: number;
+  rowsPerSecond: number;
+}
+
+export interface SupervisedGrowthReport extends Omit<GrowthAnalysisReport, 'results'> {
+  results: SupervisedGrowthMetric[];
+}
+
+export interface SupervisedGrowthStudy {
+  studyId: string;
+  trainingRunId: string;
+  status: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+  resultJson?: string | null;
+  requestedBy?: string | null;
+  failureReason?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+}
+
 /** How much two models' flagged sets overlap. */
 export interface AgreementPair {
   modelA: string;
@@ -541,6 +595,18 @@ export interface CaseRecord {
   updatedAt?: string | null;
   notes: CaseNote[];
   predictionEvidence?: CasePredictionEvidence | null;
+}
+
+export interface CasePageResponse {
+  content: CaseRecord[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  allElements: number;
+  activeElements: number;
+  strGeneratedElements: number;
+  falsePositiveElements: number;
 }
 
 export interface TransactionRecord {

@@ -4,11 +4,10 @@ import com.ftd.fraud_transaction_detector.aml.training.application.TrainingDatas
 import com.ftd.fraud_transaction_detector.aml.training.application.TrainingDatasetJobLauncher;
 import com.ftd.fraud_transaction_detector.aml.training.application.TrainingPipelineJobLauncher;
 import com.ftd.fraud_transaction_detector.aml.training.application.AmlModelRegistryService;
-import com.ftd.fraud_transaction_detector.aml.training.application.IncrementalTrainingJobLauncher;
-import com.ftd.fraud_transaction_detector.aml.training.application.IncrementalTrainingService;
 import com.ftd.fraud_transaction_detector.aml.training.application.ProductionCandidateTrainingService;
 import com.ftd.fraud_transaction_detector.aml.training.domain.AmlModelRegistryEntry;
 import com.ftd.fraud_transaction_detector.aml.training.domain.AmlTrainingRun;
+import com.ftd.fraud_transaction_detector.config.service.AppConfigService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,26 +29,23 @@ public class TrainingDatasetController {
     private final TrainingDatasetJobLauncher jobLauncher;
     private final TrainingPipelineJobLauncher pipelineJobLauncher;
     private final AmlModelRegistryService registryService;
-    private final IncrementalTrainingService incrementalTrainingService;
-    private final IncrementalTrainingJobLauncher incrementalTrainingJobLauncher;
     private final ProductionCandidateTrainingService productionCandidateTrainingService;
+    private final AppConfigService appConfigService;
 
     public TrainingDatasetController(
             TrainingDatasetExportService exportService,
             TrainingDatasetJobLauncher jobLauncher,
             TrainingPipelineJobLauncher pipelineJobLauncher,
             AmlModelRegistryService registryService,
-            IncrementalTrainingService incrementalTrainingService,
-            IncrementalTrainingJobLauncher incrementalTrainingJobLauncher,
-            ProductionCandidateTrainingService productionCandidateTrainingService
+            ProductionCandidateTrainingService productionCandidateTrainingService,
+            AppConfigService appConfigService
     ) {
         this.exportService = exportService;
         this.jobLauncher = jobLauncher;
         this.pipelineJobLauncher = pipelineJobLauncher;
         this.registryService = registryService;
-        this.incrementalTrainingService = incrementalTrainingService;
-        this.incrementalTrainingJobLauncher = incrementalTrainingJobLauncher;
         this.productionCandidateTrainingService = productionCandidateTrainingService;
+        this.appConfigService = appConfigService;
     }
 
     @PostMapping
@@ -62,9 +58,18 @@ public class TrainingDatasetController {
     public ResponseEntity<AmlTrainingRun> startPipeline(
             @Valid @RequestBody RunTrainingPipelineRequest request
     ) {
-        AmlTrainingRun run = exportService.createRun(request.toCreateRequest());
+        String systemMode = appConfigService.getLearningMode();
+        if (request.learningMode() != null
+                && !systemMode.equalsIgnoreCase(request.learningMode().trim())) {
+            throw new IllegalArgumentException(
+                    "Training mode is controlled by Settings. Active system type is " + systemMode
+            );
+        }
+        AmlTrainingRun run = exportService.createRun(request.toCreateRequest(systemMode));
         exportService.queue(run.trainingRunId());
-        pipelineJobLauncher.exportThenTrain(run.trainingRunId(), request.requestedBy());
+        pipelineJobLauncher.exportThenTrain(
+                run.trainingRunId(), request.requestedBy(), request.selectedModels()
+        );
         return ResponseEntity.accepted().body(run);
     }
 
@@ -109,18 +114,6 @@ public class TrainingDatasetController {
         return registryService.failTraining(trainingRunId, request.reason());
     }
 
-    @PostMapping("/{trainingRunId}/incremental-training")
-    public ResponseEntity<AmlTrainingRun> incrementalTraining(
-            @PathVariable UUID trainingRunId,
-            @Valid @RequestBody(required = false) RunIncrementalTrainingRequest request
-    ) {
-        String baseModelVersion = request == null ? null : request.baseModelVersion();
-        String requestedBy = request == null ? null : request.requestedBy();
-        AmlTrainingRun training = incrementalTrainingService.start(trainingRunId, baseModelVersion);
-        incrementalTrainingJobLauncher.train(trainingRunId, requestedBy);
-        return ResponseEntity.accepted().body(training);
-    }
-
     @PostMapping("/{trainingRunId}/production-candidates")
     public ResponseEntity<ProductionCandidateTrainingResponse> trainProductionCandidates(
             @PathVariable UUID trainingRunId,
@@ -132,9 +125,6 @@ public class TrainingDatasetController {
                 request == null ? null : request.selectedModels(),
                 requestedBy
         );
-        List<AmlTrainingRun> trainingRuns = response.trainingRuns();
-        incrementalTrainingJobLauncher.trainSequentially(
-                trainingRuns.stream().map(AmlTrainingRun::trainingRunId).toList(), requestedBy);
         return ResponseEntity.accepted().body(response);
     }
 }

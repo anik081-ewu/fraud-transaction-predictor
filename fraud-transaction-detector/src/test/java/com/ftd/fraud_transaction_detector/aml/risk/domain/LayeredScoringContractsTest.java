@@ -35,7 +35,7 @@ class LayeredScoringContractsTest {
     void requiresRiskPolicyWeightsToSumToOne() {
         assertThrows(IllegalArgumentException.class, () -> new RiskPolicy(
                 "AML_RISK_POLICY_V2",
-                0.20, 0.15, 0.10, 0.25, 0.15, 0.20,
+                0.20, 0.15, 0.25, 0.15,
                 0.40, 0.65, 0.80
         ));
     }
@@ -44,7 +44,7 @@ class LayeredScoringContractsTest {
     void acceptsVersionedRiskPolicyContract() {
         RiskPolicy policy = new RiskPolicy(
                 "AML_RISK_POLICY_V2",
-                0.20, 0.15, 0.00, 0.25, 0.15, 0.25,
+                0.20, 0.15, 0.40, 0.25,
                 0.40, 0.65, 0.80
         );
 

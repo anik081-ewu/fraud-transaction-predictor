@@ -25,7 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DeterministicAmlRuleEngineTest {
 
-    private final DeterministicAmlRuleEngine engine = new DeterministicAmlRuleEngine();
+    private final DeterministicAmlRuleEngine engine = new DeterministicAmlRuleEngine(
+            DeterministicAmlRulePolicy.transparentV1()
+    );
 
     @Test
     void returnsNoRuleEvidenceForNormalScenario() {

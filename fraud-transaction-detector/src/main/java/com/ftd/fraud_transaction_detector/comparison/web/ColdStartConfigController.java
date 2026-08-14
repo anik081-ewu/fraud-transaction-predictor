@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/anomaly-model-comparisons/cold-start-config")
+@RequestMapping({
+        "/api/v1/anomaly-model-comparisons/settings",
+        "/api/v1/anomaly-model-comparisons/cold-start-config"
+})
 public class ColdStartConfigController {
 
     private final ColdStartConfigService coldStartConfigService;

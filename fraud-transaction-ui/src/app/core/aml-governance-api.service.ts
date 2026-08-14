@@ -18,10 +18,11 @@ export class AmlGovernanceApiService {
   private readonly layeredValidationUrl = 'http://localhost:8080/api/v1/aml/layered-shadow';
   private readonly layeredDeploymentUrl = 'http://localhost:8080/api/v1/aml/layered-deployments';
 
-  listModels(modelType = 'HALF_SPACE_TREES') {
-    return this.http.get<AmlModelRegistryEntry[]>(this.baseUrl, {
-      params: new HttpParams().set('modelType', modelType),
-    });
+  listModels(modelType?: string) {
+    const options = modelType
+      ? { params: new HttpParams().set('modelType', modelType) }
+      : {};
+    return this.http.get<AmlModelRegistryEntry[]>(this.baseUrl, options);
   }
 
   listActiveModels() {

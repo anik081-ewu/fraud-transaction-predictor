@@ -11,8 +11,6 @@ public record RiskPolicyConfigUpdateRequest(
         PeerBehaviourSubWeightsRequest peerBehaviourSubWeights,
         AmlRuleThresholdsRequest amlRuleThresholds,
         List<RiskPolicyModelConfigRequest> models,
-        String incrementalSchedule,
-        String batchSchedule,
         double lowRiskThreshold,
         double mediumRiskThreshold,
         double highRiskThreshold

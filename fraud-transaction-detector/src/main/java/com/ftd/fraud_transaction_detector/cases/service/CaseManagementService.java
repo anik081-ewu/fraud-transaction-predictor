@@ -12,9 +12,15 @@ import com.ftd.fraud_transaction_detector.transactions.entity.Transaction;
 import com.ftd.fraud_transaction_detector.transactions.repo.TransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CaseManagementService {
@@ -62,8 +68,30 @@ public class CaseManagementService {
     }
 
     @Transactional(readOnly = true)
-    public List<CaseResponse> listCases() {
-        return caseRecordRepository.findAllByOrderByCreatedAtDescIdDesc().stream().map(this::toResponse).toList();
+    public CasePageResponse listCases(String query, String status, int page, int size) {
+        if (page < 0) throw new IllegalArgumentException("page must be zero or greater");
+        if (size < 1 || size > 100) throw new IllegalArgumentException("size must be between 1 and 100");
+        var pageable = PageRequest.of(page, size, Sort.by(
+                Sort.Order.desc("createdAt"), Sort.Order.desc("id")
+        ));
+        var casePage = caseRecordRepository.findAll(specification(query, status), pageable);
+        Map<String, Long> counts = caseRecordRepository.countByStatus().stream()
+                .collect(Collectors.toMap(
+                        row -> String.valueOf(row[0]),
+                        row -> ((Number) row[1]).longValue()
+                ));
+        long resolved = counts.getOrDefault("FALSE_POSITIVE", 0L)
+                + counts.getOrDefault("STR_GENERATED", 0L)
+                + counts.getOrDefault("CLOSED", 0L);
+        long allCases = counts.values().stream().mapToLong(Long::longValue).sum();
+        return new CasePageResponse(
+                casePage.getContent().stream().map(this::toSummary).toList(),
+                casePage.getTotalElements(), casePage.getTotalPages(), casePage.getNumber(), casePage.getSize(),
+                allCases,
+                Math.max(0, allCases - resolved),
+                counts.getOrDefault("STR_GENERATED", 0L),
+                counts.getOrDefault("FALSE_POSITIVE", 0L)
+        );
     }
 
     @Transactional(readOnly = true)
@@ -161,6 +189,36 @@ public class CaseManagementService {
         return new CaseResponse(record.getId(), record.getCaseNo(), record.getFraudAlertId(), record.getTransactionId(),
                 record.getAccountId(), record.getTitle(), record.getStatus(), record.getPriority(), record.getAssignedTo(),
                 record.getCreatedBy(), record.getCreatedAt(), record.getUpdatedAt(), notes, evidence);
+    }
+
+    private CaseSummaryResponse toSummary(CaseRecord record) {
+        return new CaseSummaryResponse(
+                record.getId(), record.getCaseNo(), record.getFraudAlertId(), record.getTransactionId(),
+                record.getAccountId(), record.getTitle(), record.getStatus(), record.getPriority(),
+                record.getAssignedTo(), record.getCreatedBy(), record.getCreatedAt(), record.getUpdatedAt()
+        );
+    }
+
+    private Specification<CaseRecord> specification(String query, String status) {
+        return (root, criteriaQuery, builder) -> {
+            var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+            String normalizedStatus = status == null ? "ACTIVE" : status.trim().toUpperCase(Locale.ROOT);
+            if ("ACTIVE".equals(normalizedStatus)) {
+                predicates.add(builder.not(root.get("status").in("FALSE_POSITIVE", "STR_GENERATED", "CLOSED")));
+            } else if (!"ALL".equals(normalizedStatus)) {
+                predicates.add(builder.equal(root.get("status"), normalizedStatus));
+            }
+            if (query != null && !query.isBlank()) {
+                String pattern = "%" + query.trim().toLowerCase(Locale.ROOT) + "%";
+                predicates.add(builder.or(
+                        builder.like(builder.lower(root.get("caseNo")), pattern),
+                        builder.like(builder.lower(root.get("transactionId")), pattern),
+                        builder.like(builder.lower(root.get("accountId")), pattern),
+                        builder.like(builder.lower(root.get("title")), pattern)
+                ));
+            }
+            return builder.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
+        };
     }
 
     private CasePredictionEvidenceResponse toEvidence(FraudPredictionLog log) {

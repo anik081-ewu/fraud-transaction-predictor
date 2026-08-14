@@ -23,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PeerBehaviourScorerTest {
 
-    private final PeerBehaviourScorer scorer = new PeerBehaviourScorer();
+    private final PeerBehaviourScorer scorer = new PeerBehaviourScorer(
+            PeerBehaviourScoringPolicy.transparentV1()
+    );
 
     @Test
     void returnsNormalForTransactionNearSpecificPeerBaseline() {
@@ -33,7 +35,8 @@ class PeerBehaviourScorerTest {
         );
 
         assertEquals("RETAIL_SALARIED", result.peerGroup());
-        assertEquals(1.0, result.confidence());
+        assertEquals(0.85, result.confidence());
+        assertTrue(result.reasonCodes().contains("PEER_BASELINE_PARENT_SEGMENT"));
         assertEquals(RiskBand.NORMAL, result.riskBand());
         assertTrue(result.score().normalizedScore() < 0.10);
     }

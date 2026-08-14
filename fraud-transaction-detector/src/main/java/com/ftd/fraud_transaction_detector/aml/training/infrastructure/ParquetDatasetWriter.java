@@ -64,7 +64,8 @@ public class ParquetDatasetWriter {
                 {"name":"peer_avg_amount","type":["null","double"],"default":null},
                 {"name":"peer_std_amount","type":["null","double"],"default":null},
                 {"name":"amount_vs_peer_avg","type":["null","double"],"default":null},
-                {"name":"peer_amount_z_score","type":["null","double"],"default":null}
+                {"name":"peer_amount_z_score","type":["null","double"],"default":null},
+                {"name":"fraud_label","type":["null","boolean"],"default":null}
               ]
             }
             """);
@@ -129,6 +130,7 @@ public class ParquetDatasetWriter {
         record.put("peer_std_amount", row.peerStandardDeviationAmount());
         record.put("amount_vs_peer_avg", row.amountVsPeerAverage());
         record.put("peer_amount_z_score", row.peerAmountZScore());
+        record.put("fraud_label", row.fraudLabel());
         return record;
     }
 }

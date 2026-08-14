@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Registers one batch model in its own transaction.
+ * Registers one model candidate in its own transaction.
  *
  * REQUIRES_NEW matters here: the caller runs inside a transaction, so without a separate one
  * a single failed registration would mark the caller's transaction rollback-only and take the

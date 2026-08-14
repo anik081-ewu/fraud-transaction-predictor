@@ -30,7 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CustomerBehaviourScorerTest {
 
-    private final CustomerBehaviourScorer scorer = new CustomerBehaviourScorer();
+    private final CustomerBehaviourScorer scorer = new CustomerBehaviourScorer(
+            CustomerBehaviourScoringPolicy.transparentV1()
+    );
     private final BehaviourScoringContext context = new BehaviourScoringContext(
             "RETAIL_SALARIED", Instant.parse("2026-08-05T00:00:00Z"), Map.of()
     );

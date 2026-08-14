@@ -66,7 +66,7 @@ class GrowthAnalysisServiceTest {
 
         assertThatThrownBy(() -> service.analyze(runId, null))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("DATASET_READY");
+                .hasMessageContaining("no verified persisted-feature dataset");
     }
 
     private void defaults() {
@@ -76,18 +76,21 @@ class GrowthAnalysisServiceTest {
         when(appConfigService.getResearchIsolationForestMaximumTrainingRows()).thenReturn(100_000);
         when(appConfigService.getResearchIsolationForestEstimators()).thenReturn(200);
         when(appConfigService.getResearchAutoencoderMaxTrainingRows()).thenReturn(50_000);
+        when(appConfigService.getLofNeighbors()).thenReturn(35);
+        when(appConfigService.getLofContamination()).thenReturn(0.05);
         when(appConfigService.getResearchRandomSeed()).thenReturn(42);
-        when(appConfigService.getHstParameters()).thenReturn(Map.of());
-        when(appConfigService.getOnlineOneClassSvmParameters()).thenReturn(Map.of());
     }
 
     private AmlTrainingRun run(UUID id, String status) {
         return new AmlTrainingRun(
-                id, AmlTrainingType.BACKTEST, "AML_FEATURES_V1", "HALF_SPACE_TREES", null,
+                id, AmlTrainingType.BACKTEST, "AML_FEATURES_V1", "UNSUPERVISED_ENSEMBLE", null,
                 LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31),
                 LocalDateTime.of(2026, 2, 1, 0, 0), 10_000L, 10_000L, null,
-                "outputs/dataset", "checksum", null, null, status, null,
-                Instant.parse("2026-02-01T00:00:00Z"), null, Instant.parse("2026-02-01T00:00:00Z")
+                "CREATED".equals(status) ? null : "outputs/dataset",
+                "CREATED".equals(status) ? null : "checksum",
+                null, null, status, null,
+                Instant.parse("2026-02-01T00:00:00Z"), null, Instant.parse("2026-02-01T00:00:00Z"),
+                null, null, null
         );
     }
 }

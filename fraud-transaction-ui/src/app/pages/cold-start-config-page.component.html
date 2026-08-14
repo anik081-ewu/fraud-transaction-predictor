@@ -1,19 +1,37 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <h2>Cold Start</h2>
+      <h2>Settings</h2>
       <p>
-        New accounts lack the transaction history the 4-layer engine needs to score reliably.
-        Cold start gates those accounts out of ML scoring until they have enough history,
-        returning a neutral <strong>NORMAL / ALLOW</strong> response in the meantime.
+        Choose the system-wide learning method and configure how new accounts are handled.
+        The selected System Type controls model training, production scoring, model configuration,
+        and the comparison methodology across the application.
       </p>
     </div>
   </header>
 
   <section class="panel">
+    <h3>System Type</h3>
+    <div class="grid two" *ngIf="systemTypeItem() as item">
+      <div>
+        <label [for]="item.configKey">{{ labelFor(item.configKey) }}</label>
+        <select [id]="item.configKey" [(ngModel)]="item.configValue">
+          <option value="UNSUPERVISED">Unsupervised Learning — no fraud label required</option>
+          <option value="SUPERVISED">Supervised Learning — FraudLabel required</option>
+        </select>
+        <small>{{ item.description }}</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
     <h3>Cold Start Settings</h3>
+    <p>
+      New accounts lack enough history for reliable customer and peer features. Cold start can return
+      <strong>NORMAL / ALLOW</strong> until the configured history threshold is reached.
+    </p>
     <div class="grid two">
-      <div *ngFor="let item of items()">
+      <div *ngFor="let item of coldStartItems()">
         <label [for]="item.configKey">{{ labelFor(item.configKey) }}</label>
         <select *ngIf="isBoolean(item)" [id]="item.configKey" [(ngModel)]="item.configValue">
           <option value="true">Enabled</option>
@@ -23,6 +41,7 @@
         <small>{{ item.description }}</small>
       </div>
     </div>
-    <button (click)="save()">Save</button>
   </section>
+
+  <button (click)="save()">Save Settings</button>
 </section>

@@ -46,6 +46,7 @@ public record ExportFeatureRow(
         Double peerAverageAmount,
         Double peerStandardDeviationAmount,
         Double amountVsPeerAverage,
-        Double peerAmountZScore
+        Double peerAmountZScore,
+        Boolean fraudLabel
 ) {
 }

@@ -83,7 +83,7 @@ class TrainingDatasetExportServiceTest {
                 LocalDate.of(2026, 8, 4), LocalDate.of(2026, 8, 4),
                 LocalDateTime.of(2026, 8, 4, 23, 59, 59),
                 null, null, null, null, null, null, null, "QUEUED", null,
-                null, null, Instant.parse("2026-08-05T00:00:00Z")
+                null, null, Instant.parse("2026-08-05T00:00:00Z"), null, null, null
         );
     }
 }

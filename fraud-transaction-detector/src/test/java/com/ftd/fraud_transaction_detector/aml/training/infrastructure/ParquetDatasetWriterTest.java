@@ -37,7 +37,7 @@ public class ParquetDatasetWriterTest {
                 30, 30, 30, 1.0, 90.0, 85.0, 10.0,
                 1.1, 1.2, 1.0, 1, 3, 10, 20,
                 300, 700, 1200, false, false, false, false, false,
-                "RETAIL_GENERAL", 95.0, 12.0, 1.05, 0.4
+                "RETAIL_GENERAL", 95.0, 12.0, 1.05, 0.4, null
         );
     }
 }

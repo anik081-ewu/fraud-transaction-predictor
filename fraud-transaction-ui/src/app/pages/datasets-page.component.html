@@ -1,14 +1,24 @@
 ﻿<section class="page train-page">
   <header class="page-header train-header">
     <div>
-      <span class="page-eyebrow">Model registry</span>
-      <h2>Model Comparison</h2>
-      <p>Compare all trained models side-by-side. Each column shows the best available version for that model type. Enable models in Risk Policy to include them in scoring decisions.</p>
+      <span class="page-eyebrow">Evidence-based model selection</span>
+      <h2>Model Comparison Lab</h2>
+      <p>Compare the three approved unsupervised detectors on identical chronological snapshots before choosing their production weights.</p>
     </div>
     <button class="refresh-button" type="button" (click)="load()" [disabled]="loading()">
       {{ loading() ? 'Loading¦' : 'Refresh' }}
     </button>
   </header>
+
+  <section class="learning-mode-panel">
+    <article class="learning-mode active">
+      <span class="mode-status">Available</span>
+      <strong>Unsupervised anomaly detection</strong>
+      <p>For datasets without confirmed fraud labels. Compare EM-AUC, separation, stability, anomaly-rate control, agreement, and throughput.</p>
+      <small>Isolation Forest | Autoencoder | Local Outlier Factor</small>
+    </article>
+
+  </section>
 
   <nav class="tab-bar">
     <button type="button" [class.active]="tab() === 'models'" (click)="selectTab('models')">
@@ -38,7 +48,7 @@
             <th *ngFor="let modelType of modelTypes" class="model-col">
               <div class="model-col-header">
                 <strong>{{ label(modelType) }}</strong>
-                <span class="family-badge">{{ family(modelType) }}</span>
+                <span class="family-badge">Unsupervised</span>
               </div>
             </th>
           </tr>
@@ -378,8 +388,6 @@
           <tr *ngFor="let detector of growthDetectors">
             <td class="metric-label">
               {{ label(detector) }}
-              <span class="native-scale" *ngIf="isStreamingDetector(detector)"
-                title="Streaming detector with a rolling window: it forgets older rows, so a falling curve is window behaviour, not degradation">windowed</span>
             </td>
             <td *ngFor="let partition of partitions()">
               <ng-container *ngIf="metricFor(detector, partition) as cell; else noCell">
@@ -413,9 +421,8 @@
       <p class="scale-caveat">
         <strong>Two caveats.</strong> Cells marked <em>capped sample</em> hit a training-row limit,
         so they did not actually learn from the whole partition and are not like-for-like points on
-        the curve. Detectors marked <em>windowed</em> (Half-Space Trees, Online One-Class SVM) forget
-        older rows by design  for them a declining curve reflects the rolling window, not a model
-        getting worse with more data.
+        the curve. Training-row caps are shown explicitly whenever a detector uses a bounded
+        sample, so capped and full-history results are not mistaken for equivalent evidence.
       </p>
     </aside>
 

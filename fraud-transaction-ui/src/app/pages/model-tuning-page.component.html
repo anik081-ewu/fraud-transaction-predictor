@@ -3,7 +3,8 @@
     <div>
       <span class="tuning-eyebrow">Training controls</span>
       <h2>Model Tuning</h2>
-      <p>Tune production streaming models and the resource limits used by offline growth analysis.</p>
+      <p>Tune the active {{ learningMode() === 'SUPERVISED' ? 'supervised fraud classifiers' : 'unsupervised anomaly detectors' }} and their shared comparison protocol.</p>
+      <span class="mode-badge">{{ learningMode() === 'SUPERVISED' ? 'Supervised Learning' : 'Unsupervised Learning' }}</span>
     </div>
     <button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving()">Reload saved values</button>
   </header>
@@ -64,6 +65,13 @@
             [min]="item.minValue ?? null"
             [max]="item.maxValue ?? null"
             [step]="item.step || 'any'"
+            [(ngModel)]="item.configValue"
+          />
+
+          <input
+            *ngIf="item.valueType === 'TEXT'"
+            [id]="item.configKey"
+            type="text"
             [(ngModel)]="item.configValue"
           />
 

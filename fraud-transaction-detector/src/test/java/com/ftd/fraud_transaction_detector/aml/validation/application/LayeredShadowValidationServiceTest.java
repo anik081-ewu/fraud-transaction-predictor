@@ -41,7 +41,7 @@ class LayeredShadowValidationServiceTest {
     @BeforeEach
     void setUp() {
         when(policyRepository.findActive(null)).thenReturn(new RiskPolicy(
-                "AML_RISK_POLICY_V2", 0.20, 0.15, 0.00, 0.25, 0.15, 0.25,
+                "AML_RISK_POLICY_V2", 0.20, 0.15, 0.40, 0.25,
                 0.40, 0.65, 0.80
         ));
         when(configService.getLayeredValidationMinRows()).thenReturn(1_000);

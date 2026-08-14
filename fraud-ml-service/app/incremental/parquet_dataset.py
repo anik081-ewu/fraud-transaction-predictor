@@ -80,6 +80,23 @@ class PersistedFeatureDataset:
             raise ValueError("Invalid persisted-feature row range")
         return islice(self.iter_features(), start, stop)
 
+    def iter_labelled_features(self) -> Iterator[tuple[dict[str, float], int]]:
+        for part in self.manifest["files"]:
+            part_path = self.path / part["path"]
+            source = parquet.ParquetFile(part_path)
+            for batch in source.iter_batches(
+                batch_size=self.batch_size,
+                columns=["model_features_json", "fraud_label"],
+                use_threads=True,
+            ):
+                features_values = batch.column(0).to_pylist()
+                labels = batch.column(1).to_pylist()
+                for raw, label in zip(features_values, labels):
+                    if label is None:
+                        continue
+                    values = json.loads(raw)
+                    yield ({str(name): float(value) for name, value in values.items()}, int(bool(label)))
+
     def _validate(self, expected_checksum: str) -> None:
         if self.manifest.get("datasetChecksum") != expected_checksum:
             raise ValueError("Dataset checksum does not match the training request")

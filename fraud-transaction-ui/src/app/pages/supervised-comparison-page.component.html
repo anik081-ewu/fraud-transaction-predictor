@@ -1,0 +1,80 @@
+<section class="page supervised-page">
+  <header class="page-header comparison-header">
+    <div>
+      <span class="eyebrow">Labelled fraud evaluation</span>
+      <h2>Supervised Model Comparison</h2>
+      <p>Compare XGBoost, Random Forest, and Logistic Regression as labelled history grows through 10%, 25%, 50%, and 100%.</p>
+    </div>
+  </header>
+
+  <section class="panel controls">
+    <label>Immutable training snapshot
+      <select [(ngModel)]="selectedRunId">
+        <option value="">Choose snapshot</option>
+        <option *ngFor="let run of runs()" [value]="run.trainingRunId">
+          {{ run.fromBusinessDate }} → {{ run.toBusinessDate }} · {{ run.learnedRowCount || run.exportedRowCount || run.requestedRowCount || 0 | number }} {{ run.learnedRowCount ? 'labelled rows' : 'snapshot rows' }}
+        </option>
+      </select>
+    </label>
+    <button type="button" (click)="run()" [disabled]="loading() || !selectedRunId">
+      {{ loading() ? 'Starting...' : 'Run or load comparison' }}
+    </button>
+    <p>Results are calculated once per snapshot and cached. Each partition uses chronological training, threshold calibration, and untouched evaluation rows.</p>
+  </section>
+
+  <section class="study-status" *ngIf="study() as currentStudy" [class.running]="currentStudy.status === 'QUEUED' || currentStudy.status === 'RUNNING'">
+    <strong>{{ currentStudy.status.replaceAll('_', ' ') }}</strong>
+    <span *ngIf="currentStudy.status === 'QUEUED' || currentStudy.status === 'RUNNING'">The comparison runs in the background. This page checks every five seconds.</span>
+    <span *ngIf="currentStudy.status === 'COMPLETED'">Cached result from {{ currentStudy.completedAt | date:'medium' }}.</span>
+    <span *ngIf="currentStudy.status === 'FAILED'">{{ currentStudy.failureReason }}</span>
+  </section>
+
+  <section class="panel" *ngIf="rankedModels().length">
+    <div class="section-heading">
+      <div><span class="eyebrow">Overall ranking</span><h3>Fraud-detection quality across growth stages</h3></div>
+      <span>{{ report()?.datasetRows | number }} labelled rows</span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Rank</th><th>Model</th><th>Avg PR-AUC</th><th>Lift</th><th>Accuracy</th><th>Balanced accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Brier ↓</th></tr></thead>
+      <tbody><tr *ngFor="let row of rankedModels(); index as index">
+        <td><b>{{ index + 1 }}</b></td><td><strong>{{ row.model }}</strong></td><td>{{ percent(row.prAuc) }}</td>
+        <td>{{ row.prAucLift | number:'1.1-1' }}×</td><td>{{ percent(row.accuracy) }}</td><td>{{ percent(row.balancedAccuracy) }}</td>
+        <td>{{ percent(row.precision) }}</td><td>{{ percent(row.recall) }}</td><td>{{ percent(row.f1) }}</td><td>{{ row.brier | number:'1.3-3' }}</td>
+      </tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" *ngIf="report() as current">
+    <div class="section-heading"><div><span class="eyebrow">Growth matrix</span><h3>Performance at every labelled partition</h3></div></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Model</th><th *ngFor="let partition of partitions()">{{ partition }}%</th></tr></thead>
+      <tbody><tr *ngFor="let model of current.detectors">
+        <td><strong>{{ model }}</strong></td>
+        <td *ngFor="let partition of partitions()">
+          <ng-container *ngIf="metric(model, partition) as item">
+            <b>{{ percent(item.prAuc) }} PR-AUC · {{ item.prAucLift | number:'1.1-1' }}× lift</b>
+            <small>{{ percent(item.accuracy) }} accuracy · {{ percent(item.balancedAccuracy) }} balanced</small>
+            <small>{{ percent(item.precision) }} precision · {{ percent(item.recall) }} recall</small>
+            <small>{{ percent(item.f1) }} F1 · {{ item.rowsPerSecond | number:'1.0-0' }} rows/s</small>
+          </ng-container>
+          <span *ngIf="!metric(model, partition)">Not usable</span>
+        </td>
+      </tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" *ngIf="report() as current">
+    <div class="section-heading"><div><span class="eyebrow">Accuracy Matrix</span><h3>Confusion matrix at 100% history</h3></div></div>
+    <p class="matrix-note">Plain accuracy can look high because legitimate transactions are 95% of this dataset. Read it together with balanced accuracy, PR-AUC, precision, and recall.</p>
+    <div class="matrix-grid">
+      <article class="model-matrix" *ngFor="let model of current.detectors">
+        <header><strong>{{ model }}</strong><span>Threshold {{ fullMetric(model)?.decisionThreshold | number:'1.3-3' }}</span></header>
+        <ng-container *ngIf="fullMetric(model) as value">
+          <div class="matrix-axis"><span></span><b>Predicted legitimate</b><b>Predicted fraud</b></div>
+          <div class="matrix-row"><b>Actual legitimate</b><span class="correct">TN {{ value.trueNegative | number }}<small>{{ matrixRate(value.trueNegative, value) }}</small></span><span class="wrong">FP {{ value.falsePositive | number }}<small>{{ matrixRate(value.falsePositive, value) }}</small></span></div>
+          <div class="matrix-row"><b>Actual fraud</b><span class="wrong">FN {{ value.falseNegative | number }}<small>{{ matrixRate(value.falseNegative, value) }}</small></span><span class="correct">TP {{ value.truePositive | number }}<small>{{ matrixRate(value.truePositive, value) }}</small></span></div>
+        </ng-container>
+      </article>
+    </div>
+  </section>
+</section>

@@ -6,7 +6,15 @@ from unittest.mock import patch
 import numpy as np
 from fastapi import HTTPException
 
-from app.main import _persisted_feature_matrix, _sunset_header, app, predict_persisted_features
+from app.main import (
+    _models,
+    _cached_models,
+    _evaluate_models,
+    _persisted_feature_matrix,
+    _sunset_header,
+    app,
+    predict_persisted_features,
+)
 from app.schemas import PersistedFeaturePredictRequest
 
 
@@ -16,6 +24,46 @@ class IdentityScaler:
 
 
 class PersistedFeatureMatrixTest(unittest.TestCase):
+    def tearDown(self):
+        _cached_models.cache_clear()
+
+    @patch("app.main.os.path.isdir", return_value=True)
+    @patch("app.main.load_models")
+    def test_reuses_loaded_artifacts_for_same_versioned_directory(self, load_models, _isdir):
+        loaded = object()
+        load_models.return_value = loaded
+
+        self.assertIs(loaded, _models("C:/models/version-1"))
+        self.assertIs(loaded, _models("C:/models/version-1"))
+
+        load_models.assert_called_once_with("C:/models/version-1")
+
+    def test_isolation_forest_uses_one_tree_scoring_pass(self):
+        class IsolationForestProbe:
+            offset_ = -0.5
+
+            def __init__(self):
+                self.score_calls = 0
+                self.predict_calls = 0
+
+            def score_samples(self, _values):
+                self.score_calls += 1
+                return np.array([-0.6])
+
+            def predict(self, _values):
+                self.predict_calls += 1
+                return np.array([-1])
+
+        model = IsolationForestProbe()
+        loaded = SimpleNamespace(iso_model=model)
+
+        result = _evaluate_models(loaded, np.array([[1.0]]), ["IsolationForest"])
+
+        self.assertTrue(result["IsolationForest"]["anomaly"])
+        self.assertAlmostEqual(-0.1, result["IsolationForest"]["decisionFunction"])
+        self.assertEqual(1, model.score_calls)
+        self.assertEqual(0, model.predict_calls)
+
     def test_legacy_routes_publish_deprecation_metadata(self):
         operation = app.openapi()["paths"]["/api/v1/fraud/predict"]["post"]
 
@@ -54,85 +102,10 @@ class PersistedFeatureMatrixTest(unittest.TestCase):
 
         self.assertEqual(400, error.exception.status_code)
 
-    @patch("app.main.load_hst_artifact")
-    @patch("app.main._evaluate_models")
-    @patch("app.main._persisted_feature_matrix")
-    @patch("app.main.load_models")
-    def test_active_hst_is_returned_as_production_decision(
-        self, load_models, feature_matrix, evaluate_models, load_hst_artifact
-    ):
-        load_models.return_value = SimpleNamespace(available_models={"IsolationForest": object()})
-        feature_matrix.return_value = np.array([[1.0]])
-        evaluate_models.return_value = {"IsolationForest": {"anomaly": False}}
-        load_hst_artifact.return_value = SimpleNamespace(
-            feature_version="AML_FEATURES_V2",
-            model_version="HST-2",
-            model_segment="RETAIL_GENERAL",
-            threshold=0.8,
-            score=lambda features: 0.9,
-            normalized_score=lambda features: 1.0,
-        )
-        request = PersistedFeaturePredictRequest(
-            transactionId="T-1",
-            accountId="A-1",
-            featureVersion="AML_FEATURES_V2",
-            modelFeatureSchema="LEGACY_MODEL_INPUT_V1",
-            features={"amount": 1.0},
-            modelsDir="batch",
-            modelNames=["IsolationForest"],
-            activeModelsDir="hst",
-            activeModelVersion="HST-2",
-        )
-
-        response = predict_persisted_features(request)
-
-        self.assertTrue(response.modelResults["HalfSpaceTrees"]["anomaly"])
-        self.assertTrue(response.modelResults["HalfSpaceTrees"]["affectsProductionDecision"])
-        self.assertEqual("HST-2", response.featureSummary["activeModel"]["modelVersion"])
-
-    @patch("app.main.load_online_ocsvm_artifact")
-    @patch("app.main._evaluate_models")
-    @patch("app.main._persisted_feature_matrix")
-    @patch("app.main.load_models")
-    def test_online_ocsvm_is_returned_as_non_decision_shadow_score(
-        self, load_models, feature_matrix, evaluate_models, load_online_ocsvm_artifact
-    ):
-        load_models.return_value = SimpleNamespace(available_models={"IsolationForest": object()})
-        feature_matrix.return_value = np.array([[1.0]])
-        evaluate_models.return_value = {"IsolationForest": {"anomaly": False}}
-        load_online_ocsvm_artifact.return_value = SimpleNamespace(
-            feature_version="AML_FEATURES_V2",
-            model_version="OCSVM-2",
-            model_segment="RETAIL_GENERAL",
-            raw_threshold=0.8,
-            raw_score=lambda features: 0.9,
-            normalized_score=lambda features: 1.0,
-        )
-        request = PersistedFeaturePredictRequest(
-            transactionId="T-1",
-            accountId="A-1",
-            featureVersion="AML_FEATURES_V2",
-            modelFeatureSchema="LEGACY_MODEL_INPUT_V1",
-            features={"amount": 1.0},
-            modelsDir="batch",
-            modelNames=["IsolationForest"],
-            shadowOnlineSvmDir="online-svm",
-            shadowOnlineSvmVersion="OCSVM-2",
-        )
-
-        response = predict_persisted_features(request)
-
-        self.assertTrue(response.modelResults["OnlineOneClassSVM"]["anomaly"])
-        self.assertFalse(response.modelResults["OnlineOneClassSVM"]["affectsProductionDecision"])
-        self.assertEqual(
-            "OCSVM-2",
-            response.featureSummary["onlineOneClassSvmShadow"]["modelVersion"],
-        )
-
     @patch("app.main.load_models")
     def test_v2_rejects_offline_only_models(self, load_models):
         load_models.return_value = SimpleNamespace(
-            available_models={"IsolationForest": object(), "LOF": object()}
+            available_models={"IsolationForest": object()}
         )
         request = PersistedFeaturePredictRequest(
             transactionId="T-1",
@@ -141,7 +114,7 @@ class PersistedFeatureMatrixTest(unittest.TestCase):
             modelFeatureSchema="LEGACY_MODEL_INPUT_V1",
             features={"amount": 1.0},
             modelsDir="batch",
-            modelNames=["LOF"],
+            modelNames=["ResearchOnlyDetector"],
         )
 
         with self.assertRaises(HTTPException) as error:

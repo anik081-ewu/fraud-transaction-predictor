@@ -24,23 +24,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class RiskPolicyConfigService {
 
     private static final String MODEL_ALLOCATIONS_JSON = "aml.risk.ml_model_allocations_json";
-    private static final String INCREMENTAL_SCHEDULE = "aml.training.schedule.incremental";
-    private static final String BATCH_SCHEDULE = "aml.training.schedule.batch";
     private static final DateTimeFormatter VERSION_FORMAT = DateTimeFormatter
             .ofPattern("yyyyMMddHHmmssSSS")
             .withZone(ZoneOffset.UTC);
     private static final TypeReference<List<StoredModelAllocation>> MODEL_LIST = new TypeReference<>() {};
 
     private static final Map<String, Definition> DEFINITIONS = definitions();
-    private static final Map<String, SupportedModel> SUPPORTED_MODELS = supportedModels();
-    private static final Set<String> SCHEDULES = Set.of("DAILY", "WEEKLY");
+    private static final String SYSTEM_LEARNING_MODE = "system.learning_mode";
+    private static final Map<String, SupportedModel> UNSUPERVISED_MODELS = unsupervisedModels();
+    private static final Map<String, SupportedModel> SUPERVISED_MODELS = supervisedModels();
 
     private final AppConfigRepository appConfigRepository;
     private final ObjectMapper objectMapper;
@@ -70,8 +68,6 @@ public class RiskPolicyConfigService {
         Instant now = clock.instant();
         String version = "AML_RISK_POLICY_" + VERSION_FORMAT.format(now);
         Map<String, StoredModelAllocation> modelAllocations = validatedModels(request.models());
-        String incrementalSchedule = normalizedSchedule(request.incrementalSchedule(), "DAILY");
-        String batchSchedule = normalizedSchedule(request.batchSchedule(), "WEEKLY");
         new RiskPolicy(
                 version,
                 request.customerBehaviourWeight(),
@@ -91,8 +87,6 @@ public class RiskPolicyConfigService {
         save(MODEL_ALLOCATIONS_JSON, json(modelAllocations.values().stream()
                 .sorted(Comparator.comparing(StoredModelAllocation::modelKey))
                 .toList()), now);
-        save(INCREMENTAL_SCHEDULE, incrementalSchedule, now);
-        save(BATCH_SCHEDULE, batchSchedule, now);
         save(AppConfigRiskPolicyRepository.LOW_THRESHOLD, decimal(request.lowRiskThreshold()), now);
         save(AppConfigRiskPolicyRepository.MEDIUM_THRESHOLD, decimal(request.mediumRiskThreshold()), now);
         save(AppConfigRiskPolicyRepository.HIGH_THRESHOLD, decimal(request.highRiskThreshold()), now);
@@ -163,6 +157,7 @@ public class RiskPolicyConfigService {
                 .orElse(null);
         return new RiskPolicyConfigResponse(
                 value(AppConfigRiskPolicyRepository.VERSION),
+                learningMode(),
                 customerWeight,
                 peerWeight,
                 mlEnsembleWeight,
@@ -192,8 +187,6 @@ public class RiskPolicyConfigService {
                         doubleValue(AppConfigRiskPolicyRepository.RULES_HIGH_EXPECTED_TURNOVER_RATIO)
                 ),
                 responseModels(allocations, mlEnsembleWeight),
-                value(INCREMENTAL_SCHEDULE),
-                value(BATCH_SCHEDULE),
                 doubleValue(AppConfigRiskPolicyRepository.LOW_THRESHOLD),
                 doubleValue(AppConfigRiskPolicyRepository.MEDIUM_THRESHOLD),
                 doubleValue(AppConfigRiskPolicyRepository.HIGH_THRESHOLD),
@@ -256,10 +249,6 @@ public class RiskPolicyConfigService {
                 new Definition("0.25", "DECIMAL", "Deterministic AML rules contribution to final risk."));
         definitions.put(MODEL_ALLOCATIONS_JSON,
                 new Definition("[]", "JSON", "Selected production ML models and their relative ensemble weights."));
-        definitions.put(INCREMENTAL_SCHEDULE,
-                new Definition("DAILY", "STRING", "Retraining cadence for incremental production detectors."));
-        definitions.put(BATCH_SCHEDULE,
-                new Definition("WEEKLY", "STRING", "Retraining cadence for batch production detectors."));
         definitions.put(AppConfigRiskPolicyRepository.LOW_THRESHOLD,
                 new Definition("0.40", "DECIMAL", "Inclusive LOW risk threshold."));
         definitions.put(AppConfigRiskPolicyRepository.MEDIUM_THRESHOLD,
@@ -309,6 +298,7 @@ public class RiskPolicyConfigService {
     }
 
     private Map<String, StoredModelAllocation> validatedModels(List<RiskPolicyModelConfigRequest> requestedModels) {
+        Map<String, SupportedModel> supportedModels = activeModels();
         List<RiskPolicyModelConfigRequest> models = requestedModels == null ? List.of() : requestedModels;
         Map<String, RiskPolicyModelConfigRequest> byKey = models.stream()
                 .filter(Objects::nonNull)
@@ -323,7 +313,14 @@ public class RiskPolicyConfigService {
         }
         List<StoredModelAllocation> allocations = new ArrayList<>();
         double enabledTotal = 0.0;
-        for (SupportedModel model : SUPPORTED_MODELS.values()) {
+        List<String> unsupported = byKey.keySet().stream()
+                .filter(key -> !supportedModels.containsKey(key))
+                .toList();
+        if (!unsupported.isEmpty()) {
+            throw new IllegalArgumentException("Models do not match the active " + learningMode()
+                    + " system type: " + String.join(", ", unsupported));
+        }
+        for (SupportedModel model : supportedModels.values()) {
             RiskPolicyModelConfigRequest request = byKey.get(model.modelKey());
             boolean enabled = request != null && request.enabled();
             double weight = enabled ? request.weight() : 0.0;
@@ -351,7 +348,7 @@ public class RiskPolicyConfigService {
             Map<String, StoredModelAllocation> allocations,
             double mlEnsembleWeight
     ) {
-        return SUPPORTED_MODELS.values().stream()
+        return activeModels().values().stream()
                 .map(model -> {
                     StoredModelAllocation allocation = allocations.getOrDefault(
                             model.modelKey(), new StoredModelAllocation(model.modelKey(), false, 0.0)
@@ -372,12 +369,13 @@ public class RiskPolicyConfigService {
     }
 
     private Map<String, StoredModelAllocation> storedAllocations() {
+        Map<String, SupportedModel> supportedModels = activeModels();
         String raw = value(MODEL_ALLOCATIONS_JSON);
         if (!raw.isBlank() && !"[]".equals(raw)) {
             try {
                 Map<String, StoredModelAllocation> parsed = objectMapper.readValue(raw, MODEL_LIST).stream()
                         .filter(Objects::nonNull)
-                        .filter(model -> SUPPORTED_MODELS.containsKey(model.modelKey()))
+                        .filter(model -> supportedModels.containsKey(model.modelKey()))
                         .collect(Collectors.toMap(
                                 StoredModelAllocation::modelKey,
                                 allocation -> allocation,
@@ -385,20 +383,32 @@ public class RiskPolicyConfigService {
                                 LinkedHashMap::new
                         ));
                 if (!parsed.isEmpty()) {
-                    return parsed;
+                    return normalizedAllocations(parsed);
                 }
             } catch (Exception ignored) {
             }
         }
-        return Map.of("ISOLATION_FOREST", new StoredModelAllocation("ISOLATION_FOREST", true, 1.0));
+        return defaultAllocation();
     }
 
-    private String normalizedSchedule(String value, String defaultValue) {
-        String normalized = value == null ? defaultValue : value.trim().toUpperCase();
-        if (!SCHEDULES.contains(normalized)) {
-            throw new IllegalArgumentException("Supported retraining schedules are DAILY and WEEKLY");
+    private Map<String, StoredModelAllocation> normalizedAllocations(Map<String, StoredModelAllocation> allocations) {
+        double total = allocations.values().stream()
+                .filter(StoredModelAllocation::enabled)
+                .mapToDouble(StoredModelAllocation::weight)
+                .filter(weight -> Double.isFinite(weight) && weight > 0.0)
+                .sum();
+        if (total <= 0.0) {
+            return defaultAllocation();
         }
-        return normalized;
+        return allocations.values().stream().collect(Collectors.toMap(
+                StoredModelAllocation::modelKey,
+                allocation -> new StoredModelAllocation(
+                        allocation.modelKey(), allocation.enabled(),
+                        allocation.enabled() ? allocation.weight() / total : 0.0
+                ),
+                (_first, second) -> second,
+                LinkedHashMap::new
+        ));
     }
 
     private String json(Object value) {
@@ -413,13 +423,37 @@ public class RiskPolicyConfigService {
         return key == null ? "" : key.trim().toUpperCase();
     }
 
-    private static Map<String, SupportedModel> supportedModels() {
+    private String learningMode() {
+        return appConfigRepository.findById(SYSTEM_LEARNING_MODE)
+                .map(AppConfig::getConfigValue)
+                .map(String::trim)
+                .map(String::toUpperCase)
+                .filter(value -> value.equals("SUPERVISED") || value.equals("UNSUPERVISED"))
+                .orElse("UNSUPERVISED");
+    }
+
+    private Map<String, SupportedModel> activeModels() {
+        return "SUPERVISED".equals(learningMode()) ? SUPERVISED_MODELS : UNSUPERVISED_MODELS;
+    }
+
+    private Map<String, StoredModelAllocation> defaultAllocation() {
+        String modelKey = activeModels().keySet().iterator().next();
+        return Map.of(modelKey, new StoredModelAllocation(modelKey, true, 1.0));
+    }
+
+    private static Map<String, SupportedModel> unsupervisedModels() {
         Map<String, SupportedModel> models = new LinkedHashMap<>();
-        models.put("ISOLATION_FOREST", new SupportedModel("ISOLATION_FOREST", "Isolation Forest", "BATCH", true));
-        models.put("ONE_CLASS_SVM", new SupportedModel("ONE_CLASS_SVM", "One-Class SVM", "BATCH", true));
-        models.put("AUTOENCODER", new SupportedModel("AUTOENCODER", "Autoencoder", "BATCH", true));
-        models.put("HALF_SPACE_TREES", new SupportedModel("HALF_SPACE_TREES", "Half-Space Trees", "INCREMENTAL", true));
-        models.put("ONLINE_ONE_CLASS_SVM", new SupportedModel("ONLINE_ONE_CLASS_SVM", "Online One-Class SVM", "INCREMENTAL", true));
+        models.put("ISOLATION_FOREST", new SupportedModel("ISOLATION_FOREST", "Isolation Forest", "UNSUPERVISED", true));
+        models.put("AUTOENCODER", new SupportedModel("AUTOENCODER", "Autoencoder", "UNSUPERVISED", true));
+        models.put("LOCAL_OUTLIER_FACTOR", new SupportedModel("LOCAL_OUTLIER_FACTOR", "Local Outlier Factor", "UNSUPERVISED", true));
+        return Map.copyOf(models);
+    }
+
+    private static Map<String, SupportedModel> supervisedModels() {
+        Map<String, SupportedModel> models = new LinkedHashMap<>();
+        models.put("XGBOOST_CLASSIFIER", new SupportedModel("XGBOOST_CLASSIFIER", "XGBoost", "SUPERVISED", true));
+        models.put("RANDOM_FOREST_CLASSIFIER", new SupportedModel("RANDOM_FOREST_CLASSIFIER", "Random Forest", "SUPERVISED", true));
+        models.put("LOGISTIC_REGRESSION", new SupportedModel("LOGISTIC_REGRESSION", "Logistic Regression", "SUPERVISED", true));
         return Map.copyOf(models);
     }
 

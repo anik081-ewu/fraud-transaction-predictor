@@ -12,91 +12,70 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 public class ModelTuningConfigService {
 
-    private static final List<Definition> DEFINITIONS = List.of(
-            // Evaluation protocol — controls how all models are trained and compared
+    private static final List<Definition> COMMON_DEFINITIONS = List.of(
             definition("aml.research.minimum_rows", "200", "INTEGER", "Evaluation Protocol", "Minimum partition rows",
-                    "Skip data partitions with fewer rows than this limit during comparison training.", 50.0, 100000.0, "50", List.of()),
+                    "Skip comparison partitions with fewer rows than this limit.", 50.0, 100000.0, "50"),
             definition("aml.research.holdout_fraction", "0.20", "DECIMAL", "Evaluation Protocol", "Chronological holdout fraction",
-                    "Newest fraction of each partition reserved for evaluation; the remainder trains each model.", 0.10, 0.40, "0.01", List.of()),
+                    "Newest fraction of each partition reserved for evaluation.", 0.10, 0.40, "0.01"),
             definition("aml.research.maximum_evaluation_rows", "20000", "INTEGER", "Evaluation Protocol", "Evaluation row cap",
-                    "Maximum holdout rows scored per model per partition during comparison.", 100.0, 1000000.0, "100", List.of()),
+                    "Maximum evaluation rows scored per model and partition.", 100.0, 1000000.0, "100"),
             definition("aml.research.random_seed", "42", "INTEGER", "Evaluation Protocol", "Random seed",
-                    "Shared reproducibility seed for all model training and comparison runs.", 0.0, 2147483647.0, "1", List.of()),
+                    "Shared reproducibility seed for training and comparison.", 0.0, 2147483647.0, "1")
+    );
 
-            // Incremental models — trained continuously on live transaction windows
-            definition("aml.hst.enabled", "true", "BOOLEAN", "Half-Space Trees", "Training enabled",
-                    "Generate new Half-Space Trees candidates during training runs.", null, null, null, List.of()),
-            definition("aml.hst.n_trees", "50", "INTEGER", "Half-Space Trees", "Number of trees",
-                    "Ensemble size — more trees give more stable scores at higher memory cost.", 5.0, 500.0, "5", List.of()),
-            definition("aml.hst.height", "8", "INTEGER", "Half-Space Trees", "Tree height",
-                    "Maximum random partition depth per tree.", 3.0, 20.0, "1", List.of()),
-            definition("aml.hst.window_size", "250", "INTEGER", "Half-Space Trees", "Streaming window size",
-                    "Number of rows per reference/current mass update window.", 50.0, 100000.0, "50", List.of()),
-            definition("aml.hst.threshold_quantile", "0.99", "DECIMAL", "Half-Space Trees", "Anomaly threshold quantile",
-                    "Training score quantile used as the anomaly decision boundary.", 0.90, 0.9999, "0.001", List.of()),
-            definition("aml.hst.parquet_batch_size", "65536", "INTEGER", "Half-Space Trees", "Parquet batch size",
-                    "Feature rows decoded per Python batch during training.", 1000.0, 262144.0, "1024", List.of()),
-            definition("aml.hst.seed", "42", "INTEGER", "Half-Space Trees", "Model seed",
-                    "Reproducibility seed for tree structure initialisation.", 0.0, 2147483647.0, "1", List.of()),
-
-            definition("aml.online_ocsvm.enabled", "true", "BOOLEAN", "Online One-Class SVM", "Training enabled",
-                    "Generate new Online One-Class SVM candidates during training runs.", null, null, null, List.of()),
-            definition("aml.online_ocsvm.nu", "0.05", "DECIMAL", "Online One-Class SVM", "Nu",
-                    "Upper bound on the fraction of training errors and support vectors.", 0.001, 0.50, "0.001", List.of()),
-            definition("aml.online_ocsvm.learning_rate", "0.01", "DECIMAL", "Online One-Class SVM", "Learning rate",
-                    "Stochastic gradient step size for model weight updates.", 0.000001, 1.0, "0.001", List.of()),
-            definition("aml.online_ocsvm.intercept_learning_rate", "0.01", "DECIMAL", "Online One-Class SVM", "Intercept learning rate",
-                    "Stochastic gradient step size for the decision intercept.", 0.000001, 1.0, "0.001", List.of()),
-            definition("aml.online_ocsvm.gamma", "0.5", "DECIMAL", "Online One-Class SVM", "RBF gamma",
-                    "Random Fourier feature kernel width — controls sensitivity to feature distances.", 0.000001, 100.0, "0.01", List.of()),
-            definition("aml.online_ocsvm.n_components", "64", "INTEGER", "Online One-Class SVM", "Random feature components",
-                    "RBF approximation dimensions; higher values improve accuracy at higher CPU/memory cost.", 8.0, 2048.0, "8", List.of()),
-            definition("aml.online_ocsvm.threshold_quantile", "0.99", "DECIMAL", "Online One-Class SVM", "Anomaly threshold quantile",
-                    "Calibration score quantile used as the anomaly decision boundary.", 0.90, 0.9999, "0.001", List.of()),
-            definition("aml.online_ocsvm.min_calibration_rows", "200", "INTEGER", "Online One-Class SVM", "Minimum calibration rows",
-                    "Minimum learned rows before threshold calibration is attempted.", 20.0, 1000000.0, "10", List.of()),
-            definition("aml.online_ocsvm.parquet_batch_size", "65536", "INTEGER", "Online One-Class SVM", "Parquet batch size",
-                    "Feature rows decoded per Python batch during training.", 1000.0, 262144.0, "1024", List.of()),
-            definition("aml.online_ocsvm.seed", "42", "INTEGER", "Online One-Class SVM", "Model seed",
-                    "Reproducibility seed for random Fourier feature initialisation.", 0.0, 2147483647.0, "1", List.of()),
-
-            // Batch models — trained on historical snapshots
+    private static final List<Definition> UNSUPERVISED_DEFINITIONS = List.of(
             definition("aml.isolation_forest.enabled", "true", "BOOLEAN", "Isolation Forest", "Training enabled",
-                    "Generate new Isolation Forest candidates during training runs.", null, null, null, List.of()),
+                    "Generate new Isolation Forest candidates.", null, null, null),
             definition("aml.research.isolation_forest_n_estimators", "200", "INTEGER", "Isolation Forest", "Number of trees",
-                    "More trees improve anomaly score stability at higher training time cost.", 50.0, 2000.0, "50", List.of()),
+                    "More trees improve score stability at additional training cost.", 50.0, 2000.0, "50"),
             definition("aml.research.isolation_forest_max_samples", "10000", "INTEGER", "Isolation Forest", "Max samples per tree",
-                    "Rows sampled per tree — default 256 is too small for large datasets; 10,000 gives much stronger isolation signal.", 256.0, 100000.0, "256", List.of()),
-            definition("aml.isolation_forest.threshold_quantile", "0.99", "DECIMAL", "Isolation Forest", "Anomaly threshold quantile",
-                    "Training score quantile used as the anomaly decision boundary.", 0.90, 0.9999, "0.001", List.of()),
-            definition("aml.research.isolation_forest_max_training_rows", "100000", "INTEGER", "Isolation Forest", "Training row cap",
-                    "Maximum rows loaded from historical data for each training run.", 1000.0, 1000000.0, "1000", List.of()),
-            definition("aml.isolation_forest.parquet_batch_size", "65536", "INTEGER", "Isolation Forest", "Parquet batch size",
-                    "Feature rows decoded per Python batch during training.", 1000.0, 262144.0, "1024", List.of()),
-
-            definition("aml.ocsvm_batch.enabled", "true", "BOOLEAN", "One-Class SVM", "Training enabled",
-                    "Generate new batch One-Class SVM candidates during training runs.", null, null, null, List.of()),
-            definition("aml.ocsvm_batch.nu", "0.05", "DECIMAL", "One-Class SVM", "Nu",
-                    "Upper bound on the fraction of training errors and support vectors.", 0.001, 0.50, "0.001", List.of()),
-            definition("aml.ocsvm_batch.threshold_quantile", "0.99", "DECIMAL", "One-Class SVM", "Anomaly threshold quantile",
-                    "Training score quantile used as the anomaly decision boundary.", 0.90, 0.9999, "0.001", List.of()),
-            definition("aml.research.ocsvm_max_training_rows", "1000000", "INTEGER", "One-Class SVM", "Training row cap",
-                    "Maximum rows used for fitting — set high to train on all available data.", 1000.0, 10000000.0, "1000", List.of()),
-            definition("aml.ocsvm_batch.parquet_batch_size", "65536", "INTEGER", "One-Class SVM", "Parquet batch size",
-                    "Feature rows decoded per Python batch during training.", 1000.0, 262144.0, "1024", List.of()),
-
+                    "Rows sampled per isolation tree.", 256.0, 100000.0, "256"),
             definition("aml.autoencoder.enabled", "true", "BOOLEAN", "Autoencoder", "Training enabled",
-                    "Generate new Autoencoder candidates during training runs.", null, null, null, List.of()),
+                    "Generate new Autoencoder candidates.", null, null, null),
             definition("aml.research.autoencoder_hidden_layer_sizes", "32,8,32", "TEXT", "Autoencoder", "Hidden layer sizes",
-                    "Comma-separated neuron counts per layer. The middle value is the bottleneck — smaller forces tighter compression and stronger anomaly signal.", null, null, null, List.of()),
+                    "Comma-separated neuron counts; the middle layer is the bottleneck.", null, null, null),
             definition("aml.research.autoencoder_max_iter", "200", "INTEGER", "Autoencoder", "Max training iterations",
-                    "Maximum gradient descent epochs — early stopping may terminate training before this limit.", 10.0, 2000.0, "10", List.of()),
-            definition("aml.research.autoencoder_max_training_rows", "50000", "INTEGER", "Autoencoder", "Training row cap",
-                    "Maximum rows used for fitting the autoencoder.", 1000.0, 1000000.0, "1000", List.of())
+                    "Maximum optimization iterations before training stops.", 10.0, 2000.0, "10"),
+            definition("aml.lof.enabled", "true", "BOOLEAN", "Local Outlier Factor", "Training enabled",
+                    "Generate new Local Outlier Factor candidates.", null, null, null),
+            definition("ml.lof.n_neighbors", "35", "INTEGER", "Local Outlier Factor", "Neighbour count",
+                    "Nearby transactions used to estimate local density.", 5.0, 500.0, "5"),
+            definition("ml.lof.contamination", "0.05", "DECIMAL", "Local Outlier Factor", "Expected anomaly rate",
+                    "Expected outlier fraction used for the decision boundary.", 0.001, 0.25, "0.001")
+    );
+
+    private static final List<Definition> SUPERVISED_DEFINITIONS = List.of(
+            definition("ml.xgboost.enabled", "true", "BOOLEAN", "XGBoost", "Training enabled",
+                    "Generate new XGBoost fraud-classifier candidates.", null, null, null),
+            definition("ml.xgboost.n_estimators", "300", "INTEGER", "XGBoost", "Boosting trees",
+                    "Number of sequential boosted trees.", 50.0, 2000.0, "50"),
+            definition("ml.xgboost.max_depth", "6", "INTEGER", "XGBoost", "Maximum tree depth",
+                    "Maximum interaction depth of each tree.", 2.0, 16.0, "1"),
+            definition("ml.xgboost.learning_rate", "0.05", "DECIMAL", "XGBoost", "Learning rate",
+                    "Contribution of each new tree.", 0.005, 0.5, "0.005"),
+            definition("ml.xgboost.subsample", "0.8", "DECIMAL", "XGBoost", "Row sample fraction",
+                    "Fraction of labelled rows sampled for each tree.", 0.5, 1.0, "0.05"),
+            definition("ml.xgboost.colsample_bytree", "0.8", "DECIMAL", "XGBoost", "Feature sample fraction",
+                    "Fraction of features sampled for each tree.", 0.5, 1.0, "0.05"),
+            definition("ml.random_forest.enabled", "true", "BOOLEAN", "Random Forest", "Training enabled",
+                    "Generate new Random Forest fraud-classifier candidates.", null, null, null),
+            definition("ml.random_forest.n_estimators", "300", "INTEGER", "Random Forest", "Number of trees",
+                    "Number of independently trained trees.", 50.0, 2000.0, "50"),
+            definition("ml.random_forest.max_depth", "12", "INTEGER", "Random Forest", "Maximum tree depth",
+                    "Limits tree complexity and memorization.", 3.0, 50.0, "1"),
+            definition("ml.random_forest.min_samples_leaf", "2", "INTEGER", "Random Forest", "Minimum leaf rows",
+                    "Minimum labelled rows in each terminal leaf.", 1.0, 100.0, "1"),
+            definition("ml.logistic_regression.enabled", "true", "BOOLEAN", "Logistic Regression", "Training enabled",
+                    "Generate new Logistic Regression fraud-classifier candidates.", null, null, null),
+            definition("ml.logistic_regression.c", "1.0", "DECIMAL", "Logistic Regression", "Inverse regularization strength",
+                    "Lower values apply stronger regularization.", 0.001, 100.0, "0.1"),
+            definition("ml.logistic_regression.max_iter", "1000", "INTEGER", "Logistic Regression", "Maximum iterations",
+                    "Maximum optimization iterations before training stops.", 100.0, 10000.0, "100")
     );
 
     private final AppConfigRepository appConfigRepository;
@@ -107,13 +86,9 @@ public class ModelTuningConfigService {
 
     @Transactional(readOnly = true)
     public List<ModelTuningItemResponse> list() {
-        return DEFINITIONS.stream()
-                .map(definition -> toResponse(
-                        definition,
-                        appConfigRepository.findById(definition.key())
-                                .map(AppConfig::getConfigValue)
-                                .orElse(definition.defaultValue())
-                ))
+        return activeDefinitions().stream()
+                .map(definition -> toResponse(definition, appConfigRepository.findById(definition.key())
+                        .map(AppConfig::getConfigValue).orElse(definition.defaultValue())))
                 .toList();
     }
 
@@ -122,18 +97,16 @@ public class ModelTuningConfigService {
         if (request == null || request.values() == null || request.values().isEmpty()) {
             throw new IllegalArgumentException("Model tuning values are required");
         }
-
-        Map<String, Definition> definitionsByKey = new LinkedHashMap<>();
-        DEFINITIONS.forEach(definition -> definitionsByKey.put(definition.key(), definition));
+        Map<String, Definition> definitions = new LinkedHashMap<>();
+        activeDefinitions().forEach(definition -> definitions.put(definition.key(), definition));
         for (Map.Entry<String, String> entry : request.values().entrySet()) {
-            Definition definition = definitionsByKey.get(entry.getKey());
+            Definition definition = definitions.get(entry.getKey());
             if (definition == null) {
-                throw new IllegalArgumentException("Unsupported model tuning key: " + entry.getKey());
+                throw new IllegalArgumentException("Unsupported tuning key for the active system type: " + entry.getKey());
             }
-            String normalizedValue = validateAndNormalize(definition, entry.getValue());
             AppConfig config = appConfigRepository.findById(definition.key()).orElseGet(AppConfig::new);
             config.setConfigKey(definition.key());
-            config.setConfigValue(normalizedValue);
+            config.setConfigValue(validateAndNormalize(definition, entry.getValue()));
             config.setValueType(definition.type());
             config.setDescription(definition.description());
             config.setUpdatedAt(Instant.now());
@@ -142,10 +115,16 @@ public class ModelTuningConfigService {
         return list();
     }
 
+    private List<Definition> activeDefinitions() {
+        boolean supervised = appConfigRepository.findById("system.learning_mode")
+                .map(AppConfig::getConfigValue).map(String::trim)
+                .map("SUPERVISED"::equalsIgnoreCase).orElse(false);
+        return Stream.concat(COMMON_DEFINITIONS.stream(),
+                (supervised ? SUPERVISED_DEFINITIONS : UNSUPERVISED_DEFINITIONS).stream()).toList();
+    }
+
     private String validateAndNormalize(Definition definition, String rawValue) {
-        if (rawValue == null || rawValue.isBlank()) {
-            throw new IllegalArgumentException(definition.label() + " is required");
-        }
+        if (rawValue == null || rawValue.isBlank()) throw new IllegalArgumentException(definition.label() + " is required");
         String value = rawValue.trim();
         return switch (definition.type()) {
             case "BOOLEAN" -> {
@@ -173,14 +152,6 @@ public class ModelTuningConfigService {
                 }
             }
             case "TEXT" -> value;
-            case "SELECT" -> {
-                if (!definition.options().contains(value)) {
-                    throw new IllegalArgumentException(
-                            definition.label() + " must be one of: " + String.join(", ", definition.options())
-                    );
-                }
-                yield value;
-            }
             default -> throw new IllegalArgumentException("Unsupported value type: " + definition.type());
         };
     }
@@ -189,55 +160,23 @@ public class ModelTuningConfigService {
         if (!Double.isFinite(value)
                 || definition.minValue() != null && value < definition.minValue()
                 || definition.maxValue() != null && value > definition.maxValue()) {
-            throw new IllegalArgumentException(
-                    definition.label() + " must be between " + definition.minValue() + " and " + definition.maxValue()
-            );
+            throw new IllegalArgumentException(definition.label() + " must be between "
+                    + definition.minValue() + " and " + definition.maxValue());
         }
     }
 
     private ModelTuningItemResponse toResponse(Definition definition, String value) {
-        return new ModelTuningItemResponse(
-                definition.key(),
-                value,
-                definition.type(),
-                definition.group(),
-                definition.label(),
-                definition.description(),
-                definition.minValue(),
-                definition.maxValue(),
-                definition.step(),
-                definition.options()
-        );
+        return new ModelTuningItemResponse(definition.key(), value, definition.type(), definition.group(),
+                definition.label(), definition.description(), definition.minValue(), definition.maxValue(),
+                definition.step(), List.of());
     }
 
-    private static Definition definition(
-            String key,
-            String defaultValue,
-            String type,
-            String group,
-            String label,
-            String description,
-            Double minValue,
-            Double maxValue,
-            String step,
-            List<String> options
-    ) {
-        return new Definition(
-                key, defaultValue, type, group, label, description, minValue, maxValue, step, options
-        );
+    private static Definition definition(String key, String defaultValue, String type, String group,
+                                         String label, String description, Double minValue,
+                                         Double maxValue, String step) {
+        return new Definition(key, defaultValue, type, group, label, description, minValue, maxValue, step);
     }
 
-    private record Definition(
-            String key,
-            String defaultValue,
-            String type,
-            String group,
-            String label,
-            String description,
-            Double minValue,
-            Double maxValue,
-            String step,
-            List<String> options
-    ) {
-    }
+    private record Definition(String key, String defaultValue, String type, String group, String label,
+                              String description, Double minValue, Double maxValue, String step) {}
 }

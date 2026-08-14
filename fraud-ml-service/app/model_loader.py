@@ -1,6 +1,6 @@
 import os
 import pickle
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import joblib
 import json
@@ -18,6 +18,8 @@ class LoadedModels:
     feature_columns: list[str]
     hyperparams: dict
     available_models: dict[str, object]
+    supervised_scaler: object | None = None
+    supervised_feature_columns: list[str] = field(default_factory=list)
 
 
 def load_models(models_dir: str) -> LoadedModels:
@@ -27,6 +29,11 @@ def load_models(models_dir: str) -> LoadedModels:
     elliptic_path = os.path.join(models_dir, "elliptic_envelope.pkl")
     pca_path = os.path.join(models_dir, "pca_reconstruction.pkl")
     autoencoder_path = os.path.join(models_dir, "autoencoder.pkl")
+    supervised_paths = {
+        "XGBoost": "xgboost_classifier.pkl",
+        "RandomForestClassifier": "random_forest_classifier.pkl",
+        "LogisticRegression": "logistic_regression.pkl",
+    }
 
     iso_model = joblib.load(iso_path) if os.path.exists(iso_path) else None
     lof_model = joblib.load(lof_path) if os.path.exists(lof_path) else None
@@ -34,14 +41,30 @@ def load_models(models_dir: str) -> LoadedModels:
     elliptic_model = joblib.load(elliptic_path) if os.path.exists(elliptic_path) else None
     pca_model = joblib.load(pca_path) if os.path.exists(pca_path) else None
     autoencoder_model = joblib.load(autoencoder_path) if os.path.exists(autoencoder_path) else None
-    scaler = joblib.load(os.path.join(models_dir, "scaler.pkl"))
-    with open(os.path.join(models_dir, "feature_columns.pkl"), "rb") as f:
-        feature_columns = pickle.load(f)
+    supervised_models = {
+        name: joblib.load(os.path.join(models_dir, file_name))
+        for name, file_name in supervised_paths.items()
+        if os.path.exists(os.path.join(models_dir, file_name))
+    }
+    scaler_path = os.path.join(models_dir, "scaler.pkl")
+    columns_path = os.path.join(models_dir, "feature_columns.pkl")
+    scaler = joblib.load(scaler_path) if os.path.exists(scaler_path) else None
+    feature_columns = []
+    if os.path.exists(columns_path):
+        with open(columns_path, "rb") as f:
+            feature_columns = pickle.load(f)
     hp_path = os.path.join(models_dir, "training_hyperparams.json")
     hyperparams = {}
     if os.path.exists(hp_path):
         with open(hp_path, "r", encoding="utf-8") as f:
             hyperparams = json.load(f) or {}
+    supervised_scaler_path = os.path.join(models_dir, "supervised_scaler.pkl")
+    supervised_columns_path = os.path.join(models_dir, "supervised_feature_columns.pkl")
+    supervised_scaler = joblib.load(supervised_scaler_path) if os.path.exists(supervised_scaler_path) else None
+    supervised_feature_columns = []
+    if os.path.exists(supervised_columns_path):
+        with open(supervised_columns_path, "rb") as handle:
+            supervised_feature_columns = pickle.load(handle)
     return LoadedModels(
         iso_model=iso_model,
         lof_model=lof_model,
@@ -52,7 +75,7 @@ def load_models(models_dir: str) -> LoadedModels:
         scaler=scaler,
         feature_columns=feature_columns,
         hyperparams=hyperparams,
-        available_models={
+        available_models={**{
             name: model
             for name, model in {
                 "IsolationForest": iso_model,
@@ -63,5 +86,7 @@ def load_models(models_dir: str) -> LoadedModels:
                 "Autoencoder": autoencoder_model,
             }.items()
             if model is not None
-        },
+        }, **supervised_models},
+        supervised_scaler=supervised_scaler,
+        supervised_feature_columns=supervised_feature_columns,
     )

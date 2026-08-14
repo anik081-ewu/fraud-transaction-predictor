@@ -8,10 +8,11 @@ import { AnomalyConfigPageComponent } from './pages/anomaly-config-page.componen
 import { CasesPageComponent } from './pages/cases-page.component';
 import { ManualCasePageComponent } from './pages/manual-case-page.component';
 import { TransactionCheckPageComponent } from './pages/transaction-check-page.component';
-import { ColdStartConfigPageComponent } from './pages/cold-start-config-page.component';
+import { SettingsPageComponent } from './pages/cold-start-config-page.component';
 import { DatasetsPageComponent } from './pages/datasets-page.component';
 import { UploadPageComponent } from './pages/upload-page.component';
 import { TrainingOperationsPageComponent } from './pages/training-operations-page.component';
+import { SupervisedComparisonPageComponent } from './pages/supervised-comparison-page.component';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'datasets' },
@@ -19,9 +20,11 @@ export const routes: Routes = [
   { path: 'register', component: RegisterPageComponent },
   { path: 'uploads', component: UploadPageComponent, canActivate: [authGuard] },
   { path: 'datasets', component: DatasetsPageComponent, canActivate: [authGuard] },
-{ path: 'training-operations', component: TrainingOperationsPageComponent, canActivate: [administratorGuard] },
+  { path: 'supervised-comparison', component: SupervisedComparisonPageComponent, canActivate: [authGuard] },
+  { path: 'training-operations', component: TrainingOperationsPageComponent, canActivate: [administratorGuard] },
   { path: 'config', component: AnomalyConfigPageComponent, canActivate: [administratorGuard] },
-  { path: 'cold-start', component: ColdStartConfigPageComponent, canActivate: [administratorGuard] },
+  { path: 'settings', component: SettingsPageComponent, canActivate: [administratorGuard] },
+  { path: 'cold-start', pathMatch: 'full', redirectTo: 'settings' },
   { path: 'model-tuning', component: ModelTuningPageComponent, canActivate: [administratorGuard] },
   { path: 'transaction-check', component: TransactionCheckPageComponent, canActivate: [authGuard] },
   { path: 'cases/manual', component: ManualCasePageComponent, canActivate: [authGuard] },

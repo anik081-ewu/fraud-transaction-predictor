@@ -60,10 +60,13 @@ public class EligibleFeatureReader {
                     f.amount_sum_24h, f.amount_sum_7d, f.amount_sum_30d,
                     f.new_beneficiary, f.new_location, f.new_channel, f.new_device,
                     f.unusual_transaction_hour, f.peer_group_code, f.peer_avg_amount,
-                    f.peer_std_amount, f.amount_vs_peer_avg, f.peer_amount_z_score
+                    f.peer_std_amount, f.amount_vs_peer_avg, f.peer_amount_z_score,
+                    tx.fraud_label
                 FROM dbo.aml_transaction_features f
                 INNER JOIN dbo.aml_feature_learning_status learning
                     ON learning.transaction_id = f.transaction_id
+                INNER JOIN dbo.transactions tx
+                    ON tx.transaction_id = f.transaction_id
                 WHERE
                 """ + filter(run) + """
                   AND (f.transaction_date > :lastTransactionDate
@@ -114,12 +117,18 @@ public class EligibleFeatureReader {
                 resultSet.getBoolean("new_device"), resultSet.getBoolean("unusual_transaction_hour"),
                 resultSet.getString("peer_group_code"), nullableDouble(resultSet, "peer_avg_amount"),
                 nullableDouble(resultSet, "peer_std_amount"), nullableDouble(resultSet, "amount_vs_peer_avg"),
-                nullableDouble(resultSet, "peer_amount_z_score")
+                nullableDouble(resultSet, "peer_amount_z_score"),
+                nullableBoolean(resultSet, "fraud_label")
         );
     }
 
     private static Double nullableDouble(ResultSet resultSet, String column) throws SQLException {
         double value = resultSet.getDouble(column);
+        return resultSet.wasNull() ? null : value;
+    }
+
+    private static Boolean nullableBoolean(ResultSet resultSet, String column) throws SQLException {
+        boolean value = resultSet.getBoolean(column);
         return resultSet.wasNull() ? null : value;
     }
 }

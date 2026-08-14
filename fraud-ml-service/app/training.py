@@ -34,8 +34,8 @@ class TrainArtifacts:
     optimization_metrics: Dict[str, Dict[str, Any]]
 
 
-DEFAULT_MODEL_NAMES = ["IsolationForest", "LOF", "OneClassSVM"]
-SUPPORTED_MODEL_NAMES = DEFAULT_MODEL_NAMES + ["EllipticEnvelope", "PCAReconstruction", "Autoencoder"]
+DEFAULT_MODEL_NAMES = ["IsolationForest", "Autoencoder", "LOF"]
+SUPPORTED_MODEL_NAMES = list(DEFAULT_MODEL_NAMES)
 
 # Models whose fitted artifact is a bundle dict rather than a bare sklearn estimator.
 # They reconstruct their input and flag rows whose reconstruction error exceeds a
@@ -634,7 +634,7 @@ def build_training_metrics(
         anomaly_count = int(np.sum(raw_predictions == -1))
         anomaly_rate = float(anomaly_count / total_rows) if total_rows else 0.0
         # decision_values are "higher = more normal"; negate so these agree in orientation
-        # with the incremental models' scores (higher = more anomalous) and stay comparable
+        # with the other models' scores (higher = more anomalous) and stay comparable
         # on the model-comparison page.
         anomaly_scores = -np.asarray(decision_values, dtype=float)
         # Real and reference rows must be scored by the same function, or the shared score
@@ -681,7 +681,7 @@ def build_training_metrics(
         # The optimizer's trainingDurationMs times one candidate fit on a ~5k-row subsample,
         # not the real thing. Reporting that as "training duration" made One-Class SVM — by
         # far the slowest model — look like the fastest. Promote the full-dataset fit time so
-        # this column means the same for batch and incremental models.
+        # this column means the same for every supported model.
         final_duration = metrics[model_name].pop("finalTrainingDurationMs", None)
         if final_duration is not None:
             metrics[model_name]["candidateSearchDurationMs"] = metrics[model_name].get("trainingDurationMs")

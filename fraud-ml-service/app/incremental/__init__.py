@@ -1,1 +1,1 @@
-"""Incremental anomaly-model training and scoring."""
+"""Persisted feature-dataset utilities retained for snapshot model training."""

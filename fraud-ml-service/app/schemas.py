@@ -68,6 +68,7 @@ class PersistedFeaturePredictRequest(BaseModel):
     challengerModelVersion: Optional[str] = None
     shadowOnlineSvmDir: Optional[str] = None
     shadowOnlineSvmVersion: Optional[str] = None
+    learningMode: str = "UNSUPERVISED"
 
 
 class ComparisonPredictRequest(BaseModel):
@@ -98,6 +99,7 @@ class TrainingTransaction(BaseModel):
     customerOccupation: Optional[str] = None
     loginAttempts: int = 0
     accountBalance: float = 0.0
+    fraudLabel: Optional[bool] = None
 
 
 class TrainModelRequest(BaseModel):
@@ -108,6 +110,7 @@ class TrainModelRequest(BaseModel):
     modelNames: Optional[List[str]] = None
     outputSubdir: Optional[str] = None
     evaluationTransactions: Optional[List[TrainingTransaction]] = None
+    learningMode: str = "UNSUPERVISED"
 
 
 class TrainModelResponse(BaseModel):
@@ -121,44 +124,10 @@ class TrainModelResponse(BaseModel):
     metrics: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
 
 
-class IncrementalTrainingRequest(BaseModel):
-    trainingRunId: str
-    datasetPath: str
-    datasetChecksum: str
-    artifactBasePath: str
-    modelVersion: str
-    modelType: str
-    modelSegment: Optional[str] = None
-    featureVersion: str
-    baseModelPath: Optional[str] = None
-    parameters: Dict[str, Any] = Field(default_factory=dict)
-
-
-class IncrementalTrainingResponse(BaseModel):
-    status: str
-    modelVersion: str
-    artifactPath: str
-    artifactChecksum: str
-    featureSchemaChecksum: str
-    learnedRowCount: int
-    anomalyRate: float
-    validationRowCount: int
-    alertCount: int
-    averageScore: float
-    scoreP95: float
-    scoreP99: float
-    threshold: float
-    trainingDurationMs: float
-    parameters: Dict[str, Any]
-    metrics: Dict[str, Any]
-
-
 class ModelAgreementRequest(BaseModel):
     datasetPath: str
     datasetChecksum: str
-    batchModelsDir: Optional[str] = None
-    hstBundlePath: Optional[str] = None
-    onlineOcsvmBundlePath: Optional[str] = None
+    modelBundlePath: Optional[str] = None
 
 
 class GrowthAnalysisRequest(BaseModel):
@@ -171,9 +140,12 @@ class GrowthAnalysisRequest(BaseModel):
     isolationForestMaximumTrainingRows: int = 100_000
     isolationForestEstimators: int = 200
     autoencoderMaxTrainingRows: int = 50_000
+    localOutlierFactorMaxTrainingRows: int = 50_000
+    localOutlierFactorNeighbors: int = 35
+    localOutlierFactorContamination: float = 0.05
     randomSeed: int = 42
-    halfSpaceTreesParameters: Dict[str, Any] = Field(default_factory=dict)
-    onlineOneClassSvmParameters: Dict[str, Any] = Field(default_factory=dict)
+    learningMode: str = "UNSUPERVISED"
+    hyperparams: Optional[Dict[str, Any]] = None
 
 
 class GrowthAnalysisResponse(BaseModel):

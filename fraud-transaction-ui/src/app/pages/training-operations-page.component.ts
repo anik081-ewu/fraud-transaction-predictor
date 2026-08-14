@@ -7,7 +7,7 @@ import { AlertService } from '../core/alert.service';
 import { AmlTrainingApiService } from '../core/aml-training-api.service';
 import { AuthService } from '../core/auth.service';
 import { ComparisonApiService } from '../core/comparison-api.service';
-import { AmlTrainingRun, SystemHealth } from '../core/models';
+import { AmlTrainingRun, ColdStartConfigItem, LearningModelDefinition, ModelTuningItem, SystemHealth } from '../core/models';
 
 const ACTIVE_STATUSES = ['QUEUED', 'EXPORTING', 'TRAINING'];
 const POLL_INTERVAL_MS = 2000;
@@ -29,7 +29,6 @@ export class TrainingOperationsPageComponent {
   readonly runs = signal<AmlTrainingRun[]>([]);
   readonly health = signal<SystemHealth | null>(null);
   readonly loading = signal(false);
-  readonly actionRunId = signal<string | null>(null);
   readonly loadingDates = signal(false);
   readonly selectedRunId = signal<string | null>(null);
   readonly selectedRun = computed(() => this.runs().find((run) => run.trainingRunId === this.selectedRunId()) ?? null);
@@ -37,8 +36,8 @@ export class TrainingOperationsPageComponent {
   readonly candidateCount = computed(() => this.runs().filter((run) => run.status === 'CANDIDATE_READY').length);
   readonly failedCount = computed(() => this.runs().filter((run) => run.status.includes('FAILED')).length);
 
-  // A pipeline creates one run per model, so the list grows five rows at a time and needs
-  // paging rather than an ever-lengthening table.
+  // A pipeline can create one run per selected model, so the list needs paging rather
+  // than becoming an ever-lengthening table.
   readonly pageSize = RUNS_PER_PAGE;
   private readonly requestedPage = signal(1);
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.runs().length / this.pageSize)));
@@ -50,6 +49,13 @@ export class TrainingOperationsPageComponent {
   });
   readonly rangeStart = computed(() => (this.runs().length ? (this.currentPage() - 1) * this.pageSize + 1 : 0));
   readonly rangeEnd = computed(() => Math.min(this.currentPage() * this.pageSize, this.runs().length));
+  readonly availableModels = signal<LearningModelDefinition[]>([]);
+  readonly selectedModelKeys = signal<string[]>([]);
+  readonly disabledModelKeys = signal<string[]>([]);
+  readonly learningMode = signal<'UNSUPERVISED' | 'SUPERVISED'>('UNSUPERVISED');
+  readonly selectedModelNames = computed(() => this.availableModels()
+    .filter((model) => this.selectedModelKeys().includes(model.modelKey))
+    .map((model) => model.displayName));
 
   private readonly pollHandle: ReturnType<typeof setInterval>;
   /** Guards against overlapping background polls piling up on the connection pool. */
@@ -63,6 +69,7 @@ export class TrainingOperationsPageComponent {
 
   constructor() {
     this.refresh();
+    this.loadTrainingOptions();
     // Poll only while a run is mid-pipeline, so the progress bar advances on its own.
     // The in-flight guard matters: setInterval fires on a fixed schedule regardless of
     // whether the previous request returned, so during a slow period (a bulk upload
@@ -75,6 +82,43 @@ export class TrainingOperationsPageComponent {
       this.load(true);
     }, POLL_INTERVAL_MS);
     inject(DestroyRef).onDestroy(() => clearInterval(this.pollHandle));
+  }
+
+  private loadTrainingOptions(): void {
+    forkJoin({
+      catalog: this.comparisonApi.getModelCatalog(),
+      tuning: this.comparisonApi.listModelTuning(),
+      settings: this.comparisonApi.listColdStartConfigs(),
+    }).subscribe({
+      next: ({ catalog, tuning, settings }) => {
+        const mode = this.systemMode(settings);
+        const models = catalog.find((entry) => entry.mode === mode)?.models ?? [];
+        const disabled = this.disabledModels(tuning);
+        this.learningMode.set(mode);
+        this.availableModels.set(models);
+        this.disabledModelKeys.set(disabled);
+        this.selectedModelKeys.set(models
+          .filter((model) => model.recommended && !disabled.includes(model.modelKey))
+          .map((model) => model.modelKey));
+      },
+      error: (error) => this.alerts.error(this.message(error), 'Training models unavailable'),
+    });
+  }
+
+  isModelSelected(modelKey: string): boolean {
+    return this.selectedModelKeys().includes(modelKey);
+  }
+
+  isModelDisabled(modelKey: string): boolean {
+    return this.disabledModelKeys().includes(modelKey);
+  }
+
+  toggleModel(modelKey: string): void {
+    if (this.isModelDisabled(modelKey)) return;
+    const selected = this.selectedModelKeys();
+    this.selectedModelKeys.set(selected.includes(modelKey)
+      ? selected.filter((key) => key !== modelKey)
+      : [...selected, modelKey]);
   }
 
   refresh(): void {
@@ -138,18 +182,16 @@ export class TrainingOperationsPageComponent {
       toBusinessDate: this.toBusinessDate,
       cutoffTimestamp: `${this.cutoffTimestamp}:00`,
       requestedBy: this.actor(),
+      learningMode: this.learningMode(),
+      selectedModels: this.selectedModelKeys(),
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: (run) => {
-        this.alerts.success('Pipeline started', 'Exporting dataset then training all models automatically.');
+        this.alerts.success('Pipeline started', `Exporting the dataset, then training ${this.selectedModelNames().join(', ')}.`);
         this.selectedRunId.set(run.trainingRunId);
         this.refresh();
       },
       error: (error) => this.alerts.error(this.message(error), 'Pipeline not started'),
     });
-  }
-
-  canRetryTraining(run: AmlTrainingRun): boolean {
-    return run.status === 'TRAINING_FAILED' && !!run.datasetPath;
   }
 
   isActive(run: AmlTrainingRun): boolean {
@@ -219,28 +261,35 @@ export class TrainingOperationsPageComponent {
   }
 
 
-  retryTraining(run: AmlTrainingRun): void {
-    this.actionRunId.set(run.trainingRunId);
-    this.api.retryIncrementalTraining(run.trainingRunId, this.actor())
-      .pipe(finalize(() => this.actionRunId.set(null)))
-      .subscribe({
-        next: () => {
-          this.alerts.success('Retry started', 'Incremental training job re-queued.');
-          this.refresh();
-        },
-        error: (error) => this.alerts.error(this.message(error), 'Retry failed'),
-      });
-  }
   statusClass(status: string): string { return `status-${status.toLowerCase().replaceAll('_', '-')}`; }
   modelLabel(modelType: string): string {
     const labels: Record<string, string> = {
-      HALF_SPACE_TREES: 'Half-Space Trees',
-      ONLINE_ONE_CLASS_SVM: 'Online One-Class SVM',
       ISOLATION_FOREST: 'Isolation Forest',
-      ONE_CLASS_SVM: 'One-Class SVM',
       AUTOENCODER: 'Autoencoder',
+      LOCAL_OUTLIER_FACTOR: 'Local Outlier Factor',
+      XGBOOST_CLASSIFIER: 'XGBoost',
+      RANDOM_FOREST_CLASSIFIER: 'Random Forest',
+      LOGISTIC_REGRESSION: 'Logistic Regression',
     };
     return labels[modelType] || modelType.replaceAll('_', ' ');
+  }
+  private disabledModels(items: ModelTuningItem[]): string[] {
+    const enabledKeys: Record<string, string> = {
+      ISOLATION_FOREST: 'aml.isolation_forest.enabled',
+      AUTOENCODER: 'aml.autoencoder.enabled',
+      LOCAL_OUTLIER_FACTOR: 'aml.lof.enabled',
+      XGBOOST_CLASSIFIER: 'ml.xgboost.enabled',
+      RANDOM_FOREST_CLASSIFIER: 'ml.random_forest.enabled',
+      LOGISTIC_REGRESSION: 'ml.logistic_regression.enabled',
+    };
+    return Object.entries(enabledKeys)
+      .filter(([, configKey]) => items.find((item) => item.configKey === configKey)?.configValue === 'false')
+      .map(([modelKey]) => modelKey);
+  }
+  private systemMode(items: ColdStartConfigItem[]): 'UNSUPERVISED' | 'SUPERVISED' {
+    return items.find((item) => item.configKey === 'system.learning_mode')?.configValue === 'SUPERVISED'
+      ? 'SUPERVISED'
+      : 'UNSUPERVISED';
   }
   runPurpose(run: AmlTrainingRun): string {
     return ['CREATED', 'QUEUED', 'EXPORTING', 'DATASET_READY', 'FAILED'].includes(run.status)

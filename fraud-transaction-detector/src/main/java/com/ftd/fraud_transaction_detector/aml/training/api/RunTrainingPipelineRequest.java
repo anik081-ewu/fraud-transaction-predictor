@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record RunTrainingPipelineRequest(
         @NotBlank String featureVersion,
@@ -13,13 +14,18 @@ public record RunTrainingPipelineRequest(
         @NotNull LocalDate fromBusinessDate,
         @NotNull LocalDate toBusinessDate,
         @NotNull LocalDateTime cutoffTimestamp,
-        String requestedBy
+        String requestedBy,
+        String learningMode,
+        List<String> selectedModels
 ) {
-    public CreateTrainingRunRequest toCreateRequest() {
+    public CreateTrainingRunRequest toCreateRequest(String activeLearningMode) {
+        String snapshotModelType = "SUPERVISED".equalsIgnoreCase(activeLearningMode)
+                ? "SUPERVISED_ENSEMBLE"
+                : "UNSUPERVISED_ENSEMBLE";
         return new CreateTrainingRunRequest(
                 AmlTrainingType.FULL_REBUILD,
                 featureVersion,
-                null,
+                snapshotModelType,
                 modelSegment,
                 fromBusinessDate,
                 toBusinessDate,

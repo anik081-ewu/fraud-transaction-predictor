@@ -1,0 +1,903 @@
+=== PAGE 1 ===
+University of Dhaka
+Institute of Information Technology (IIT)
+Project
+On
+“EduRide Transport Management System”
+Submitted By
+Name: Swapnil Das Tushar
+Exam Roll: 252023
+Session: 2024-2025
+A project submitted to the Institute of Information Technology (IIT), DU
+for the partial fulfillment of the degree of Executive
+Master in Information Technology
+Supervised By
+Dr. Rezvi Shahariar
+Associate Professor
+Institute of Information Technology (IIT)
+University of Dhaka
+Date: 7th March, 2026
+
+=== PAGE 2 ===
+Acknowledgement
+I would like to express my sincere and heartfelt gratitude to my Project Supervisor,
+Dr. Rezvi Shahariar, Associate Professor, Institute of Information Technology (IIT),
+University of Dhaka, for his invaluable guidance, continuous support, and insightful
+suggestions throughout the development of the EduRide Transport Management
+System and the preparation of this report. His expertise and encouragement have
+played a crucial role in successfully completing this project. I am also deeply grateful
+to the Institute of Information Technology and the University of Dhaka for providing
+a supportive and inspiring academic environment. As a working professional, I truly
+appreciate the opportunity to pursue an Executive Master in Information Technology,
+which will greatly contribute to my personal and professional growth. Finally, I
+extend my deepest gratitude to my loved ones, especially my mother, for their
+unwavering motivation, countless sacrifices, and continuous emotional support.
+
+=== PAGE 3 ===
+Declaration
+This is to declare that this project is my original work. No part of this work has been
+submitted elsewhere, partially or entirely, for the award of any other degree or
+diploma. All project-related information will remain confidential and shall not be
+disclosed without the formal consent of the project supervisor. The plagiarism policy,
+as stated by the supervisor, has been maintained.
+Student's Name: Swapnil Das Tushar
+Student's Signature: .................................................
+
+=== PAGE 4 ===
+Signature Page
+Project : : EduRide Transport Management System
+Student Name : : Swapnil Das Tushar
+Exam Roll : : 252023
+ID : : 2405202
+Batch : : 5th
+Program : EMIT
+Date of Submission : 7th March, 2026
+Supervised By : : Dr. Rezvi Shahariar, Associate Professor,
+IIT, University of Dhaka
+Supervisor’s Approval : .................................................
+
+=== PAGE 5 ===
+Abstract
+The EduRide Transport Management System is a comprehensive software solution
+designed to streamline campus transportation operations. By replacing manual
+processes with an automated, user-centric platform, the system aims to reduce
+administrative burdens, enhance resource optimization, and improve service quality
+for all stakeholders, including students, teachers, administrators, staff, and drivers.
+Built using the MERN stack (MongoDB, Express.js, React.js, Node.js), the
+application features role-specific dashboards that facilitate route management, real-
+time tracking, payments, and communication. This report outlines the project's
+motivation, description, technical strategy, and implementation details, highlighting
+its potential to deliver efficiency, reliability, and user empowerment in educational
+environments.
+Keywords: EduRide Transport Management System, Campus Transportation,
+Transport Management System, Real-time Vehicle Tracking, MERN Stack,
+MongoDB, Express.js, React.js, Node.js.
+Page 5 of 47
+
+=== PAGE 6 ===
+Table of Contents
+Acknowledgement ............................................................................................................................................................ 2
+Declaration ....................................................................................................................................................................... 3
+Signature Page .................................................................................................................................................................. 4
+Abstract ............................................................................................................................................................................ 5
+Chapter 1 .......................................................................................................................................................................... 8
+Introduction ...................................................................................................................................................................... 8
+1.1 Background ............................................................................................................................................................ 8
+1.2 Motivation .............................................................................................................................................................. 8
+1.3 Problem Statement .................................................................................................................................................. 9
+1.4 Project Objectives ................................................................................................................................................... 9
+1.5 Scope of the Project .............................................................................................................................................. 10
+1.6 Significance of the Project .................................................................................................................................... 10
+Chapter 2 ........................................................................................................................................................................ 11
+Literature Review ........................................................................................................................................................... 11
+2.1 Overview .............................................................................................................................................................. 11
+2.2 Research Gap ........................................................................................................................................................ 11
+2.4 Conclusion ............................................................................................................................................................ 13
+Chapter 3 ........................................................................................................................................................................ 14
+System Analysis and Requirements ............................................................................................................................... 14
+3.1 Requirement Analysis .......................................................................................................................................... 14
+3.2 Functional Requirements ...................................................................................................................................... 14
+3.3 Non-Functional Requirements .............................................................................................................................. 16
+3.4 System Feasibility ................................................................................................................................................ 16
+Chapter 4 ........................................................................................................................................................................ 18
+System Design and UML Diagrams ............................................................................................................................... 18
+4.1 Use Case Diagram ................................................................................................................................................ 18
+4..1.1 Level 0 Use Case Diagram ........................................................................................................................... 19
+4..1.2 Level 1 Use Case Diagram ........................................................................................................................... 21
+4.2 Data Flow Diagram .............................................................................................................................................. 22
+4.2.1 DFD Diagram Level 0 ................................................................................................................................... 22
+4.2.2 DFD Level 1 ( Admin ) ................................................................................................................................. 24
+4.2.3 DFD Level 1 ( Teacher )................................................................................................................................ 26
+4.2.4 DFD Level 1 ( Student ) ................................................................................................................................ 27
+4.2.5 DFD Level 1 ( Driver ) .................................................................................................................................. 29
+Page 6 of 47
+
+=== PAGE 7 ===
+4.2.6 DFD Diagram Level 1 ( Staff ) ...................................................................................................................... 30
+Chapter 5 ........................................................................................................................................................................ 32
+Implementation ............................................................................................................................................................... 32
+5.1 Tools and Technology .......................................................................................................................................... 32
+5.2 Project View ......................................................................................................................................................... 33
+5.2 MongoDB Collections .......................................................................................................................................... 40
+Chapter 6 ........................................................................................................................................................................ 41
+Testing and Results......................................................................................................................................................... 41
+6.1 Unit Testing .......................................................................................................................................................... 41
+6.2 Integration Testing................................................................................................................................................ 42
+6.3 Performance Testing ............................................................................................................................................. 43
+6.4 Testing Summary.................................................................................................................................................. 43
+Chapter 7 ........................................................................................................................................................................ 44
+Conclusion and Future Work .......................................................................................................................................... 44
+7.1 Overview .............................................................................................................................................................. 44
+7.2 Limitation of the Project ....................................................................................................................................... 44
+7.3 Future Work ......................................................................................................................................................... 45
+7.4 Conclusion ............................................................................................................................................................ 46
+References ...................................................................................................................................................................... 47
+Page 7 of 47
+
+=== PAGE 8 ===
+Chapter 1
+Introduction
+1.1 Background
+Transportation management is a crucial operational component of educational institutions
+such as universities and colleges. Every day, students, teachers, staff, and drivers depend
+on campus transportation services to ensure smooth commuting between residential areas
+and academic premises. However, many institutions still rely on manual systems for
+managing transport services, which creates inefficiency, confusion, scheduling conflicts,
+lack of transparency, and increased administrative workload. With the advancement of
+modern web technologies, it has become possible to develop intelligent transport
+management platforms that provide real-time tracking, automated scheduling, digital
+enrollment, and seamless communication among all stakeholders. The EduRide Transport
+Management System has been developed to address these challenges by offering a smart,
+reliable, and scalable campus transport solution.
+1.2 Motivation
+The motivation behind EduRide arises from the difficulties faced in traditional campus
+transport systems. Manual operations require excessive paperwork, physical approvals,
+and constant communication between transport offices and users.
+EduRide enhances the campus transport experience by:
+Reducing administrative hassle.
+
+Digitizing route and slot allocation.
+
+Providing real-time vehicle tracking.
+
+Ensuring transparency in enrollment and payments.
+
+Page 8 of 47
+
+=== PAGE 9 ===
+Improving communication through complaints and feedback.
+
+Optimizing vehicle and driver resource utilization.
+
+The project is designed to ensure efficiency, reliability, and improved service quality for
+students, teachers, administrators, staff members, and drivers.
+1.3 Problem Statement
+Manual transport management systems in educational institutions suffer from several
+limitations:
+Difficulty in managing multiple routes and time slots.
+
+Lack of live vehicle monitoring.
+
+Inefficient driver and vehicle assignment.
+
+Poor communication between transport authority and users.
+
+No automated complaint or feedback mechanism.
+
+Absence of digital payment notification and receipt generation.
+
+Increased chances of human error and delays.
+
+Therefore, there is a strong need for an automated and centralized transport management
+system.
+1.4 Project Objectives
+The EduRide Transport Management System aims to improve the efficiency of campus
+transportation by introducing a centralized and automated management platform. The
+system focuses on reducing manual administrative work and providing a structured
+digital solution for managing transport operations. It provides role-based dashboards for
+different users such as administrators, drivers, and passengers to ensure organized access
+and management of transport services. The system also supports dynamic route and slot
+selection, allowing users to enroll in available transport routes conveniently.
+Page 9 of 47
+
+=== PAGE 10 ===
+Additionally, EduRide enables real-time vehicle tracking, helping users monitor vehicle
+movement and improving service transparency. It also assists administrators in managing
+driver duties effectively and ensures that users receive notifications regarding enrollment
+and payment updates. Through these features, the system enhances the overall efficiency
+and reliability of campus transportation services.
+1.5 Scope of the Project
+EduRide manages all aspects of campus transportation services. The system is intended
+for:
+Students who sign up for transport services.
+
+Teachers and staff in need of commuting assistance.
+
+Drivers who offer transport duty and live tracking.
+
+Administrators who oversee routes, vehicles, drivers, and users.
+
+The system guarantees centralized oversight and access based on user roles.
+1.6 Significance of the Project
+The EduRide Transport Management System contributes to improving the overall
+efficiency and organization of campus transportation services. By introducing a digital
+platform for managing transport operations, the system helps reduce manual
+administrative tasks and simplifies the management of routes, vehicles, users. The system
+also enhances the reliability and efficiency of transport services by enabling structured
+route management, driver duty allocation, automated processes. In addition, EduRide
+improves user satisfaction by providing a convenient and user-friendly interface for
+transport enrollment, notifications, and service updates. Furthermore, the system supports
+better utilization of transport resources, ensuring that routes, and schedules are managed
+more effectively. Through these improvements, EduRide promotes the adoption of
+modern digital transport services within universities, efficient transportation environment.
+Page 10 of 47
+
+=== PAGE 11 ===
+Chapter 2
+Literature Review
+2.1 Overview
+Transport management systems have been widely adopted in modern smart campuses.
+Many institutions use digital systems for tracking buses, managing routes, and providing
+transport-related services.
+A transport management system typically includes:
+Vehicle scheduling.
+
+Route optimization.
+
+Driver assignment.
+
+GPS-based tracking.
+
+User enrollment.
+
+Payment processing.
+
+Complaint and feedback support.
+
+EduRide follows these principles while focusing on university campus needs.
+2.2 Research Gap
+Despite the increasing adoption of digital technologies in transportation systems, many
+institutional transport management frameworks remain limited in scope and functionality.
+Existing approaches primarily focus on isolated operational tasks such as payment
+processing, route listing, or driver assignment, rather than offering a fully integrated
+transport management ecosystem. In traditional campus environments, transport
+administration is still dependent on manual procedures including paper-based payment
+Page 11 of 47
+
+=== PAGE 12 ===
+verification, manual route allocation, and informal complaint handling mechanisms [1],
+[2]. These processes introduce inefficiencies, increase administrative workload, and
+create a high probability of human error.
+Although some modern systems have attempted to digitize transport management through
+web-based platforms, they often fail to address the comprehensive needs of a university
+transport environment. Most existing solutions lack real-time vehicle monitoring
+capabilities, which are critical for improving operational transparency, passenger safety,
+and service reliability [1], [2]. Additionally, many systems do not implement role-based
+access control structures, resulting in limited usability for different stakeholders such as
+administrators, drivers, and passengers who require distinct operational interfaces and
+permissions [3], [4].
+Another significant limitation observed in current literature and practical
+implementations is the absence of structured route-slot enrollment mechanisms tailored
+for campus transportation. Many transport platforms operate with static route
+assignments rather than dynamic slot-based enrollment systems that allow users to
+register for specific routes and schedules efficiently. Furthermore, existing systems rarely
+incorporate integrated communication modules for delivering transport notices,
+operational updates, or traffic law awareness to users within the same platform.
+From a research perspective, the major gap lies in the lack of a comprehensive,
+university-focused transport management framework that integrates administrative
+control, passenger services, operational monitoring, and communication functionalities
+into a unified digital system. Current solutions are fragmented, focusing on single
+functionalities rather than providing a holistic management environment capable of
+supporting large academic institutions.
+Page 12 of 47
+
+=== PAGE 13 ===
+2.4 Conclusion
+The review emphasizes the need for an integrated campus-specific transport management
+system to replace inefficient manual processes. EduRide fulfills this need by offering a
+centralized and scalable solution built with the MERN Stack. It streamlines route
+management, bus allocation, user coordination, and complaint handling through a secure
+digital platform. Overall, the system enhances operational efficiency and improves.
+Page 13 of 47
+
+=== PAGE 14 ===
+Chapter 3
+System Analysis and Requirements
+3.1 Requirement Analysis
+EduRide is designed as a role-based web system with five primary user types:
+Admin.
+
+Student.
+
+Teacher.
+
+Staff.
+
+Driver.
+
+Each role has specific permissions and functionalities.
+3.2 Functional Requirements
+Admin, Student, Teacher, Staff, Driver are five actors in this system.
+Admin can:
+Assign routes and slots.
+
+Approve/ Pending/ Reject slot requests.
+
+Manage vehicles and users.
+
+Track vehicles in real time.
+
+Upload traffic law information.
+
+Manage Users.
+
+Publish notices.
+
+Handle complaints and give feedback.
+
+Monitor and verify student payments.
+
+Page 14 of 47
+
+=== PAGE 15 ===
+Students can:
+Select routes and slots.
+
+Make payments.
+
+Download payment receipts.
+
+Track vehicles live.
+
+Submit complaints.
+
+Enable location.
+
+Get complain feedback.
+
+View notices.
+
+Download student transport card.
+
+Teachers can:
+Select routes and slots.
+
+Track vehicles.
+
+Enable location.
+
+Submit complaints.
+
+Receive complain feedback.
+
+View notices.
+
+Staff can:
+Track vehicles.
+
+View notices.
+
+Select routes and slots.
+
+Enable location.
+
+Receive complain feedback.
+
+Submit complaints.
+
+Page 15 of 47
+
+=== PAGE 16 ===
+Drivers can:
+View assigned duty schedule.
+
+Enable live location sharing.
+
+View notices.
+
+Verify Student Payment.
+
+View traffic laws.
+
+3.3 Non-Functional Requirements
+The EduRide Transport Management System must satisfy several important system
+requirements to ensure effective and reliable operation. The system should be scalable,
+allowing it to handle an increasing number of users, vehicles, and transport routes as the
+university grows. It must also maintain a high level of reliability, ensuring that the system
+remains stable and operational without frequent failures. Security is another critical
+requirement, as the system needs to protect user data, payment information, and
+administrative controls from unauthorized access. Furthermore, EduRide should support
+real-time responsiveness so that users can receive immediate updates regarding vehicle
+tracking, route information, and transport notifications. The system must also provide a
+user-friendly interface, enabling students, staff, and administrators to interact with the
+platform easily and efficiently. Finally, the system should ensure database consistency,
+guaranteeing that all transport-related data such as routes, payments, and user information
+remain accurate, synchronized, and properly maintained within the database.
+3.4 System Feasibility
+Technical Feasibility: MERN Stack provides full support for real-time scalable web
+
+applications. It enables seamless integration between the frontend and backend using
+JavaScript across the entire development process. With MongoDB’s flexible database
+Page 16 of 47
+
+=== PAGE 17 ===
+structure, the system can efficiently manage large volumes of dynamic transport data.
+Node.js and Express.js ensure fast server-side processing and API handling, while
+React.js delivers an interactive and responsive user interface. This combination makes
+the application highly scalable, maintainable, and suitable for future expansion.
+Economic Feasibility: The system is cost-effective as it uses open-source tools. It
+
+eliminates the need for expensive proprietary software licenses and reduces overall
+development costs. The availability of a large developer community ensures
+continuous updates, security improvements, and technical support. Additionally,
+open-source technologies allow easy customization and scalability without significant
+financial investment.
+Operational Feasibility: The platform is easy to use for all campus stakeholders. It
+
+provides a simple and intuitive interface that requires minimal technical knowledge.
+Role-based dashboards ensure that students, staff, drivers, and administrators can
+quickly access relevant features. Clear navigation and responsive design make the
+system accessible from both desktop and mobile devices.
+Page 17 of 47
+
+=== PAGE 18 ===
+Chapter 4
+System Design and UML Diagrams
+4.1 Use Case Diagram
+Use case diagrams give the non-technical view of the overall system. The following use
+cases were made from the scenario.
+Figure 1: Level 0 Use Case Diagram.
+Page 18 of 47
+
+=== PAGE 19 ===
+4..1.1 Level 0 Use Case Diagram
+It (Figure: 1) presents the overall use case and system architecture of the EduRide
+Transport Management System. It illustrates five main actors — Admin, Student,
+Teacher, Staff, and Driver — who interact directly with the centralized EduRide system
+according to their specific roles. The Admin is responsible for managing routes, vehicles,
+drivers, users, and overall system operations. Students, teachers, and staff use the
+platform for transport enrollment, route and slot selection, payment processing, and
+submitting complaints or feedback. Drivers access the system to view duty schedules and
+provide transport updates, including real-time location sharing.
+At the core, the EduRide system processes all user requests and coordinates transport
+operations efficiently. The system integrates with a GPS module to collect real-time
+vehicle location data, enabling live tracking functionality. All operational information is
+stored in the main central database, while financial transactions are securely maintained
+in a separate payment database. Online payments are handled through an integrated
+payment gateway to ensure secure and reliable transactions.
+Overall, the diagram represents a fully centralized and integrated transport management
+platform that combines user interaction, real-time GPS tracking, database management,
+and digital payment services into a unified and scalable system.
+Page 19 of 47
+
+=== PAGE 20 ===
+Figure 2: Level 1 Use Case Diagram.
+Page 20 of 47
+
+=== PAGE 21 ===
+4..1.2 Level 1 Use Case Diagram
+The “EduRide Transport Management System” Level 1 Use Case Diagram (Figure:2)
+illustrates the functional structure and user interactions of the system. It defines the
+system boundary and shows how five main actors—Admin, Driver, Student, Staff, and
+Teacher—interact with various transport management features.
+The Admin has full control over system operations, including user management, fleet
+management, route and driver assignments, payment verification, complaint handling,
+and notice publication. Students, Staff, and Teachers use the system to request transport
+services, make online payments, track buses in real time, view notices, and submit
+complaints. Students can also download transport cards and payment receipts after
+successful transactions. Drivers access duty schedules, assigned routes, traffic guidelines,
+and live map navigation.
+The system integrates with external components such as GPS for real-time tracking, a
+Database for storing operational data, and a Payment Gateway with Payment Database
+for secure transaction processing and verification.
+Overall, the diagram demonstrates structured role-based access control, real-time
+monitoring, secure payment processing, and centralized data management, ensuring
+efficient and transparent campus transportation services.
+Page 21 of 47
+
+=== PAGE 22 ===
+4.2 Data Flow Diagram
+4.2.1 DFD Diagram Level 0
+Figure 3: DFD Diagram Level 0.
+Page 22 of 47
+
+=== PAGE 23 ===
+The EduRide Transport Management System is a centralized, role-based platform
+developed to efficiently manage school or college transportation services. The system
+begins with a secure login management process where students, teachers, staff, drivers,
+and administrators authenticate themselves using valid credentials. These credentials are
+verified against a central database to ensure authorized access and maintain system
+security. After successful authentication, users are directed to their respective dashboards
+based on their assigned roles and permissions.
+The core system functions as a central coordinator that integrates multiple management
+modules, including user management, admin management, vehicle and bus request
+management, and payment management. Users can request vehicles or bus services
+through the system, and administrators can manage and assign transport resources
+accordingly. The payment management module handles transport fees and securely
+communicates with an external payment gateway to process transactions. The gateway
+returns real-time payment status updates to ensure transparency and accuracy. Overall,
+the system ensures secure, efficient, and accountable transport operations through
+integrated authentication, centralized database control, vehicle allocation, and online
+payment processing.
+Page 23 of 47
+
+=== PAGE 24 ===
+4.2.2 DFD Level 1 ( Admin )
+Figure 4: DFD Level 1 ( Admin ).
+Page 24 of 47
+
+=== PAGE 25 ===
+The diagram ( Figure 4 ) represents the Admin side of the transport management system.
+First, the Admin logs in through the 1.0 Authentication module. The login information is
+verified using the User DB, and after successful authentication, the admin can access all
+management modules. The admin can manage complaints in the 2.0 Complaint module
+by viewing student complaints and giving feedback. All complaint data is stored in the
+Complaints DB. Through the 3.0 Assignment module, the admin manages bus
+assignments, which are stored in the Bus DB. In the 4.0 Payment Overview and 12.0
+Verify Student Payment modules, the admin views payment records and verifies paid
+students using the Payment DB. The 5.0 Route & Stop module allows the admin to add,
+edit, and manage routes and stops, with data stored in the Route DB. The 6.0 Fleet
+module is used to add, edit, or delete vehicles, and the data is stored in the Vehicle DB.
+The admin can publish announcements through the 10.0 Notice module (stored in the
+Notice DB) and upload traffic rules through the 11.0 Traffic Rules module (stored in the
+Traffic Law DB). Using the 8.0 Manage User module, the admin can add, update, delete,
+or redefine user roles. The 9.0 Bus Request module allows the admin to review, approve,
+or reject bus requests from students. The 7.0 Live Map module enables the admin to track
+vehicles in real time using GPS.
+Overall, the admin system controls and manages users, vehicles, routes, payments,
+complaints, notices, and real-time tracking to ensure smooth transport service operation.
+Page 25 of 47
+
+=== PAGE 26 ===
+4.2.3 DFD Level 1 ( Teacher )
+Figure 5: DFD Level 1 ( Teacher ).
+Page 26 of 47
+
+=== PAGE 27 ===
+The Level-1 DFD ( Teacher ) of the “EduRide Transport Management System” (Teacher
+Module) illustrates the interaction between a teacher member and the system, as well as
+the data flow among processes and databases. The process of working starts with
+Authentication, during which teacher register or log in and their credentials are confirmed
+via the User Database. Once logged in successfully, teacher members can manage their
+profiles, view notices from the Notice Database, and send bus requests that are saved in
+the Bus Request Database.
+In case of any issues, teacher can file complaints which will be recorded in the
+Complaints Database. They can subsequently check for feedback or updates on the status.
+Through the Live Map module, which gathers location data from GPS once location
+permission is activated, the system also offers real-time vehicle tracking.
+4.2.4 DFD Level 1 ( Student )
+The ( Figure 6: DFD Diagram Level 1 ( Student ) ) allows a Student to register or log in
+through the Authentication module, where user data is stored in the User DB. After
+successful login, the student can access different services. Students can manage their
+profile, submit and view complaints, make transport payments, and receive payment slips
+and transport card updates. They can also view notices from the system. By enabling
+location services, students can track the bus in real time using GPS and the live map.
+Additionally, they can send bus requests and check their approval status.
+Overall, the system combines authentication, complaint handling, payment processing,
+notice updates, GPS tracking, and bus request management to support student transport
+services efficiently.
+Page 27 of 47
+
+=== PAGE 28 ===
+Figure 6: DFD Level 1 ( Student ).
+Page 28 of 47
+
+=== PAGE 29 ===
+4.2.5 DFD Level 1 ( Driver )
+Figure 7: DFD Level 1 ( Driver ).
+Page 29 of 47
+
+=== PAGE 30 ===
+The ( Figure 7: DFD Diagram Level 1 ( Driver ) ) allows the Driver to log in through the
+Authentication module, where user information is stored in the User DB. After successful
+login, the driver can access different services. The driver can view traffic rules, manage
+profile information, verify student payments, and check notices from their respective
+databases. When location is enabled, the system uses GPS to provide real-time tracking
+through the live map.
+Overall, the system combines authentication, database management, payment
+verification, and GPS tracking to support driver activities efficiently.
+4.2.6 DFD Diagram Level 1 ( Staff )
+The (Figure:8 ) Level-1 DFD ( Staff ) of the “EduRide Transport Management System”
+(Staff Module) describes how a staff member interacts with the system and how data
+flows between processes and databases. The working process begins with Authentication,
+where staff register or log in and their credentials are verified through the User Database.
+After successful login, staff can manage their profile, view notices from the Notice
+Database, and send bus requests which are stored in the Bus Request Database.
+If any issue arises, staff can submit complaints that are stored in the Complaints Database
+and later view feedback or status updates. The system also provides real-time vehicle
+tracking through the Live Map module, which collects location data from GPS after
+location permission is enabled.
+Overall, the diagram shows structured data processing, secure user authentication,
+database interaction, and GPS integration to ensure efficient and transparent transport
+service management.
+Page 30 of 47
+
+=== PAGE 31 ===
+Figure 8: DFD Level 1 ( Staff ).
+Page 31 of 47
+
+=== PAGE 32 ===
+Chapter 5
+Implementation
+5.1 Tools and Technology
+Programming Languages:
+• Backend Development: Node.js, Express.js (MERN Stack)
+• Frontend Development: React.js, HTML, CSS, Tailwind CSS, JavaScript
+• Database: MongoDB
+Integrated Development Environment (IDE):
+• Visual Studio Code
+Version Control:
+• Git, GitHub
+Page 32 of 47
+
+=== PAGE 33 ===
+5.2 Project View
+Signup and Login Interface
+Figure 9: Signup Interface ( For All Users ).
+Figure 10: Login Interface ( For All Users ).
+Page 33 of 47
+
+=== PAGE 34 ===
+Admin Dashboard Interface
+Figure 11: Admin Dashboard ( Live Map for Tracking ).
+Figure 12: Admin Dashboard ( Bus Request ).
+Page 34 of 47
+
+=== PAGE 35 ===
+Figure 13: Admin Dashboard ( Payment Overview ).
+Figure 14: Admin Dashboard ( Complaints ).
+Page 35 of 47
+
+=== PAGE 36 ===
+Student Dashboard Interface
+Figure 15: Student Dashboard ( Submit Complaint ).
+Figure 16: Student Dashboard ( My Complaints ).
+Page 36 of 47
+
+=== PAGE 37 ===
+Figure 17: Student Dashboard ( Bus Request ).
+Figure 18: Student Dashboard ( Payment & Card ).
+Page 37 of 47
+
+=== PAGE 38 ===
+Figure 19: Student Dashboard ( Active Vehicle ).
+Teacher Dashboard Interface
+Figure 20: Teacher Dashboard ( Live Map ).
+Page 38 of 47
+
+=== PAGE 39 ===
+Satff Dashboard Interface
+Figure 21: Staff Dashboard ( Notice and Live Map ).
+Driver Dashboard Interface
+Figure 22: Driver Dashboard ( Verify Student Payment and Live Map ).
+Page 39 of 47
+
+=== PAGE 40 ===
+Figure 23: Driver Dashboard ( My Assigned Vehicles ).
+5.2 MongoDB Collections
+Figure 24: Database Collection ( EduRide Transport Management System ).
+Page 40 of 47
+
+=== PAGE 41 ===
+Chapter 6
+Testing and Results
+6.1 Unit Testing
+Test Case Module Test Expected
+Input Status
+ID Name Description Output
+Valid user Valid name,
+User User created
+UT-01 registration email, Pass
+Registration successfully
+check password
+Login Correct Valid email JWT token
+UT-02 Pass
+Module credential login & password generated
+Login Invalid Wrong Error message
+UT-03 Pass
+Module password check password displayed
+Bus data Bus saved in
+UT-04 Fleet Add new bus Pass
+valid database
+Route Create new Route Route stored
+UT-05 Pass
+Module route details valid successfully
+Complaint Submit Complaint
+UT-06 Complaint saved Pass
+Module complaint text
+Payment Payment Valid Payment status
+UT-07 Pass
+Module success update payment ID updated
+GPS Enable location Click Enable Location updated
+UT-08 Pass
+Tracking sharing location in system
+Notice Notice visible
+UT-09 Notice Publish notice Pass
+content to users
+Download
+Payment Download Click
+UT-10 receipt Pass
+Receipt receipt button
+successfully
+Student Download
+Download Click
+UT-11 Transport transport card Pass
+card button
+Card successfully
+Driver
+Assign driver Name + Assignment
+UT-12 Assignment Pass
+to route Route stored
+Name
+Table 1: Unit Testing of EduRide Transport Management System.
+Page 41 of 47
+
+=== PAGE 42 ===
+6.2 Integration Testing
+Integration Test Expected
+Modules Involved Status
+Scenario Objective Result
+Verify user data User logged in
+User Login Flow Authentication + Database Pass
+retrieval successfully
+Admin can
+Route Selection Student + Route Module + Check approval
+approve/reject/p Pass
+with Approval Admin workflow
+ending
+Driver Admin + Assignment + Verify route- Driver assigned
+Pass
+Assignment Database driver linkage correctly
+Check real-time Location visible
+Live Tracking Driver + GPS + Live Map Pass
+tracking on map
+Payment stored
+Online Payment Student + Payment Gateway Verify secure
+& receipt and Pass
+Process + Payment DB transaction
+Card generated
+Check
+Feedback
+Complaint Student/Teacher/Staff + complaint
+delivered Pass
+Feedback Flow Admin + Complaint Module submission &
+successfully
+response
+Notice Admin + Notice Module + All Verify notice Notice visible
+Pass
+Publishing Users visibility to all roles
+Ensure correct
+Correct vehicle
+Vehicle Tracking Fleet + GPS + Database vehicle data Pass
+location shown
+sync
+Table 2: Integration Testing of EduRide Transport Management System.
+Page 42 of 47
+
+=== PAGE 43 ===
+6.3 Performance Testing
+Load Expected
+Module Name Test Scenario Result
+Condition Performance
+Multiple user 6 concurrent Response time <
+Authentication Stable
+login users 3 sec
+Real-time GPS Location update
+Live Tracking 3 buses updating Stable
+updates within 5 sec
+Payment Simultaneous No transaction
+5 transactions Stable
+System payments failure
+Peak hour slot
+Route Selection 6 users No system crash Stable
+booking
+Complaint Complaint Stored without
+1 submissions Stable
+System submission delay
+Mass notice Page loads
+Notice Module 6 users viewing Stable
+access within 2 sec
+Full system load
+System Overall 6 active users No downtime Stable
+test
+Table 3: Performance Testing of EduRide Transport Management System.
+6.4 Testing Summary
+The EduRide Transport Management System was tested through Unit, Integration, and
+Performance Testing.
+Unit testing confirmed that all individual modules—such as registration, login, route
+management, payment, GPS tracking, complaints, and notice publishing—worked
+correctly.
+Integration testing verified smooth communication between connected modules,
+including authentication with the database, route approval workflows, driver assignment,
+live tracking, and payment processing.
+Performance testing showed that the system handled multiple users and transactions
+efficiently, maintaining response times under 2–3 seconds without crashes or downtime.
+Overall, the system is functional, stable, and ready for reliable campus transport
+management use.
+Page 43 of 47
+
+=== PAGE 44 ===
+Chapter 7
+Conclusion and Future Work
+7.1 Overview
+The EduRide Transport Management System has been successfully developed to address
+the challenges associated with manual campus transport operations. This project aimed to
+automate transport tasks such as enrollment, route and slot allocation, real-time vehicle
+tracking, payment handling, complaints management, and communication through an
+integrated digital platform. Built using modern web technologies, the system
+demonstrates robust functionality, scalability, and improved user experience for all
+stakeholders including administrators, students, teachers, staff, and drivers.
+Comprehensive testing—including unit, integration, and performance evaluations—was
+conducted to ensure that the system meets both functional and non-functional
+requirements. The system’s ability to handle multiple users, real-time GPS updates, and
+secure transactions has been verified under moderate load conditions, confirming its
+readiness for practical deployment in an educational environment.
+7.2 Limitation of the Project
+While EduRide significantly improves the transport management process, several
+limitations were identified during development and testing:
+Dependency on Internet Connectivity:
+Real-time GPS tracking and online payment features require stable internet access. In
+areas with poor network coverage, system responsiveness may degrade.
+Page 44 of 47
+
+=== PAGE 45 ===
+Driver Phone-Based Tracking:
+Currently, location updates rely on the driver’s mobile device. This approach may be
+affected by battery drain, device performance, or GPS accuracy variations.
+Scalability Constraint in High Load Scenarios:
+Although tested for moderate load, the system’s performance under very high concurrent
+users (e.g., thousands of simultaneous tracking requests) needs further optimization.
+User Role Dependencies:
+Certain functions like slot approval and driver assignment depend on Admin intervention,
+which may introduce manual bottlenecks.
+These limitations provide valuable insights for future improvement and system
+refinement.
+7.3 Future Work
+Several enhancements can be undertaken in future iterations to further strengthen
+EduRide’s capabilities:
+Nearby Vehicle Finder:
+The Nearby Vehicle Finder will allow students, teachers, and staff to locate the closest
+available campus transport vehicle in real time using GPS technology and AI.
+Mobile Application Development:
+Develop companion mobile applications for Android and iOS to improve the accessibility
+and usability of the platform for students and drivers alike.
+IoT-Based Vehicle Health Monitoring:
+Connect sensors to monitor Fuel level, Engine condition, Tire pressure. Send
+maintenance alerts notification and information to Admin dashboard before breakdown
+occurs.
+Page 45 of 47
+
+=== PAGE 46 ===
+Advanced Analytics and Reporting:
+Add analytical dashboards featuring insights such as route usage, peak demand periods,
+and driver performance metrics to help administrators make data-driven decisions.
+7.4 Conclusion
+The EduRide Transport Management System delivers an effective and scalable solution
+for managing campus transportation services digitally. By replacing manual and paper-
+based systems with a centralized platform, the project enhances transparency, reduces
+administrative workloads, and improves overall service quality for all users. The system
+successfully integrates core functionalities such as user management, real-time tracking,
+payment processing, complaint handling, and notice distribution into a unified
+application. Through rigorous testing, EduRide proved to be both functionally reliable
+and performance-stable under expected operational conditions. Despite certain
+limitations, the project sets a strong foundation for future development and real-world
+implementation. With proposed enhancements such as dedicated GPS hardware, mobile
+apps, and advanced analytics, EduRide has the potential to evolve into a comprehensive
+transport solution suitable for larger institutional needs. Overall, this project demonstrates
+a significant contribution toward modernizing campus transportation management with
+modern web technologies.
+Page 46 of 47
+
+=== PAGE 47 ===
+References
+[1] UIU Transportation Service. UIU offers an extensive and heavily subsidized
+transportation service to the students in Dhaka city. Available at:
+https://www.uiu.ac.bd/uiu-transportation-service/ ( Accessed: March 4, 2026 ).
+[2] UU Transport Service, Uttara University offers its own affordable, safe and
+comfortable transport service. Available at: https://www.uttara.ac.bd/uu-bus-
+service/ ( Accessed: March 5, 2026 ).
+[3] WUB Transport, Available at: https://wub.edu.bd/student/transport/ ( Accessed:
+March 5, 2026 ).
+[4] HUB Transport, https://www.hamdarduniversity.edu.bd/campus/transportation/ (
+Accessed: March 5, 2026 ).
+Page 47 of 47

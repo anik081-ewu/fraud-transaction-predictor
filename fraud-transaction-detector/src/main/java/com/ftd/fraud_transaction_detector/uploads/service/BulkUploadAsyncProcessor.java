@@ -3,6 +3,7 @@ package com.ftd.fraud_transaction_detector.uploads.service;
 import com.opencsv.CSVReader;
 import com.ftd.fraud_transaction_detector.aml.training.application.BusinessDayService;
 import com.ftd.fraud_transaction_detector.comparison.service.UploadedDatasetService;
+import com.ftd.fraud_transaction_detector.config.service.AppConfigService;
 import com.ftd.fraud_transaction_detector.fraud.service.ModelTrainingService;
 import com.ftd.fraud_transaction_detector.transactions.repo.TransactionRepository;
 import com.ftd.fraud_transaction_detector.uploads.entity.BulkUploadBatch;
@@ -38,6 +39,7 @@ public class BulkUploadAsyncProcessor {
     private final BusinessDayService businessDayService;
     private final TaskExecutor taskExecutor;
     private final Environment environment;
+    private final AppConfigService appConfigService;
 
     public BulkUploadAsyncProcessor(
             BulkUploadBatchRepository batchRepository,
@@ -46,7 +48,8 @@ public class BulkUploadAsyncProcessor {
             ModelTrainingService modelTrainingService,
             BusinessDayService businessDayService,
             TaskExecutor taskExecutor,
-            Environment environment
+            Environment environment,
+            AppConfigService appConfigService
     ) {
         this.batchRepository = batchRepository;
         this.transactionRepository = transactionRepository;
@@ -55,6 +58,7 @@ public class BulkUploadAsyncProcessor {
         this.businessDayService = businessDayService;
         this.taskExecutor = taskExecutor;
         this.environment = environment;
+        this.appConfigService = appConfigService;
     }
 
     @Transactional
@@ -136,6 +140,7 @@ public class BulkUploadAsyncProcessor {
             if (headerRow == null) throw new IllegalArgumentException("Excel header row is missing");
             Map<String, Integer> headerIndex = ExcelBulkUploadService.buildHeaderIndex(headerRow);
             ExcelBulkUploadService.validateRequiredColumns(headerIndex);
+            ExcelBulkUploadService.validateLearningModeColumns(headerIndex, appConfigService.getLearningMode());
 
             for (int r = 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
@@ -163,6 +168,7 @@ public class BulkUploadAsyncProcessor {
             if (header == null) throw new IllegalArgumentException("CSV header row is missing");
             Map<String, Integer> headerIndex = ExcelBulkUploadService.buildHeaderIndex(header);
             ExcelBulkUploadService.validateRequiredColumns(headerIndex);
+            ExcelBulkUploadService.validateLearningModeColumns(headerIndex, appConfigService.getLearningMode());
 
             String[] row;
             int rowNumber = 1;

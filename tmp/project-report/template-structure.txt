@@ -1,0 +1,123 @@
+P000 [Normal] <Project Title>
+P001 [Normal] 
+P002 [Normal] 
+P003 [Normal] A Project 
+P004 [Normal] Presented to the
+P005 [Normal] University of Dhaka, Bangladesh
+P006 [Normal] 
+P007 [Normal] 
+P008 [Normal] In Partial Fulfillment
+P009 [Normal] Of the Requirements for the Degree
+P010 [Normal] Master in Information Technology (MIT)
+P011 [Normal] Or
+P012 [Normal] Post Graduate Diploma in Information Technology (PGDIT)
+P013 [Normal] 
+P014 [Normal] 
+P015 [Normal] By
+P016 [Normal] <Name>
+P017 [Normal] <Roll>
+P018 [Normal] <Year>
+P019 [Normal] 
+P020 [Default] 
+P021 [Normal] SIGNATURE PAGE
+P022 [Normal] 
+P023 [Normal] 
+P024 [Normal] 
+P025 [Normal] 
+P026 [Normal] 
+P027 [Normal] 
+P028 [Normal] 
+P029 [Normal] 
+P030 [Normal] 
+P031 [Normal] 
+P032 [Normal] 
+P033 [Normal] 
+P034 [Normal] 
+P035 [Normal] 
+P036 [Normal] 
+P037 [Normal] 
+P038 [Normal] 
+P039 [Normal] 
+P040 [Normal] 
+P041 [Normal] 
+P042 [Normal] 
+P043 [Normal] 
+P044 [Normal] 
+P045 [Normal] 
+P046 [Normal] 
+P047 [Normal] 
+P048 [Normal] 
+P049 [Normal] 
+P050 [Normal] 
+P051 [Normal] 
+P052 [Heading 1] ACKNOWLEDGEMENTS
+P053 [Default] 
+P054 [Default] 
+P055 [Default] 
+P056 [Default] 
+P057 [Default] 
+P058 [Default] 
+P059 [Normal] 
+P060 [Default] 
+P061 [Normal] 
+P062 [Heading 1] ABSTRACT
+P063 [Default] 
+P064 [Default] 
+P065 [Default] 
+P066 [Default] 
+P067 [Default] 
+P068 [Default] 
+P069 [Default] 
+P070 [Heading 1]  LIST OF TABLES
+P071 [Default]  
+P072 [Default] 
+P073 [Default]  
+P074 [table of figures] Table 1. Effect of User Interface	1
+P075 [table of figures] Table 2. Most popular Technolgy by Users	2
+P076 [table of figures] Table 3. Sample Table Including Confidence Intervals	2
+P077 [Default] 
+P078 [Default] 
+P079 [Default] 
+P080 [Normal] 
+
+P081 [Heading 1] 
+P082 [Heading 1] 
+P083 [Heading 1] 
+P084 [Heading 1] LIST OF FIGURES
+P085 [Default]  
+P086 [Default]  
+P087 [Default] 
+P088 [table of figures] Figure 1. Use case diagram	3
+P089 [table of figures] Figure 2. Architecture of the System	4
+P090 [table of figures] Figure 3. LogIn Screen	5
+P091 [Normal] 
+P092 [Normal] 
+P093 [Normal] 
+P094 [Normal] 
+P095 [Normal] 
+P096 [Normal] INTRODUCTION
+P097 [Normal] <You can add Objectives, Motivations, Scope and finally the description of the project in this chapter.>
+P098 [Normal] 
+P099 [Normal] METHODOLOGY
+P100 [Normal] <In this chapter, you can specify the requirements, various diagrams, technology used and finally any specific methodology/algorithms that you followed to implement your project. >
+P101 [Normal] IMPLEMENTATION
+P102 [Normal] <You can use this chapter to describe how implemented your project and present your implementation details.>
+P103 [Normal] RESULTS
+P104 [Normal] <You can present the results of your experimental evaluation if there is any or any other findings. In case of the implementation of a tool, you can add the user manual or present the operational detail of your finished product.>
+P105 [Normal] CONCLUSION
+P106 [Normal] <You can write the final remarks on your project in this chapter. You can also discuss limitations and the future direction for your project under this section. >
+P107 [Heading 1] REFERENCES
+P108 [Normal] 
+P109 [Normal] <Follow a standard style for referencing. You can follow any standard referencing style, but it has to be uniform throughout your entire report.>
+P110 [Normal] 
+P111 [Heading 1] APPENDIX A
+P112 [Normal] 
+P113 [Normal] <You can add supplementary topics, formulas, etc. under this section. If you have more than 1 appendix, label them APPENDIX A, B, etc.>
+TABLE 0 ROW 0: PROJECT: | <Project Title>
+TABLE 0 ROW 1:  | 
+TABLE 0 ROW 2: AUTHOR: | <Author’s Name>
+TABLE 0 ROW 3:  | 
+TABLE 0 ROW 4: DATE SUBMITTED: | <Date or Month or Semester>
+TABLE 0 ROW 5:  | 
+TABLE 0 ROW 6: SUPERVISED BY: | <Supervisor’s Name> / <Supervisor’s Designation> / <Institution’s Name> / 
+TABLE 0 ROW 7: SUPERVISOR’S APPROVAL: | <Signature and Date> / ___________________________________

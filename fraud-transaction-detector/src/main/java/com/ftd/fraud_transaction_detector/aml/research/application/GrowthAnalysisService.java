@@ -53,9 +53,12 @@ public class GrowthAnalysisService {
                         : options.isolationForestMaximumTrainingRows(),
                 appConfigService.getResearchIsolationForestEstimators(),
                 appConfigService.getResearchAutoencoderMaxTrainingRows(),
+                50_000,
+                appConfigService.getLofNeighbors(),
+                appConfigService.getLofContamination(),
                 appConfigService.getResearchRandomSeed(),
-                appConfigService.getHstParameters(),
-                appConfigService.getOnlineOneClassSvmParameters()
+                appConfigService.getLearningMode(),
+                appConfigService.getMlHyperparams()
         ));
     }
 }

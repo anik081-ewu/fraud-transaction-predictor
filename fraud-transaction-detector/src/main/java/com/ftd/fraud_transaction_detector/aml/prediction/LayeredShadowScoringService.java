@@ -138,21 +138,17 @@ public class LayeredShadowScoringService {
         Map<String, MlModelScore> scores = new LinkedHashMap<>();
         addModel(scores, legacy, "IsolationForest", "ISOLATION_FOREST",
                 "ISOLATION_FOREST_MARGIN_PROXY_V1", "ISOLATION_FOREST_HIGH_ANOMALY_SCORE",
-                "ISOLATION_FOREST_BATCH_DEFAULT");
+                "ISOLATION_FOREST_DEFAULT");
         addModel(scores, legacy, "LOF", "LOCAL_OUTLIER_FACTOR",
-                "LOF_MARGIN_PROXY_V1", "LOF_HIGH_ANOMALY_SCORE", "LOF_BATCH_DEFAULT");
-        addModel(scores, legacy, "OneClassSVM", "ONE_CLASS_SVM",
-                "ONE_CLASS_SVM_MARGIN_PROXY_V1", "ONE_CLASS_SVM_HIGH_ANOMALY_SCORE", "ONE_CLASS_SVM_BATCH_DEFAULT");
-        addModel(scores, legacy, "EllipticEnvelope", "ELLIPTIC_ENVELOPE",
-                "ELLIPTIC_ENVELOPE_MARGIN_PROXY_V1", "ELLIPTIC_ENVELOPE_HIGH_ANOMALY_SCORE", "ELLIPTIC_BATCH_DEFAULT");
-        addModel(scores, legacy, "PCAReconstruction", "PCA_RECONSTRUCTION",
-                "PCA_RECONSTRUCTION_MARGIN_PROXY_V1", "PCA_RECONSTRUCTION_HIGH_ANOMALY_SCORE", "PCA_BATCH_DEFAULT");
+                "LOF_MARGIN_PROXY_V1", "LOF_HIGH_ANOMALY_SCORE", "LOF_DEFAULT");
         addModel(scores, legacy, "Autoencoder", "AUTOENCODER",
-                "AUTOENCODER_RECONSTRUCTION_MARGIN_PROXY_V1", "AUTOENCODER_HIGH_ANOMALY_SCORE", "AUTOENCODER_BATCH_DEFAULT");
-        addModel(scores, legacy, "HalfSpaceTrees", "HALF_SPACE_TREES",
-                "HST_EMPIRICAL_THRESHOLD_V1", "HST_HIGH_ANOMALY_SCORE", "HST_UNVERSIONED");
-        addModel(scores, legacy, "OnlineOneClassSVM", "ONLINE_ONE_CLASS_SVM",
-                "ONLINE_OCSVM_EMPIRICAL_V1", "ONLINE_OCSVM_HIGH_ANOMALY_SCORE", "ONLINE_OCSVM_UNVERSIONED");
+                "AUTOENCODER_RECONSTRUCTION_MARGIN_PROXY_V1", "AUTOENCODER_HIGH_ANOMALY_SCORE", "AUTOENCODER_DEFAULT");
+        addModel(scores, legacy, "XGBoost", "XGBOOST_CLASSIFIER",
+                "SUPERVISED_PROBABILITY_V1", "XGBOOST_HIGH_FRAUD_PROBABILITY", "XGBOOST_DEFAULT");
+        addModel(scores, legacy, "RandomForestClassifier", "RANDOM_FOREST_CLASSIFIER",
+                "SUPERVISED_PROBABILITY_V1", "RANDOM_FOREST_HIGH_FRAUD_PROBABILITY", "RANDOM_FOREST_DEFAULT");
+        addModel(scores, legacy, "LogisticRegression", "LOGISTIC_REGRESSION",
+                "SUPERVISED_PROBABILITY_V1", "LOGISTIC_REGRESSION_HIGH_FRAUD_PROBABILITY", "LOGISTIC_REGRESSION_DEFAULT");
         return new MlModelScores(scores);
     }
 
@@ -169,8 +165,11 @@ public class LayeredShadowScoringService {
         Object rawResult = response.modelResults().get(responseKey);
         if (!(rawResult instanceof Map<?, ?> result)) return;
         Double normalized = number(result.get("normalizedScore"));
+        if (normalized == null) normalized = number(result.get("fraudProbability"));
         Double rawScore = number(result.get("rawScore"));
+        if (rawScore == null) rawScore = number(result.get("fraudProbability"));
         if (rawScore == null) rawScore = number(result.get("score"));
+        if (rawScore == null) rawScore = number(result.get("scoreSamples"));
         if (rawScore == null) rawScore = number(result.get("decisionFunction"));
         boolean anomaly = Boolean.TRUE.equals(result.get("anomaly"));
         if (normalized == null) {

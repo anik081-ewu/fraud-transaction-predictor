@@ -3,6 +3,7 @@
     <div>
       <span class="upload-eyebrow">Data ingestion</span>
       <h2>Upload Transactions</h2>
+      <p><strong>Active system type: {{ learningMode() === 'SUPERVISED' ? 'Supervised Learning' : 'Unsupervised Learning' }}</strong></p>
       <p>Import historical transactions into the database. Business dates are sealed automatically — you can proceed directly to Training Operations once the upload completes.</p>
     </div>
   </header>
@@ -15,6 +16,8 @@
       <div class="upload-copy">
         <strong>{{ selectedFile?.name || 'Choose a transaction dataset' }}</strong>
         <span>Accepted formats: Excel (.xlsx, .xls) and CSV</span>
+        <span *ngIf="learningMode() === 'SUPERVISED'">Required: FraudLabel (1 = suspicious/fraud, 0 = legitimate, blank = excluded)</span>
+        <span *ngIf="learningMode() === 'UNSUPERVISED'">FraudLabel is optional and does not affect unsupervised training.</span>
       </div>
       <label class="file-button">
         Browse file

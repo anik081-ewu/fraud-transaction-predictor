@@ -29,6 +29,7 @@ export class AnomalyConfigPageComponent implements OnInit {
   readonly cbModalOpen = signal(false);
   readonly pbModalOpen = signal(false);
   readonly rulesModalOpen = signal(false);
+  readonly mlModalOpen = signal(false);
 
   customerBehaviourWeight = 0.20;
   peerBehaviourWeight = 0.15;
@@ -56,6 +57,7 @@ export class AnomalyConfigPageComponent implements OnInit {
   mediumRiskThreshold = 0.65;
   highRiskThreshold = 0.80;
   models: EditableModel[] = [];
+  learningMode: 'UNSUPERVISED' | 'SUPERVISED' = 'UNSUPERVISED';
 
   ngOnInit(): void {
     this.load();
@@ -136,8 +138,6 @@ export class AnomalyConfigPageComponent implements OnInit {
         enabled: model.enabled,
         weight: model.enabled ? model.weight : 0,
       })),
-      incrementalSchedule: 'DAILY',
-      batchSchedule: 'WEEKLY',
       lowRiskThreshold: this.lowRiskThreshold,
       mediumRiskThreshold: this.mediumRiskThreshold,
       highRiskThreshold: this.highRiskThreshold,
@@ -159,43 +159,28 @@ export class AnomalyConfigPageComponent implements OnInit {
   }
 
   setLayerWeight(key: LayerKey, value: number): void {
-    const nextValue = this.clamp(value);
-    const current = this.layerWeights();
-    const otherKeys = (Object.keys(current) as LayerKey[]).filter((entry) => entry !== key);
-    const remaining = 1 - nextValue;
-    const totalOthers = otherKeys.reduce((sum, entry) => sum + current[entry], 0);
-    const updated = { ...current, [key]: nextValue };
+    this.assignLayerWeights({ ...this.layerWeights(), [key]: this.clamp(value) });
+  }
 
-    if (otherKeys.length === 0) {
-      this.assignLayerWeights(updated);
+  normalizeLayerWeight(key: LayerKey): void {
+    const remaining = this.remainingLayerWeight(key);
+    if (remaining < 0 || remaining > 1) {
+      this.alerts.error(
+        'The other rule weights already exceed 100%. Reduce one of them before using the remaining budget.',
+        'Cannot normalize this component'
+      );
       return;
     }
-
-    if (totalOthers <= 0) {
-      const even = remaining / otherKeys.length;
-      otherKeys.forEach((entry) => { updated[entry] = even; });
-    } else {
-      otherKeys.forEach((entry) => { updated[entry] = remaining * (current[entry] / totalOthers); });
-    }
-
-    this.assignLayerWeights(this.normalizedWeights(updated));
+    this.setLayerWeight(key, remaining);
   }
 
   setCbSubWeight(key: CbSubKey, value: number): void {
-    const nextValue = this.clamp(value);
-    const current = this.cbSubWeights();
-    const otherKeys = (Object.keys(current) as CbSubKey[]).filter((k) => k !== key);
-    const remaining = 1 - nextValue;
-    const totalOthers = otherKeys.reduce((sum, k) => sum + current[k], 0);
-    const updated = { ...current, [key]: nextValue };
-    if (totalOthers <= 0) {
-      const even = remaining / otherKeys.length;
-      otherKeys.forEach((k) => { updated[k] = even; });
-    } else {
-      otherKeys.forEach((k) => { updated[k] = remaining * (current[k] / totalOthers); });
-    }
-    const normalized = this.normalizedWeights(updated);
-    this.assignCbSubWeights(normalized);
+    this.assignCbSubWeights({ ...this.cbSubWeights(), [key]: this.clamp(value) });
+  }
+
+
+  normalizeCbSubWeights(): void {
+    this.assignCbSubWeights(this.normalizedWeights(this.cbSubWeights()));
   }
 
   cbSubTotal(): number {
@@ -207,20 +192,11 @@ export class AnomalyConfigPageComponent implements OnInit {
   }
 
   setPbSubWeight(key: PbSubKey, value: number): void {
-    const nextValue = this.clamp(value);
-    const current = this.pbSubWeights();
-    const otherKeys = (Object.keys(current) as PbSubKey[]).filter((k) => k !== key);
-    const remaining = 1 - nextValue;
-    const totalOthers = otherKeys.reduce((sum, k) => sum + current[k], 0);
-    const updated = { ...current, [key]: nextValue };
-    if (totalOthers <= 0) {
-      const even = remaining / otherKeys.length;
-      otherKeys.forEach((k) => { updated[k] = even; });
-    } else {
-      otherKeys.forEach((k) => { updated[k] = remaining * (current[k] / totalOthers); });
-    }
-    const normalized = this.normalizedWeights(updated);
-    this.assignPbSubWeights(normalized);
+    this.assignPbSubWeights({ ...this.pbSubWeights(), [key]: this.clamp(value) });
+  }
+
+  normalizePbSubWeights(): void {
+    this.assignPbSubWeights(this.normalizedWeights(this.pbSubWeights()));
   }
 
   pbSubTotal(): number {
@@ -255,38 +231,31 @@ export class AnomalyConfigPageComponent implements OnInit {
     if (model.enabled) {
       model.enabled = false;
       model.weight = 0;
-      this.redistributeEnabledModels();
       return;
     }
 
     model.enabled = true;
-    const enabled = this.enabledModels();
-    const newWeight = 1 / enabled.length;
-    enabled.forEach((entry) => { entry.weight = newWeight; });
-    this.normalizeModelWeights();
+    model.weight = this.round4(Math.max(0, 1 - this.modelWeightTotal()));
   }
 
   setModelWeight(modelKey: string, value: number): void {
     const target = this.models.find((entry) => entry.modelKey === modelKey && entry.enabled);
     if (!target) return;
-    const enabled = this.enabledModels();
-    if (enabled.length === 1) {
-      target.weight = 1;
+    target.weight = this.clamp(value);
+  }
+
+  normalizeModelWeight(modelKey: string): void {
+    const target = this.models.find((model) => model.modelKey === modelKey && model.enabled);
+    if (!target) return;
+    const remaining = this.remainingModelWeight(modelKey);
+    if (remaining < 0 || remaining > 1) {
+      this.alerts.error(
+        'The other enabled model weights already exceed 100%. Reduce one before using the remaining budget.',
+        'Cannot normalize this model'
+      );
       return;
     }
-
-    const nextValue = this.clamp(value);
-    const others = enabled.filter((entry) => entry.modelKey !== modelKey);
-    const remaining = 1 - nextValue;
-    const otherTotal = others.reduce((sum, entry) => sum + entry.weight, 0);
-    target.weight = nextValue;
-    if (otherTotal <= 0) {
-      const even = remaining / others.length;
-      others.forEach((entry) => { entry.weight = even; });
-    } else {
-      others.forEach((entry) => { entry.weight = remaining * (entry.weight / otherTotal); });
-    }
-    this.normalizeModelWeights();
+    target.weight = this.round4(remaining);
   }
 
   topLevelTotal(): number {
@@ -299,6 +268,24 @@ export class AnomalyConfigPageComponent implements OnInit {
 
   modelWeightTotal(): number {
     return this.enabledModels().reduce((sum, model) => sum + model.weight, 0);
+  }
+
+  remainingLayerWeight(key: LayerKey): number {
+    const weights = this.layerWeights();
+    return this.round4(1 - Object.entries(weights)
+      .filter(([entryKey]) => entryKey !== key)
+      .reduce((sum, [, weight]) => sum + weight, 0));
+  }
+
+  remainingModelWeight(modelKey: string): number {
+    return this.round4(1 - this.enabledModels()
+      .filter((model) => model.modelKey !== modelKey)
+      .reduce((sum, model) => sum + model.weight, 0));
+  }
+
+  normalizeLabel(value: number): string {
+    if (value < 0) return 'Other weights exceed 100%';
+    return `Use remaining ${this.percent(value)}`;
   }
 
   validTopLevelWeights(): boolean {
@@ -324,13 +311,8 @@ export class AnomalyConfigPageComponent implements OnInit {
     return model.enabled ? model.weight * this.mlEnsembleWeight : 0;
   }
 
-  familyDescription(family: string): string {
-    return family === 'BATCH'
-      ? 'Uses a larger historical snapshot and is trained manually from Training Operations.'
-      : 'Adapts to evolving behaviour and is trained manually from Training Operations.';
-  }
-
   private assign(policy: RiskPolicyConfig): void {
+    this.learningMode = policy.learningMode;
     this.customerBehaviourWeight = policy.customerBehaviourWeight;
     this.peerBehaviourWeight = policy.peerBehaviourWeight;
     this.mlEnsembleWeight = policy.mlEnsembleWeight;
@@ -366,33 +348,14 @@ export class AnomalyConfigPageComponent implements OnInit {
     this.mediumRiskThreshold = policy.mediumRiskThreshold;
     this.highRiskThreshold = policy.highRiskThreshold;
     this.models = policy.models.map((model) => ({ ...model }));
-    this.normalizeModelWeights();
+    if (!this.models.some((model) => model.enabled)) {
+      this.models[0].enabled = true;
+      this.models[0].weight = 1;
+    }
   }
 
   private enabledModels(): EditableModel[] {
     return this.models.filter((model) => model.enabled);
-  }
-
-  private redistributeEnabledModels(): void {
-    const enabled = this.enabledModels();
-    if (enabled.length === 0) return;
-    const total = enabled.reduce((sum, model) => sum + model.weight, 0);
-    if (total <= 0) {
-      const even = 1 / enabled.length;
-      enabled.forEach((model) => { model.weight = even; });
-      return;
-    }
-    enabled.forEach((model) => { model.weight /= total; });
-    this.normalizeModelWeights();
-  }
-
-  private normalizeModelWeights(): void {
-    const enabled = this.enabledModels();
-    if (enabled.length === 0) return;
-    const normalized = this.normalizedWeights(
-      Object.fromEntries(enabled.map((model) => [model.modelKey, model.weight]))
-    );
-    enabled.forEach((model) => { model.weight = normalized[model.modelKey] ?? model.weight; });
   }
 
   private layerWeights(): Record<LayerKey, number> {
@@ -446,13 +409,18 @@ export class AnomalyConfigPageComponent implements OnInit {
   private normalizedWeights<T extends string>(weights: Record<T, number>): Record<T, number> {
     const keys = Object.keys(weights) as T[];
     if (keys.length === 0) return weights;
+    const total = keys.reduce((sum, key) => sum + this.clamp(weights[key]), 0);
+    if (total <= 0) {
+      const even = 1 / keys.length;
+      return Object.fromEntries(keys.map((key) => [key, even])) as Record<T, number>;
+    }
     const rounded = { ...weights };
     let running = 0;
     keys.forEach((key, index) => {
       if (index === keys.length - 1) {
         rounded[key] = this.clamp(1 - running);
       } else {
-        rounded[key] = this.round4(this.clamp(weights[key]));
+        rounded[key] = this.round4(this.clamp(weights[key]) / total);
         running += rounded[key];
       }
     });
