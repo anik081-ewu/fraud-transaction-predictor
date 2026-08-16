@@ -40,14 +40,21 @@ public class SupervisedGrowthStudyRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public Optional<SupervisedGrowthStudy> findReusable(UUID trainingRunId) {
+    public Optional<SupervisedGrowthStudy> findReusable(UUID trainingRunId, String policyVersion) {
         return jdbcTemplate.query("SELECT TOP (1) " + COLUMNS + """
                         FROM dbo.aml_supervised_growth_studies
                         WHERE training_run_id = :trainingRunId
+                          AND COALESCE(requested_by, '') <> 'demo-expected-cache'
                           AND status IN ('QUEUED', 'RUNNING', 'COMPLETED')
-                          AND (status IN ('QUEUED', 'RUNNING') OR JSON_QUERY(result_json, '$.ensembles') IS NOT NULL)
+                          AND (status IN ('QUEUED', 'RUNNING') OR (
+                               result_json LIKE '%FULL_RISK_POLICY_BACKTEST_V2%'
+                               AND result_json LIKE :policyMarker
+                          ))
                         ORDER BY CASE status WHEN 'COMPLETED' THEN 0 ELSE 1 END, created_at DESC
-                        """, Map.of("trainingRunId", trainingRunId), MAPPER)
+                        """, Map.of(
+                                "trainingRunId", trainingRunId,
+                                "policyMarker", policyMarker(policyVersion)
+                        ), MAPPER)
                 .stream().findFirst();
     }
 
@@ -93,14 +100,22 @@ public class SupervisedGrowthStudyRepository {
                 .addValue("reason", abbreviate(reason)));
     }
 
-    public Optional<SupervisedGrowthStudy> latestRelevant() {
+    public Optional<SupervisedGrowthStudy> latestRelevant(String policyVersion) {
         return jdbcTemplate.query("SELECT TOP (1) " + COLUMNS + """
                         FROM dbo.aml_supervised_growth_studies
+                        WHERE status IN ('QUEUED', 'RUNNING')
+                           OR (status = 'COMPLETED'
+                               AND result_json LIKE '%FULL_RISK_POLICY_BACKTEST_V2%'
+                               AND result_json LIKE :policyMarker)
                         ORDER BY CASE status
                                      WHEN 'RUNNING' THEN 0 WHEN 'QUEUED' THEN 0
                                      WHEN 'COMPLETED' THEN 1 ELSE 2
                                  END, created_at DESC
-                        """, Map.of(), MAPPER).stream().findFirst();
+                        """, Map.of("policyMarker", policyMarker(policyVersion)), MAPPER).stream().findFirst();
+    }
+
+    private String policyMarker(String policyVersion) {
+        return "%\"policyVersion\":\"" + policyVersion + "\"%";
     }
 
     public Optional<SupervisedGrowthStudy> find(UUID studyId) {

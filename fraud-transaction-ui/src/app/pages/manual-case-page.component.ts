@@ -75,9 +75,9 @@ export class ManualCasePageComponent implements OnInit {
         this.creating.set(false);
         this.alerts.success(
           'Case created',
-          `${caseRecord.caseNo} was created successfully.`,
-          () => this.router.navigate(['/cases'], { queryParams: { caseId: caseRecord.id } })
+          `${caseRecord.caseNo} was added to the Case Management review queue.`
         );
+        this.router.navigate(['/cases'], { queryParams: { caseId: caseRecord.id } });
       },
       error: (error) => {
         this.alerts.error(this.extractMessage(error), 'Case not created');

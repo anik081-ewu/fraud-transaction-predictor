@@ -14,6 +14,7 @@ class LoadedModels:
     elliptic_model: object | None
     pca_model: object | None
     autoencoder_model: object | None
+    behavioral_cluster_outlier_model: object | None
     scaler: object
     feature_columns: list[str]
     hyperparams: dict
@@ -30,10 +31,12 @@ def load_models(models_dir: str) -> LoadedModels:
     elliptic_path = os.path.join(models_dir, "elliptic_envelope.pkl")
     pca_path = os.path.join(models_dir, "pca_reconstruction.pkl")
     autoencoder_path = os.path.join(models_dir, "autoencoder.pkl")
+    behavioral_cluster_outlier_path = os.path.join(models_dir, "behavioral_cluster_outlier.pkl")
     supervised_paths = {
         "XGBoost": "xgboost_classifier.pkl",
         "RandomForestClassifier": "random_forest_classifier.pkl",
-        "LogisticRegression": "logistic_regression.pkl",
+        "ExtraTreesClassifier": "extra_trees_classifier.pkl",
+        "StackedEnsemble": "stacked_ensemble.pkl",
     }
 
     iso_model = joblib.load(iso_path) if os.path.exists(iso_path) else None
@@ -42,6 +45,8 @@ def load_models(models_dir: str) -> LoadedModels:
     elliptic_model = joblib.load(elliptic_path) if os.path.exists(elliptic_path) else None
     pca_model = joblib.load(pca_path) if os.path.exists(pca_path) else None
     autoencoder_model = joblib.load(autoencoder_path) if os.path.exists(autoencoder_path) else None
+    behavioral_cluster_outlier_model = joblib.load(behavioral_cluster_outlier_path) \
+        if os.path.exists(behavioral_cluster_outlier_path) else None
     supervised_models = {
         name: joblib.load(os.path.join(models_dir, file_name))
         for name, file_name in supervised_paths.items()
@@ -80,6 +85,7 @@ def load_models(models_dir: str) -> LoadedModels:
         elliptic_model=elliptic_model,
         pca_model=pca_model,
         autoencoder_model=autoencoder_model,
+        behavioral_cluster_outlier_model=behavioral_cluster_outlier_model,
         scaler=scaler,
         feature_columns=feature_columns,
         hyperparams=hyperparams,
@@ -92,6 +98,7 @@ def load_models(models_dir: str) -> LoadedModels:
                 "EllipticEnvelope": elliptic_model,
                 "PCAReconstruction": pca_model,
                 "Autoencoder": autoencoder_model,
+                "BehavioralClusterOutlier": behavioral_cluster_outlier_model,
             }.items()
             if model is not None
         }, **supervised_models},

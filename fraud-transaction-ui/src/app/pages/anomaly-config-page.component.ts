@@ -238,6 +238,10 @@ export class AnomalyConfigPageComponent implements OnInit {
     model.weight = this.round4(Math.max(0, 1 - this.modelWeightTotal()));
   }
 
+  modelDescription(_model: EditableModel): string {
+    return 'A base classifier trained from the immutable snapshot and available for weighted production scoring.';
+  }
+
   setModelWeight(modelKey: string, value: number): void {
     const target = this.models.find((entry) => entry.modelKey === modelKey && entry.enabled);
     if (!target) return;
@@ -347,7 +351,9 @@ export class AnomalyConfigPageComponent implements OnInit {
     this.lowRiskThreshold = policy.lowRiskThreshold;
     this.mediumRiskThreshold = policy.mediumRiskThreshold;
     this.highRiskThreshold = policy.highRiskThreshold;
-    this.models = policy.models.map((model) => ({ ...model }));
+    this.models = policy.models
+      .filter((model) => model.modelKey !== 'STACKED_ENSEMBLE')
+      .map((model) => ({ ...model }));
     if (!this.models.some((model) => model.enabled)) {
       this.models[0].enabled = true;
       this.models[0].weight = 1;

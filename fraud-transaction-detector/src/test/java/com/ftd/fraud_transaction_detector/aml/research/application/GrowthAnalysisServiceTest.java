@@ -41,7 +41,7 @@ class GrowthAnalysisServiceTest {
         when(datasetService.getRun(runId)).thenReturn(run(runId, "DATASET_READY"));
         GrowthAnalysisResponse expected = new GrowthAnalysisResponse(
                 "COMPLETED", 10_000, 12, "AML_FEATURES_V1", List.of(10, 25, 50, 100),
-                List.of("ISOLATION_FOREST"), Map.of(), List.of(), List.of()
+                List.of("ISOLATION_FOREST"), Map.of(), List.of(), List.of(), List.of()
         );
         when(client.analyze(org.mockito.ArgumentMatchers.any())).thenReturn(expected);
         defaults();
@@ -76,8 +76,9 @@ class GrowthAnalysisServiceTest {
         when(appConfigService.getResearchIsolationForestMaximumTrainingRows()).thenReturn(100_000);
         when(appConfigService.getResearchIsolationForestEstimators()).thenReturn(200);
         when(appConfigService.getResearchAutoencoderMaxTrainingRows()).thenReturn(50_000);
-        when(appConfigService.getLofNeighbors()).thenReturn(35);
-        when(appConfigService.getLofContamination()).thenReturn(0.05);
+        when(appConfigService.getResearchBehavioralClusterMaximumTrainingRows()).thenReturn(100_000);
+        when(appConfigService.getBehavioralClusterCount()).thenReturn(16);
+        when(appConfigService.getBehavioralClusterContamination()).thenReturn(0.01);
         when(appConfigService.getResearchRandomSeed()).thenReturn(42);
     }
 

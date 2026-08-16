@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import com.ftd.fraud_transaction_detector.aml.peer.domain.PeerGroupStats;
 import com.ftd.fraud_transaction_detector.aml.profile.domain.TrustedCustomerProfile;
 import com.ftd.fraud_transaction_detector.aml.training.application.MaterializationHistoryIndex;
+import com.ftd.fraud_transaction_detector.aml.training.application.TerminalRiskHistoryIndex;
+import com.ftd.fraud_transaction_detector.aml.feature.infrastructure.TerminalRiskContextRepository;
+import com.ftd.fraud_transaction_detector.config.service.AppConfigService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,15 +30,21 @@ public class FeatureContextLoader {
     private final TransactionRepository transactionRepository;
     private final CustomerProfileRepository profileRepository;
     private final PeerContextLoader peerContextLoader;
+    private final TerminalRiskContextRepository terminalRiskRepository;
+    private final AppConfigService appConfigService;
 
     public FeatureContextLoader(
             TransactionRepository transactionRepository,
             CustomerProfileRepository profileRepository,
-            PeerContextLoader peerContextLoader
+            PeerContextLoader peerContextLoader,
+            TerminalRiskContextRepository terminalRiskRepository,
+            AppConfigService appConfigService
     ) {
         this.transactionRepository = transactionRepository;
         this.profileRepository = profileRepository;
         this.peerContextLoader = peerContextLoader;
+        this.terminalRiskRepository = terminalRiskRepository;
+        this.appConfigService = appConfigService;
     }
 
     public FeatureContext load(Transaction transaction) {
@@ -69,13 +78,22 @@ public class FeatureContextLoader {
                 trustedProfile,
                 transaction.getTransactionDate()
         );
+        var terminalRisk = terminalRiskRepository.load(
+                transaction.getLocation(),
+                transaction.getTransactionDate(),
+                appConfigService.getTerminalRiskDelayDays(),
+                appConfigService.getTerminalRiskSmoothingStrength(),
+                appConfigService.getTerminalRiskMinimumTransactions(),
+                appConfigService.isTerminalRiskEnabled()
+        );
 
         return new FeatureContext(
                 toCurrent(transaction),
                 historyCount,
                 trustedProfile,
                 history,
-                peerContext
+                peerContext,
+                terminalRisk
         );
     }
 
@@ -94,6 +112,7 @@ public class FeatureContextLoader {
     public FeatureContext load(
             Transaction transaction,
             MaterializationHistoryIndex historyIndex,
+            TerminalRiskHistoryIndex terminalRiskHistoryIndex,
             Map<String, Optional<TrustedCustomerProfile>> profileCache,
             Map<String, PeerGroupStats> peerStatsCache,
             Map<String, Double> peerPercentileCache
@@ -120,7 +139,15 @@ public class FeatureContextLoader {
                 peerStatsCache,
                 peerPercentileCache
         );
-        return new FeatureContext(toCurrent(transaction), historyCount, trustedProfile, history, peerContext);
+        var terminalRisk = terminalRiskHistoryIndex.context(
+                transaction.getLocation(),
+                transactionDate,
+                appConfigService.getTerminalRiskDelayDays(),
+                appConfigService.getTerminalRiskSmoothingStrength(),
+                appConfigService.getTerminalRiskMinimumTransactions(),
+                appConfigService.isTerminalRiskEnabled()
+        );
+        return new FeatureContext(toCurrent(transaction), historyCount, trustedProfile, history, peerContext, terminalRisk);
     }
 
     private TransactionSnapshot toCurrent(Transaction transaction) {

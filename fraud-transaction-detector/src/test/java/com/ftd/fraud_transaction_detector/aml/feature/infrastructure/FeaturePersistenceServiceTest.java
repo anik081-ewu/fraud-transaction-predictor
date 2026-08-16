@@ -42,7 +42,7 @@ class FeaturePersistenceServiceTest {
                         FeatureFixtures.trustedProfile(1),
                         List.of(FeatureFixtures.history("T3", 300, currentTime.minusHours(1), "B3", true))
                 ),
-                "AML_FEATURES_V2",
+                "AML_FEATURES_V4",
                 BigDecimal.valueOf(10_000)
         );
 
@@ -50,9 +50,9 @@ class FeaturePersistenceServiceTest {
 
         verify(jdbcTemplate).update(anyString(), argThat((SqlParameterSource parameters) -> {
             assertEquals("T4", parameters.getValue("transactionId"));
-            assertEquals("AML_FEATURES_V2", parameters.getValue("featureVersion"));
+            assertEquals("AML_FEATURES_V4", parameters.getValue("featureVersion"));
             assertEquals("test-generator", parameters.getValue("generatorVersion"));
-            assertEquals("AML_MODEL_INPUT_V2", parameters.getValue("modelFeatureSchema"));
+            assertEquals("AML_MODEL_INPUT_V3", parameters.getValue("modelFeatureSchema"));
             assertEquals(Timestamp.from(Instant.parse("2026-08-04T06:00:00Z")), parameters.getValue("generatedAt"));
             assertEquals(Types.TIMESTAMP, parameters.getSqlType("generatedAt"));
             assertEquals(Types.DOUBLE, parameters.getSqlType("peerAverage"));

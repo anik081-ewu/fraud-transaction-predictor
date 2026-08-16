@@ -39,7 +39,7 @@ class ConfiguredAnomalyPredictionServiceTest {
                 "T4", "ACCOUNT-1",
                 Map.of(
                         "IsolationForest", Map.of("anomaly", true),
-                        "LOF", Map.of("anomaly", false),
+                        "BehavioralClusterOutlier", Map.of("anomaly", false),
                         "OneClassSVM", Map.of("anomaly", false)
                 ),
                 Map.of("scoringContract", "PERSISTED_FEATURES_V2"),
@@ -82,12 +82,12 @@ class ConfiguredAnomalyPredictionServiceTest {
         PersistedFeaturePredictionClient persistedClient = mock(PersistedFeaturePredictionClient.class);
         AppConfigService configService = mock(AppConfigService.class);
         when(configRepository.findFirstByIsActiveTrueOrderByUpdatedAtDescIdDesc()).thenReturn(Optional.empty());
-        when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of("LOCAL_OUTLIER_FACTOR", 1.0));
+        when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of("BEHAVIORAL_CLUSTER_OUTLIER", 1.0));
         when(persistedClient.predict(any())).thenReturn(new ComparisonPredictResponse(
                 "T4", "ACCOUNT-1",
                 Map.of(
                         "IsolationForest", Map.of("anomaly", false),
-                        "LOF", Map.of("anomaly", true)
+                        "BehavioralClusterOutlier", Map.of("anomaly", true)
                 ),
                 Map.of(),
                 List.of()
@@ -102,7 +102,7 @@ class ConfiguredAnomalyPredictionServiceTest {
         assertEquals("HIGH", response.riskLevel());
         ArgumentCaptor<PersistedFeaturePredictRequest> request = ArgumentCaptor.forClass(PersistedFeaturePredictRequest.class);
         verify(persistedClient).predict(request.capture());
-        assertEquals(List.of("LOF"), request.getValue().modelNames());
+        assertEquals(List.of("BehavioralClusterOutlier"), request.getValue().modelNames());
     }
 
     private ConfiguredAnomalyPredictionService service(

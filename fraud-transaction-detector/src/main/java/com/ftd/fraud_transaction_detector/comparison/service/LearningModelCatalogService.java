@@ -16,7 +16,7 @@ public class LearningModelCatalogService {
                         List.of(
                                 model("ISOLATION_FOREST", "Isolation Forest", "UNSUPERVISED", "Broad nonlinear anomaly isolation"),
                                 model("AUTOENCODER", "Autoencoder", "UNSUPERVISED", "Complex feature reconstruction anomalies"),
-                                model("LOCAL_OUTLIER_FACTOR", "Local Outlier Factor", "UNSUPERVISED", "Local-density anomaly detection")
+                                model("BEHAVIORAL_CLUSTER_OUTLIER", "Behavioral Cluster Outlier", "UNSUPERVISED", "Cluster-conditional behavioural anomaly detection")
                         )
                 ),
                 new LearningModelCatalogResponse(
@@ -24,8 +24,8 @@ public class LearningModelCatalogService {
                         List.of("PR_AUC", "PRECISION", "RECALL", "F1", "BRIER_SCORE", "THROUGHPUT"),
                         List.of(
                                 model("XGBOOST_CLASSIFIER", "XGBoost", "SUPERVISED", "High-performance nonlinear fraud classification"),
-                                model("RANDOM_FOREST_CLASSIFIER", "Random Forest", "SUPERVISED", "Robust nonlinear benchmark and feature importance"),
-                                model("LOGISTIC_REGRESSION", "Logistic Regression", "SUPERVISED", "Interpretable calibrated baseline")
+                                model("RANDOM_FOREST_CLASSIFIER", "Class-Balanced Random Forest", "SUPERVISED", "Bootstrap-balanced nonlinear fraud classification"),
+                                model("EXTRA_TREES_CLASSIFIER", "Extra Trees", "SUPERVISED", "High-variance randomized trees for complementary fraud patterns")
                         )
                 )
         );

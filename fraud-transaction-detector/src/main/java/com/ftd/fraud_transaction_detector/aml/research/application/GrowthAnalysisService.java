@@ -53,9 +53,9 @@ public class GrowthAnalysisService {
                         : options.isolationForestMaximumTrainingRows(),
                 appConfigService.getResearchIsolationForestEstimators(),
                 appConfigService.getResearchAutoencoderMaxTrainingRows(),
-                50_000,
-                appConfigService.getLofNeighbors(),
-                appConfigService.getLofContamination(),
+                appConfigService.getResearchBehavioralClusterMaximumTrainingRows(),
+                appConfigService.getBehavioralClusterCount(),
+                appConfigService.getBehavioralClusterContamination(),
                 appConfigService.getResearchRandomSeed(),
                 appConfigService.getLearningMode(),
                 appConfigService.getMlHyperparams()

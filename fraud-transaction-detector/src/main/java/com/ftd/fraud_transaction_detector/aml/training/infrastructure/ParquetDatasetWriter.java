@@ -65,6 +65,19 @@ public class ParquetDatasetWriter {
                 {"name":"peer_std_amount","type":["null","double"],"default":null},
                 {"name":"amount_vs_peer_avg","type":["null","double"],"default":null},
                 {"name":"peer_amount_z_score","type":["null","double"],"default":null},
+                {"name":"terminal_tx_count_1d","type":"long"},
+                {"name":"terminal_fraud_count_1d","type":"long"},
+                {"name":"terminal_fraud_rate_1d","type":"double"},
+                {"name":"terminal_avg_amount_1d","type":"double"},
+                {"name":"terminal_tx_count_7d","type":"long"},
+                {"name":"terminal_fraud_count_7d","type":"long"},
+                {"name":"terminal_fraud_rate_7d","type":"double"},
+                {"name":"terminal_avg_amount_7d","type":"double"},
+                {"name":"terminal_tx_count_30d","type":"long"},
+                {"name":"terminal_fraud_count_30d","type":"long"},
+                {"name":"terminal_fraud_rate_30d","type":"double"},
+                {"name":"terminal_avg_amount_30d","type":"double"},
+                {"name":"terminal_risk_available","type":"boolean"},
                 {"name":"fraud_label","type":["null","boolean"],"default":null},
                 {"name":"label_source","type":["null","string"],"default":null}
               ]
@@ -131,6 +144,19 @@ public class ParquetDatasetWriter {
         record.put("peer_std_amount", row.peerStandardDeviationAmount());
         record.put("amount_vs_peer_avg", row.amountVsPeerAverage());
         record.put("peer_amount_z_score", row.peerAmountZScore());
+        record.put("terminal_tx_count_1d", row.terminalTransactionCount1Day());
+        record.put("terminal_fraud_count_1d", row.terminalFraudCount1Day());
+        record.put("terminal_fraud_rate_1d", row.terminalFraudRate1Day());
+        record.put("terminal_avg_amount_1d", row.terminalAverageAmount1Day());
+        record.put("terminal_tx_count_7d", row.terminalTransactionCount7Days());
+        record.put("terminal_fraud_count_7d", row.terminalFraudCount7Days());
+        record.put("terminal_fraud_rate_7d", row.terminalFraudRate7Days());
+        record.put("terminal_avg_amount_7d", row.terminalAverageAmount7Days());
+        record.put("terminal_tx_count_30d", row.terminalTransactionCount30Days());
+        record.put("terminal_fraud_count_30d", row.terminalFraudCount30Days());
+        record.put("terminal_fraud_rate_30d", row.terminalFraudRate30Days());
+        record.put("terminal_avg_amount_30d", row.terminalAverageAmount30Days());
+        record.put("terminal_risk_available", row.terminalRiskAvailable());
         record.put("fraud_label", row.fraudLabel());
         record.put("label_source", row.labelSource());
         return record;

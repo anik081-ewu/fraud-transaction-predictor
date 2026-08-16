@@ -142,9 +142,9 @@ class GrowthAnalysisRequest(BaseModel):
     isolationForestMaximumTrainingRows: int = 100_000
     isolationForestEstimators: int = 200
     autoencoderMaxTrainingRows: int = 50_000
-    localOutlierFactorMaxTrainingRows: int = 50_000
-    localOutlierFactorNeighbors: int = 35
-    localOutlierFactorContamination: float = 0.05
+    behavioralClusterMaximumTrainingRows: int = 100_000
+    behavioralClusterCount: int = 16
+    behavioralClusterContamination: float = 0.01
     randomSeed: int = 42
     learningMode: str = "UNSUPERVISED"
     hyperparams: Optional[Dict[str, Any]] = None
@@ -160,6 +160,7 @@ class GrowthAnalysisResponse(BaseModel):
     methodology: Dict[str, Any]
     results: List[Dict[str, Any]]
     ensembles: List[Dict[str, Any]] = Field(default_factory=list)
+    riskPolicyEvaluations: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class ScorePercentilesRequest(BaseModel):

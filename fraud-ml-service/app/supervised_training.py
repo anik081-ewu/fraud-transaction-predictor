@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
@@ -30,13 +30,16 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, StandardScaler
 
 from app.incremental.parquet_dataset import PersistedFeatureDataset
+from app.models.stacked_fraud_ensemble import StackedFraudEnsemble
 
 
-SUPPORTED_MODELS = ["XGBoost", "RandomForestClassifier", "LogisticRegression"]
+SUPPORTED_MODELS = ["XGBoost", "RandomForestClassifier", "ExtraTreesClassifier"]
+STACKED_MODEL = "StackedEnsemble"
 MODEL_FILES = {
     "XGBoost": "xgboost_classifier.pkl",
     "RandomForestClassifier": "random_forest_classifier.pkl",
-    "LogisticRegression": "logistic_regression.pkl",
+    "ExtraTreesClassifier": "extra_trees_classifier.pkl",
+    STACKED_MODEL: "stacked_ensemble.pkl",
 }
 
 WEAK_NEGATIVE_SOURCE = "AUTO_NO_CASE"
@@ -51,8 +54,16 @@ class SupervisedFeatureAugmenter(BaseEstimator, TransformerMixin):
         self._log_feature(frame, "current_amount")
         self._log_feature(frame, "current_balance")
         self._log_feature(frame, "amount_sum_24h")
+        self._log_feature(frame, "amount_sum_7d")
+        self._log_feature(frame, "expected_monthly_turnover")
+        self._safe_ratio(frame, "transaction_count_10m", "transaction_count_1h", "velocity_10m_share")
         self._safe_ratio(frame, "transaction_count_1h", "transaction_count_24h", "velocity_1h_share")
+        self._safe_ratio(frame, "transaction_count_24h", "transaction_count_7d", "velocity_24h_share")
+        self._safe_ratio(frame, "amount_sum_1h", "amount_sum_24h", "amount_velocity_1h_share")
+        self._safe_ratio(frame, "amount_sum_24h", "amount_sum_7d", "amount_velocity_24h_share")
         self._safe_ratio(frame, "amount_sum_24h", "transaction_count_24h", "average_amount_24h")
+        self._safe_ratio(frame, "repeated_amount_count_24h", "transaction_count_24h", "repeated_amount_density_24h")
+        self._safe_ratio(frame, "unique_beneficiaries_1h", "unique_beneficiaries_24h", "beneficiary_burst_share")
         novelty = [name for name in ("new_beneficiary", "new_location", "new_channel", "new_device") if name in frame]
         if novelty:
             frame["novelty_signal_count"] = frame[novelty].fillna(0.0).sum(axis=1)
@@ -64,6 +75,15 @@ class SupervisedFeatureAugmenter(BaseEstimator, TransformerMixin):
             frame["absolute_peer_amount_z_score"] = frame["peer_amount_z_score"].abs()
         if "current_amount_log1p" in frame and "new_beneficiary" in frame:
             frame["amount_new_beneficiary_interaction"] = frame["current_amount_log1p"] * frame["new_beneficiary"].fillna(0.0)
+        if "current_amount_log1p" in frame and "new_location" in frame:
+            frame["amount_new_location_interaction"] = frame["current_amount_log1p"] * frame["new_location"].fillna(0.0)
+        if "current_amount_log1p" in frame and "new_channel" in frame:
+            frame["amount_new_channel_interaction"] = frame["current_amount_log1p"] * frame["new_channel"].fillna(0.0)
+        if "amount_vs_last_30_avg" in frame:
+            frame["customer_amount_multiplier_excess"] = np.maximum(
+                frame["amount_vs_last_30_avg"].fillna(0.0) - 1.0,
+                0.0,
+            )
         return frame
 
     @staticmethod
@@ -85,6 +105,8 @@ def train_supervised_from_persisted_dataset(
     model_names: Optional[List[str]] = None,
 ) -> Tuple[int, int, Dict[str, Dict[str, Any]]]:
     dataset = PersistedFeatureDataset(dataset_path, dataset_checksum)
+    columns = dataset.collect_feature_columns()
+    feature_batches: list[pd.DataFrame] = []
     rows: list[dict[str, float]] = []
     labels: list[int] = []
     label_sources: list[str | None] = []
@@ -92,10 +114,15 @@ def train_supervised_from_persisted_dataset(
         rows.append(features)
         labels.append(label)
         label_sources.append(label_source)
+        if len(rows) >= 8_192:
+            feature_batches.append(_dense_feature_batch(rows, columns))
+            rows.clear()
     if not rows:
-        raise ValueError("Supervised training snapshot contains no labelled rows")
-    columns = dataset.collect_feature_columns()
-    features = pd.DataFrame(rows).reindex(columns=columns, fill_value=0.0).fillna(0.0)
+        if not feature_batches:
+            raise ValueError("Supervised training snapshot contains no labelled rows")
+    else:
+        feature_batches.append(_dense_feature_batch(rows, columns))
+    features = pd.concat(feature_batches, ignore_index=True)
     return _train_supervised_feature_frame(
         features,
         pd.Series(labels, dtype=int),
@@ -106,6 +133,10 @@ def train_supervised_from_persisted_dataset(
         source="PERSISTED_SNAPSHOT",
         label_sources=label_sources,
     )
+
+
+def _dense_feature_batch(rows: list[dict[str, float]], columns: list[str]) -> pd.DataFrame:
+    return pd.DataFrame.from_records(rows, columns=columns).fillna(0.0).astype(np.float32, copy=False)
 
 
 def train_supervised_from_transactions_df(
@@ -177,6 +208,7 @@ def _train_supervised_feature_frame(
         if partition.nunique() < 2:
             raise ValueError(f"Chronological {name} partition must contain FraudLabel 0 and 1")
 
+    stack_requested = bool(model_names and STACKED_MODEL in model_names)
     selected = _normalize_models(model_names)
     metrics: Dict[str, Dict[str, Any]] = {}
     models: Dict[str, Any] = {}
@@ -239,6 +271,27 @@ def _train_supervised_feature_frame(
             ),
         })
 
+    if set(selected) == set(SUPPORTED_MODELS):
+        stacked_model, stacked_threshold, stacked_metrics = _train_stacked_ensemble(
+            models,
+            x_calibration,
+            y_calibration,
+            sample_weights.iloc[tuning_end:calibration_end],
+            x_evaluation,
+            y_evaluation,
+            minimum_precision,
+            threshold_beta,
+            random_state,
+        )
+        if stacked_model is not None:
+            models[STACKED_MODEL] = stacked_model
+            thresholds[STACKED_MODEL] = stacked_threshold
+            metrics[STACKED_MODEL] = stacked_metrics
+        elif stack_requested:
+            raise ValueError(
+                "Temporal Stacked Ensemble requires both FraudLabel classes in each half of the chronological calibration window"
+            )
+
     os.makedirs(models_dir, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="fraud-supervised-train-", dir=models_dir) as temporary:
         for model_name, model in models.items():
@@ -250,7 +303,7 @@ def _train_supervised_feature_frame(
         with open(os.path.join(temporary, "learning_mode.json"), "w", encoding="utf-8") as handle:
             json.dump({
                 "learningMode": "SUPERVISED",
-                "models": selected,
+                "models": list(models),
                 "featureVersion": feature_version,
                 "trainingSource": source,
                 "split": "chronological 60% fit / 10% tuning / 10% threshold calibration / 20% evaluation",
@@ -269,6 +322,85 @@ def _train_supervised_feature_frame(
         os.remove(legacy_scaler)
 
     return int(len(features)), int(len(features.columns)), metrics
+
+
+def _train_stacked_ensemble(
+    base_models: Dict[str, Any],
+    calibration_features: pd.DataFrame,
+    calibration_labels: pd.Series,
+    calibration_weights: pd.Series,
+    evaluation_features: pd.DataFrame,
+    evaluation_labels: pd.Series,
+    minimum_precision: float,
+    threshold_beta: float,
+    random_state: int,
+) -> tuple[Optional[StackedFraudEnsemble], float, Dict[str, Any]]:
+    midpoint = len(calibration_labels) // 2
+    meta_labels = calibration_labels.iloc[:midpoint]
+    threshold_labels = calibration_labels.iloc[midpoint:]
+    if midpoint < 10 or len(threshold_labels) < 10 \
+            or meta_labels.nunique() < 2 or threshold_labels.nunique() < 2:
+        return None, 0.5, {}
+    member_names = list(SUPPORTED_MODELS)
+    meta_features = np.column_stack([
+        base_models[name].predict_proba(calibration_features.iloc[:midpoint])[:, 1]
+        for name in member_names
+    ])
+    threshold_features = np.column_stack([
+        base_models[name].predict_proba(calibration_features.iloc[midpoint:])[:, 1]
+        for name in member_names
+    ])
+    meta_model = LogisticRegression(
+        C=1.0,
+        class_weight="balanced",
+        max_iter=1000,
+        solver="liblinear",
+        random_state=random_state,
+    )
+    started = time.perf_counter()
+    meta_model.fit(
+        meta_features,
+        meta_labels,
+        sample_weight=calibration_weights.iloc[:midpoint].to_numpy(dtype=float),
+    )
+    ensemble = StackedFraudEnsemble(
+        {name: base_models[name] for name in member_names},
+        meta_model,
+    )
+    training_ms = (time.perf_counter() - started) * 1000.0
+    threshold_probability = meta_model.predict_proba(threshold_features)[:, 1]
+    threshold, calibration = precision_constrained_threshold(
+        threshold_labels.to_numpy(),
+        threshold_probability,
+        minimum_precision=minimum_precision,
+        fallback_beta=threshold_beta,
+        sample_weight=calibration_weights.iloc[midpoint:].to_numpy(dtype=float),
+    )
+    prediction_started = time.perf_counter()
+    probabilities = ensemble.predict_proba(evaluation_features)[:, 1]
+    predictions = (probabilities >= threshold).astype(int)
+    prediction_ms = (time.perf_counter() - prediction_started) * 1000.0
+    metrics = _classification_metrics(
+        evaluation_labels.to_numpy(),
+        probabilities,
+        predictions,
+        threshold,
+        int(midpoint),
+        int(len(threshold_labels)),
+        training_ms,
+        prediction_ms,
+    )
+    metrics.update({
+        "members": member_names,
+        "stackingProtocol": "FIRST_HALF_CALIBRATION_META_FIT_SECOND_HALF_THRESHOLD",
+        "metaCoefficients": {
+            name: float(coefficient)
+            for name, coefficient in zip(member_names, meta_model.coef_[0])
+        },
+        "metaIntercept": float(meta_model.intercept_[0]),
+        "calibrationThresholdPolicy": calibration,
+    })
+    return ensemble, threshold, metrics
 
 
 def _classification_metrics(
@@ -398,20 +530,65 @@ def _select_hyperparams(
 ) -> tuple[Dict[str, Any], Optional[float]]:
     base = dict(hyperparams or {})
     candidates = _candidate_hyperparams(model_name, base)[:maximum_candidates] if tuning_enabled else [base]
+    tuning_row_cap = max(1_000, _value(base, "ml.supervised.tuning_row_cap", 50_000, int))
+    tuning_validation_cap = max(1_000, _value(base, "ml.supervised.tuning_validation_cap", 25_000, int))
+    search_fit, search_labels, search_weights = _bounded_temporal_sample(
+        x_fit, y_fit, fit_weights, tuning_row_cap
+    )
+    search_tuning, search_tuning_labels, search_tuning_weights = _bounded_temporal_sample(
+        x_tuning, y_tuning, tuning_weights, tuning_validation_cap
+    )
     best_params = candidates[0]
     best_score = -1.0
     best_pr_auc = -1.0
     for candidate in candidates:
-        model = _build_pipeline(model_name, random_state, y_fit, candidate)
-        _fit_with_weights(model, x_fit, y_fit, fit_weights)
-        probabilities = model.predict_proba(x_tuning)[:, 1]
-        pr_auc = float(average_precision_score(y_tuning, probabilities, sample_weight=tuning_weights))
-        score = _robust_tuning_score(y_tuning, probabilities, tuning_weights, pr_auc)
+        search_candidate = _resource_bounded_search_params(model_name, candidate, base)
+        model = _build_pipeline(model_name, random_state, search_labels, search_candidate)
+        _fit_with_weights(model, search_fit, search_labels, search_weights)
+        probabilities = model.predict_proba(search_tuning)[:, 1]
+        pr_auc = float(average_precision_score(
+            search_tuning_labels, probabilities, sample_weight=search_tuning_weights
+        ))
+        score = _robust_tuning_score(
+            search_tuning_labels, probabilities, search_tuning_weights, pr_auc
+        )
         if score > best_score:
             best_score = score
             best_pr_auc = pr_auc
             best_params = candidate
     return best_params, None if not tuning_enabled else best_pr_auc
+
+
+def _bounded_temporal_sample(
+    features: pd.DataFrame,
+    labels: pd.Series,
+    weights: pd.Series,
+    maximum_rows: int,
+) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
+    if len(features) <= maximum_rows:
+        return features, labels, weights
+    positions = np.linspace(0, len(features) - 1, num=maximum_rows, dtype=int)
+    return (
+        features.iloc[positions].reset_index(drop=True),
+        labels.iloc[positions].reset_index(drop=True),
+        weights.iloc[positions].reset_index(drop=True),
+    )
+
+
+def _resource_bounded_search_params(
+    model_name: str,
+    candidate: Dict[str, Any],
+    base: Dict[str, Any],
+) -> Dict[str, Any]:
+    bounded = dict(candidate)
+    tree_cap = max(50, _value(base, "ml.supervised.tuning_tree_cap", 160, int))
+    estimator_key = {
+        "ExtraTreesClassifier": "ml.extra_trees.n_estimators",
+        "RandomForestClassifier": "ml.random_forest.n_estimators",
+        "XGBoost": "ml.xgboost.n_estimators",
+    }[model_name]
+    bounded[estimator_key] = min(_value(candidate, estimator_key, tree_cap, int), tree_cap)
+    return bounded
 
 
 def _robust_tuning_score(
@@ -440,23 +617,25 @@ def _robust_tuning_score(
 def _candidate_hyperparams(model_name: str, base: Dict[str, Any]) -> list[Dict[str, Any]]:
     candidates: list[Dict[str, Any]] = [dict(base)]
     imbalance = _value(base, "ml.supervised.class_weight_multiplier", 1.0, float)
-    if model_name == "LogisticRegression":
-        current = _value(base, "ml.logistic_regression.c", 0.5, float)
-        for regularization, weight in (
-            (current / 10.0, imbalance * 0.50),
-            (current / 3.0, imbalance * 0.75),
-            (current, imbalance * 0.50),
-            (current, imbalance * 0.75),
-            (current * 3.0, imbalance * 0.50),
-            (current * 3.0, imbalance * 0.75),
-            (current * 10.0, imbalance),
-            (current * 10.0, imbalance * 0.50),
-        ):
-            candidates.append({
-                **base,
-                "ml.logistic_regression.c": max(0.001, min(regularization, 100.0)),
-                "ml.supervised.class_weight_multiplier": max(0.10, min(weight, 3.0)),
-            })
+    if model_name == "ExtraTreesClassifier":
+        trees = _value(base, "ml.extra_trees.n_estimators", 400, int)
+        leaf = _value(base, "ml.extra_trees.min_samples_leaf", 2, int)
+        candidates.extend([
+            {**base, "ml.extra_trees.n_estimators": max(200, trees),
+             "ml.extra_trees.min_samples_leaf": 1, "ml.extra_trees.max_features": 0.7},
+            {**base, "ml.extra_trees.n_estimators": max(300, trees),
+             "ml.extra_trees.min_samples_leaf": 2, "ml.extra_trees.max_features": 0.8},
+            {**base, "ml.extra_trees.n_estimators": max(400, trees),
+             "ml.extra_trees.min_samples_leaf": 3, "ml.extra_trees.max_features": 1.0},
+            {**base, "ml.extra_trees.n_estimators": max(500, trees),
+             "ml.extra_trees.min_samples_leaf": max(2, leaf), "ml.extra_trees.max_features": "sqrt"},
+            {**base, "ml.extra_trees.n_estimators": max(400, trees),
+             "ml.extra_trees.min_samples_leaf": 4, "ml.extra_trees.max_features": 0.6,
+             "ml.supervised.class_weight_multiplier": max(0.10, imbalance * 0.75)},
+            {**base, "ml.extra_trees.n_estimators": max(600, trees),
+             "ml.extra_trees.min_samples_leaf": 2, "ml.extra_trees.max_features": 1.0,
+             "ml.supervised.class_weight_multiplier": max(0.10, imbalance * 0.50)},
+        ])
     elif model_name == "RandomForestClassifier":
         depth = _value(base, "ml.random_forest.max_depth", 16, int)
         leaf = _value(base, "ml.random_forest.min_samples_leaf", 2, int)
@@ -530,13 +709,11 @@ def _candidate_hyperparams(model_name: str, base: Dict[str, Any]) -> list[Dict[s
 
 
 def _model_hyperparams(model_name: str, hyperparams: Dict[str, Any]) -> Dict[str, Any]:
-    if model_name == "LogisticRegression":
+    if model_name == "ExtraTreesClassifier":
         return {
-            "ml.logistic_regression.c": _value(hyperparams, "ml.logistic_regression.c", 0.5, float),
-            "ml.logistic_regression.max_iter": _value(hyperparams, "ml.logistic_regression.max_iter", 2000, int),
-            "ml.supervised.class_weight_multiplier": _value(
-                hyperparams, "ml.supervised.class_weight_multiplier", 1.0, float
-            ),
+            "ml.extra_trees.n_estimators": _value(hyperparams, "ml.extra_trees.n_estimators", 400, int),
+            "ml.extra_trees.min_samples_leaf": _value(hyperparams, "ml.extra_trees.min_samples_leaf", 2, int),
+            "ml.extra_trees.max_features": _max_features(hyperparams, "ml.extra_trees.max_features", 0.8),
         }
     if model_name == "RandomForestClassifier":
         return {
@@ -599,9 +776,11 @@ def _boolean_value(hyperparams: Optional[Dict[str, Any]], key: str, default: boo
 def _normalize_models(model_names: Optional[List[str]]) -> List[str]:
     selected = model_names or SUPPORTED_MODELS
     normalized = list(dict.fromkeys(str(name).strip() for name in selected if name))
-    unsupported = [name for name in normalized if name not in SUPPORTED_MODELS]
+    unsupported = [name for name in normalized if name not in {*SUPPORTED_MODELS, STACKED_MODEL}]
     if unsupported:
         raise ValueError(f"Unsupported supervised model names: {unsupported}")
+    if STACKED_MODEL in normalized:
+        return list(SUPPORTED_MODELS)
     return normalized or list(SUPPORTED_MODELS)
 
 
@@ -610,6 +789,16 @@ def _value(hyperparams: Optional[Dict[str, Any]], key: str, default: Any, conver
         return converter((hyperparams or {}).get(key, default))
     except (TypeError, ValueError):
         return converter(default)
+
+
+def _max_features(hyperparams: Optional[Dict[str, Any]], key: str, default: Any) -> Any:
+    value = (hyperparams or {}).get(key, default)
+    if isinstance(value, str) and value.strip().lower() in {"sqrt", "log2"}:
+        return value.strip().lower()
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def _build_pipeline(
@@ -622,8 +811,6 @@ def _build_pipeline(
         ("supervised_features", SupervisedFeatureAugmenter()),
         ("missing", SimpleImputer(strategy="median", add_indicator=True)),
     ]
-    if model_name == "LogisticRegression":
-        steps.append(("scale", RobustScaler()))
     steps.append(("classifier", _build_model(model_name, random_state, labels, hyperparams)))
     return Pipeline(steps)
 
@@ -638,12 +825,14 @@ def _build_model(
     negatives = max(1, int(len(labels) - positives))
     imbalance_multiplier = _value(hyperparams, "ml.supervised.class_weight_multiplier", 1.0, float)
     positive_class_weight = max(0.01, (negatives / positives) * imbalance_multiplier)
-    if model_name == "LogisticRegression":
-        return LogisticRegression(
-            C=_value(hyperparams, "ml.logistic_regression.c", 0.5, float),
-            max_iter=_value(hyperparams, "ml.logistic_regression.max_iter", 2000, int),
-            class_weight={0: 1.0, 1: positive_class_weight},
-            solver="liblinear",
+    parallel_jobs = max(1, _value(hyperparams, "ml.supervised.parallel_jobs", min(4, os.cpu_count() or 1), int))
+    if model_name == "ExtraTreesClassifier":
+        return ExtraTreesClassifier(
+            n_estimators=_value(hyperparams, "ml.extra_trees.n_estimators", 400, int),
+            min_samples_leaf=_value(hyperparams, "ml.extra_trees.min_samples_leaf", 2, int),
+            max_features=_max_features(hyperparams, "ml.extra_trees.max_features", 0.8),
+            class_weight="balanced_subsample",
+            n_jobs=parallel_jobs,
             random_state=random_state,
         )
     if model_name == "RandomForestClassifier":
@@ -652,8 +841,9 @@ def _build_model(
             max_depth=_value(hyperparams, "ml.random_forest.max_depth", 16, int),
             min_samples_leaf=_value(hyperparams, "ml.random_forest.min_samples_leaf", 2, int),
             max_features=(hyperparams or {}).get("ml.random_forest.max_features", "sqrt"),
-            class_weight={0: 1.0, 1: positive_class_weight},
-            n_jobs=-1,
+            class_weight="balanced_subsample",
+            bootstrap=True,
+            n_jobs=parallel_jobs,
             random_state=random_state,
         )
     if model_name == "XGBoost":
@@ -672,7 +862,8 @@ def _build_model(
             reg_lambda=_value(hyperparams, "ml.xgboost.reg_lambda", 2.0, float),
             scale_pos_weight=positive_class_weight,
             eval_metric="logloss",
-            n_jobs=-1,
+            tree_method="hist",
+            n_jobs=parallel_jobs,
             random_state=random_state,
         )
     raise ValueError(f"Unsupported supervised model name: {model_name}")

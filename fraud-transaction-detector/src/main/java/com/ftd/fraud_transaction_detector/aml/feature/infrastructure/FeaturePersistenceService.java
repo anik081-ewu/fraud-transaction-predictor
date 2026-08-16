@@ -37,6 +37,10 @@ public class FeaturePersistenceService {
                 peer_group_code, peer_avg_amount, peer_median_amount, peer_std_amount,
                 amount_vs_peer_avg, peer_amount_z_score, peer_frequency_percentile,
                 customer_type, customer_risk_rating, expected_monthly_turnover, amount_vs_expected_turnover,
+                terminal_tx_count_1d, terminal_fraud_count_1d, terminal_fraud_rate_1d, terminal_avg_amount_1d,
+                terminal_tx_count_7d, terminal_fraud_count_7d, terminal_fraud_rate_7d, terminal_avg_amount_7d,
+                terminal_tx_count_30d, terminal_fraud_count_30d, terminal_fraud_rate_30d, terminal_avg_amount_30d,
+                terminal_risk_available,
                 model_feature_schema, model_features_json,
                 generated_at, generator_service_version
             ) VALUES (
@@ -60,6 +64,10 @@ public class FeaturePersistenceService {
                 :peerGroupCode, :peerAverage, :peerMedian, :peerStd,
                 :amountVsPeerAverage, :peerAmountZScore, :peerFrequencyPercentile,
                 :customerType, :customerRiskRating, :expectedMonthlyTurnover, :amountVsExpectedTurnover,
+                :terminalTxCount1d, :terminalFraudCount1d, :terminalFraudRate1d, :terminalAvgAmount1d,
+                :terminalTxCount7d, :terminalFraudCount7d, :terminalFraudRate7d, :terminalAvgAmount7d,
+                :terminalTxCount30d, :terminalFraudCount30d, :terminalFraudRate30d, :terminalAvgAmount30d,
+                :terminalRiskAvailable,
                 :modelFeatureSchema, :modelFeaturesJson,
                 :generatedAt, :generatorVersion
             )
@@ -98,6 +106,7 @@ public class FeaturePersistenceService {
         var novelty = vector.novelty();
         var profile = vector.profile();
         var peer = vector.peer();
+        var terminalRisk = vector.terminalRisk();
         MapSqlParameterSource parameters = new MapSqlParameterSource()
                 .addValue("transactionId", vector.transactionId()).addValue("customerId", vector.customerId())
                 .addValue("accountId", vector.accountId()).addValue("businessDate", vector.businessDate())
@@ -133,6 +142,19 @@ public class FeaturePersistenceService {
                 .addValue("peerFrequencyPercentile", peer.peerFrequencyPercentile()).addValue("customerType", peer.customerType())
                 .addValue("customerRiskRating", peer.customerRiskRating()).addValue("expectedMonthlyTurnover", peer.expectedMonthlyTurnover())
                 .addValue("amountVsExpectedTurnover", peer.amountVsExpectedTurnover())
+                .addValue("terminalTxCount1d", terminalRisk.transactionCount1Day())
+                .addValue("terminalFraudCount1d", terminalRisk.confirmedFraudCount1Day())
+                .addValue("terminalFraudRate1d", terminalRisk.fraudRate1Day())
+                .addValue("terminalAvgAmount1d", terminalRisk.averageAmount1Day())
+                .addValue("terminalTxCount7d", terminalRisk.transactionCount7Days())
+                .addValue("terminalFraudCount7d", terminalRisk.confirmedFraudCount7Days())
+                .addValue("terminalFraudRate7d", terminalRisk.fraudRate7Days())
+                .addValue("terminalAvgAmount7d", terminalRisk.averageAmount7Days())
+                .addValue("terminalTxCount30d", terminalRisk.transactionCount30Days())
+                .addValue("terminalFraudCount30d", terminalRisk.confirmedFraudCount30Days())
+                .addValue("terminalFraudRate30d", terminalRisk.fraudRate30Days())
+                .addValue("terminalAvgAmount30d", terminalRisk.averageAmount30Days())
+                .addValue("terminalRiskAvailable", terminalRisk.available())
                 .addValue("modelFeatureSchema", vector.modelFeatureSchema()).addValue("modelFeaturesJson", toJson(vector))
                 .addValue("generatedAt", Timestamp.from(vector.generatedAt()), Types.TIMESTAMP)
                 .addValue("generatorVersion", versionProvider.generatorVersion());
@@ -154,10 +176,11 @@ public class FeaturePersistenceService {
                 "transactionCount10Minutes", "transactionCount1Hour", "transactionCount24Hours",
                 "transactionCount7Days", "transactionCount30Days", "uniqueBeneficiaries1Hour",
                 "uniqueBeneficiaries24Hours", "uniqueBeneficiaries7Days", "repeatedAmountCount24Hours",
-                "belowThresholdCount24Hours");
+                "belowThresholdCount24Hours", "terminalTxCount1d", "terminalFraudCount1d",
+                "terminalTxCount7d", "terminalFraudCount7d", "terminalTxCount30d", "terminalFraudCount30d");
         register(parameters, Types.BIT,
                 "night", "weekend", "newBeneficiary", "newLocation", "newChannel", "newDevice",
-                "unusualTransactionHour");
+                "unusualTransactionHour", "terminalRiskAvailable");
         register(parameters, Types.DOUBLE,
                 "amountBalanceRatio", "profileConfidence", "last5Average", "last5Median",
                 "last30Average", "last30Median", "last30Std", "last30Maximum", "last30Minimum",
@@ -167,7 +190,8 @@ public class FeaturePersistenceService {
                 "amountSum24Hours", "amountSum7Days", "amountSum30Days", "belowThresholdAmountSum24Hours",
                 "minutesSincePrevious", "peerAverage", "peerMedian", "peerStd", "amountVsPeerAverage",
                 "peerAmountZScore", "peerFrequencyPercentile", "expectedMonthlyTurnover",
-                "amountVsExpectedTurnover");
+                "amountVsExpectedTurnover", "terminalFraudRate1d", "terminalAvgAmount1d",
+                "terminalFraudRate7d", "terminalAvgAmount7d", "terminalFraudRate30d", "terminalAvgAmount30d");
         register(parameters, Types.NVARCHAR, "modelFeaturesJson");
     }
 

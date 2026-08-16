@@ -74,7 +74,9 @@ public class HistoricalFeatureMaterializationService {
 
         // Loaded once for the whole run — replaces three history queries per transaction
         MaterializationHistoryIndex historyIndex = materializationRepository.loadAccountHistory(run);
+        TerminalRiskHistoryIndex terminalRiskHistoryIndex = materializationRepository.loadTerminalRiskHistory(run);
         log.info("Loaded history index for {} accounts", historyIndex.accountCount());
+        log.info("Loaded terminal history index for {} terminals", terminalRiskHistoryIndex.terminalCount());
 
         // Shared across all batches: peer group stats and profile rows repeat heavily
         Map<String, PeerGroupStats> peerStatsCache = new HashMap<>();
@@ -105,7 +107,8 @@ public class HistoricalFeatureMaterializationService {
                 normalize(transaction);
                 var vector = featureEngineeringService.calculate(
                         contextLoader.load(
-                                transaction, historyIndex, profileCache, peerStatsCache, peerPercentileCache
+                                transaction, historyIndex, terminalRiskHistoryIndex,
+                                profileCache, peerStatsCache, peerPercentileCache
                         ),
                         run.featureVersion(),
                         reportingThreshold

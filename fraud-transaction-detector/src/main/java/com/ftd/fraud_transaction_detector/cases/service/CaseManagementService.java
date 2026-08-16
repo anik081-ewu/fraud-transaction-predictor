@@ -69,7 +69,11 @@ public class CaseManagementService {
         record.setCreatedBy(blankToDefault(request.createdBy(), "system"));
         record.setCreatedAt(now);
         record.setUpdatedAt(now);
-        return toResponse(caseRecordRepository.save(record));
+        CaseRecord saved = caseRecordRepository.save(record);
+        if (request.fraudAlertId() == null) {
+            addSystemNote(saved, "Manual case created from transaction search.", saved.getCreatedBy());
+        }
+        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)

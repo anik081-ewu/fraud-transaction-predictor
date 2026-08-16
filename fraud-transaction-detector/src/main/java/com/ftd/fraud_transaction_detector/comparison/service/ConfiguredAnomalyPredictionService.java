@@ -24,20 +24,22 @@ public class ConfiguredAnomalyPredictionService {
     // decisionResults() drops unmapped keys silently.
     private static final Map<String, String> CONFIG_MODEL_TO_RESPONSE_MODEL = Map.of(
             "ISOLATION_FOREST", "IsolationForest",
-            "LOCAL_OUTLIER_FACTOR", "LOF",
+            "BEHAVIORAL_CLUSTER_OUTLIER", "BehavioralClusterOutlier",
             "AUTOENCODER", "Autoencoder",
             "XGBOOST_CLASSIFIER", "XGBoost",
             "RANDOM_FOREST_CLASSIFIER", "RandomForestClassifier",
-            "LOGISTIC_REGRESSION", "LogisticRegression"
+            "EXTRA_TREES_CLASSIFIER", "ExtraTreesClassifier",
+            "STACKED_ENSEMBLE", "StackedEnsemble"
     );
 
     private static final Map<String, String> CONFIG_MODEL_TO_BATCH_MODEL = Map.of(
             "ISOLATION_FOREST", "IsolationForest",
-            "LOCAL_OUTLIER_FACTOR", "LOF",
+            "BEHAVIORAL_CLUSTER_OUTLIER", "BehavioralClusterOutlier",
             "AUTOENCODER", "Autoencoder",
             "XGBOOST_CLASSIFIER", "XGBoost",
             "RANDOM_FOREST_CLASSIFIER", "RandomForestClassifier",
-            "LOGISTIC_REGRESSION", "LogisticRegression"
+            "EXTRA_TREES_CLASSIFIER", "ExtraTreesClassifier",
+            "STACKED_ENSEMBLE", "StackedEnsemble"
     );
 
     private final AnomalyConfigRepository anomalyConfigRepository;

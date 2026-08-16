@@ -1,0 +1,753 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/y0wd6w",
+    "id": "y0wd6w",
+    "slide": 11,
+    "layoutId": "3adf5354-1ec7-42b6-b3f5-0cb7353a702a",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "d118fce2-1358-4e5a-8327-443c340c8c38",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "3adf5354-1ec7-42b6-b3f5-0cb7353a702a",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "d118fce2-1358-4e5a-8327-443c340c8c38",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "d118fce2-1358-4e5a-8327-443c340c8c38",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/98jut8rq",
+      "id": "1",
+      "bbox": [
+        64,
+        34,
+        620,
+        24
+      ],
+      "geometry": "rect",
+      "text": "FUSION EVIDENCE",
+      "textPreview": "FUSION EVIDENCE",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "fontSize": 14,
+        "typeface": "+mn-lt",
+        "color": "#3D8DFF",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "FUSION EVIDENCE"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "FUSION EVIDENCE",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#3D8DFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "FUSION EVIDENCE",
+              "fontSize": 14,
+              "color": "#3D8DFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/mlsbidsz",
+      "id": "2",
+      "bbox": [
+        64,
+        66,
+        1080,
+        54
+      ],
+      "geometry": "rect",
+      "text": "Fusion is useful only when measured—it does not automatically beat one model",
+      "textPreview": "Fusion is useful only when measured—it does not automatically beat one model",
+      "resolvedFontSize": 38,
+      "resolvedTextStyle": {
+        "fontSize": 38,
+        "typeface": "+mn-lt",
+        "color": "#081A3A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Fusion is useful only when measured—it does not automatically"
+          },
+          {
+            "index": 2,
+            "text": "beat one model"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Fusion is useful only when measured—it does not automatically beat one model",
+          "resolvedTextStyle": {
+            "fontSize": 38,
+            "color": "#081A3A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Fusion is useful only when measured—it does not automatically beat one model",
+              "fontSize": 38,
+              "color": "#081A3A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nm1cri9k",
+      "id": "3",
+      "bbox": [
+        1160,
+        42,
+        56,
+        24
+      ],
+      "geometry": "rect",
+      "text": "11",
+      "textPreview": "11",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "fontSize": 14,
+        "typeface": "+mn-lt",
+        "color": "#5E6F89",
+        "bold": true,
+        "alignment": "right",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "11"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "11",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "color": "#5E6F89",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "11",
+              "fontSize": 14,
+              "color": "#5E6F89",
+              "bold": true,
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0jatg3a9",
+      "id": "4",
+      "bbox": [
+        64,
+        126,
+        1152,
+        1
+      ],
+      "geometry": "rect",
+      "fillColor": "#B8C2D0",
+      "lineColor": "#B8C2D0",
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/gritsza5",
+      "id": "5",
+      "bbox": [
+        64,
+        164,
+        730,
+        392
+      ],
+      "alt": "Measured standalone and fusion comparison",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "asset": {
+        "assetId": "1ebc2862-a7b5-49a0-bd8a-28fdf943030d",
+        "contentType": "image/png",
+        "byteLength": 163333
+      }
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/yhsbets3",
+      "id": "6",
+      "bbox": [
+        834,
+        164,
+        338,
+        392
+      ],
+      "geometry": "rect",
+      "fillColor": "#EDF1F6",
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zi1cny9o",
+      "id": "7",
+      "bbox": [
+        858,
+        190,
+        290,
+        26
+      ],
+      "geometry": "rect",
+      "text": "Measured conclusion",
+      "textPreview": "Measured conclusion",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "fontSize": 16,
+        "typeface": "+mn-lt",
+        "color": "#3D8DFF",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Measured conclusion"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Measured conclusion",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "color": "#3D8DFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Measured conclusion",
+              "fontSize": 16,
+              "color": "#3D8DFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4fuds7ad",
+      "id": "8",
+      "bbox": [
+        858,
+        234,
+        280,
+        56
+      ],
+      "geometry": "rect",
+      "text": "Weighted probability ensemble",
+      "textPreview": "Weighted probability ensemble",
+      "resolvedFontSize": 25,
+      "resolvedTextStyle": {
+        "fontSize": 25,
+        "typeface": "+mn-lt",
+        "color": "#081A3A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Weighted probability"
+          },
+          {
+            "index": 2,
+            "text": "ensemble"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Weighted probability ensemble",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "color": "#081A3A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Weighted probability ensemble",
+              "fontSize": 25,
+              "color": "#081A3A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5gnu1sry",
+      "id": "9",
+      "bbox": [
+        858,
+        310,
+        280,
+        110
+      ],
+      "geometry": "rect",
+      "text": "58.7% precision\n65.9% recall\n62.0% F1",
+      "textPreview": "58.7% precision | 65.9% recall | 62.0% F1",
+      "resolvedFontSize": 30,
+      "resolvedTextStyle": {
+        "fontSize": 30,
+        "typeface": "+mn-lt",
+        "color": "#102A63",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "58.7% precision"
+          },
+          {
+            "index": 2,
+            "text": "65.9% recall"
+          },
+          {
+            "index": 3,
+            "text": "62.0% F1"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "58.7% precision",
+          "resolvedTextStyle": {
+            "fontSize": 30,
+            "color": "#102A63",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "58.7% precision",
+              "fontSize": 30,
+              "color": "#102A63",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "65.9% recall",
+          "resolvedTextStyle": {
+            "fontSize": 30,
+            "color": "#102A63",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "65.9% recall",
+              "fontSize": 30,
+              "color": "#102A63",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "62.0% F1",
+          "resolvedTextStyle": {
+            "fontSize": 30,
+            "color": "#102A63",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "62.0% F1",
+              "fontSize": 30,
+              "color": "#102A63",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/dc7upgvi",
+      "id": "10",
+      "bbox": [
+        858,
+        438,
+        270,
+        86
+      ],
+      "geometry": "rect",
+      "text": "The fusion result is close to—not clearly better than—the strongest standalone classifier on this 25,000-row integration snapshot.",
+      "textPreview": "The fusion result is close to—not clearly better than—the strongest standalone classifier on this 25,000-row integration snapshot.",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "fontSize": 18,
+        "typeface": "+mn-lt",
+        "color": "#5E6F89",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 4,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The fusion result is close to—not"
+          },
+          {
+            "index": 2,
+            "text": "clearly better than—the strongest"
+          },
+          {
+            "index": 3,
+            "text": "standalone classifier on this"
+          },
+          {
+            "index": 4,
+            "text": "25,000-row integration snapshot."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The fusion result is close to—not clearly better than—the strongest standalone classifier on this 25,000-row integration snapshot.",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "color": "#5E6F89",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The fusion result is close to—not clearly better than—the strongest standalone classifier on this 25,000-row integration snapshot.",
+              "fontSize": 18,
+              "color": "#5E6F89",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cbydwbux",
+      "id": "11",
+      "bbox": [
+        64,
+        602,
+        1100,
+        32
+      ],
+      "geometry": "rect",
+      "text": "Temporal stacking remains a research comparison but is removed from production-model selection.",
+      "textPreview": "Temporal stacking remains a research comparison but is removed from production-model selection.",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "fontSize": 20,
+        "typeface": "+mn-lt",
+        "color": "#D92D20",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Temporal stacking remains a research comparison but is removed from production-model selection."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Temporal stacking remains a research comparison but is removed from production-model selection.",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "color": "#D92D20",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Temporal stacking remains a research comparison but is removed from production-model selection.",
+              "fontSize": 20,
+              "color": "#D92D20",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/rapcn6dc",
+      "id": "12",
+      "bbox": [
+        64,
+        687,
+        700,
+        18
+      ],
+      "geometry": "rect",
+      "text": "INTELLIGENT FRAUD TRANSACTION DETECTION",
+      "textPreview": "INTELLIGENT FRAUD TRANSACTION DETECTION",
+      "resolvedFontSize": 10,
+      "resolvedTextStyle": {
+        "fontSize": 10,
+        "typeface": "+mn-lt",
+        "color": "#5E6F89",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "INTELLIGENT FRAUD TRANSACTION DETECTION"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "INTELLIGENT FRAUD TRANSACTION DETECTION",
+          "resolvedTextStyle": {
+            "fontSize": 10,
+            "color": "#5E6F89",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "INTELLIGENT FRAUD TRANSACTION DETECTION",
+              "fontSize": 10,
+              "color": "#5E6F89",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

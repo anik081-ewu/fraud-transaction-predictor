@@ -15,7 +15,7 @@
       <span class="mode-status">Available</span>
       <strong>Unsupervised anomaly detection</strong>
       <p>For datasets without confirmed fraud labels. Compare EM-AUC, separation, stability, anomaly-rate control, agreement, and throughput.</p>
-      <small>Isolation Forest | Autoencoder | Local Outlier Factor</small>
+      <small>Isolation Forest | Autoencoder | Behavioral Cluster Outlier</small>
     </article>
 
   </section>
@@ -40,6 +40,9 @@
   </div>
 
   <ng-container *ngIf="hasAnyModel()">
+    <div class="study-status" *ngIf="usingDemoModelSummary()">
+      <span class="demo-result"></span>
+    </div>
     <div class="comparison-scroll">
       <table class="comparison-table">
         <thead>
@@ -362,6 +365,7 @@
 
     <div class="study-status" *ngIf="study() as current">
       <span class="status-badge" [ngClass]="studyStatusClass(current.status)">{{ current.status }}</span>
+      <span class="demo-result" *ngIf="demoExpectedGrowth()"></span>
       <span *ngIf="current.completedAt">Completed {{ current.completedAt | date:'medium' }}</span>
       <span *ngIf="studyRunning()">
         Training 5 detectors across {{ partitions().length || 4 }} partitions  several minutes.

@@ -491,9 +491,54 @@ export interface SupervisedEnsembleMetric {
   rowsPerSecond: number;
 }
 
+export interface RiskPolicyDecisionMetric {
+  accuracy: number;
+  balancedAccuracy: number;
+  precision: number;
+  recall: number;
+  f1: number;
+  trueNegative: number;
+  falsePositive: number;
+  falseNegative: number;
+  truePositive: number;
+  decisionCount: number;
+  decisionsPer1000: number;
+  fraudCaptured: number;
+  fraudMissed: number;
+}
+
+export interface SupervisedRiskPolicyEvaluation {
+  protocol: string;
+  partitionPercentage: number;
+  partitionRows: number;
+  evaluationRows: number;
+  policyVersion: string;
+  mlStrategy: string;
+  modelAllocationSource: string;
+  selectedModels: string[];
+  modelWeights: Record<string, number>;
+  componentWeights: Record<string, number>;
+  thresholds: { low: number; mediumCase: number; highStr: number };
+  continuousPrAuc: number;
+  continuousRocAuc: number;
+  averageFinalScore: number;
+  componentAverages: Record<string, number>;
+  limitations: string[];
+  caseDecision: RiskPolicyDecisionMetric;
+  strDecision: RiskPolicyDecisionMetric;
+  versusMlEnsemble: {
+    baselineStrategy: string;
+    precisionDelta: number;
+    recallDelta: number;
+    f1Delta: number;
+    balancedAccuracyDelta: number;
+  };
+}
+
 export interface SupervisedGrowthReport extends Omit<GrowthAnalysisReport, 'results'> {
   results: SupervisedGrowthMetric[];
   ensembles?: SupervisedEnsembleMetric[];
+  riskPolicyEvaluations?: SupervisedRiskPolicyEvaluation[];
 }
 
 export interface SupervisedGrowthStudy {

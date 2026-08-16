@@ -95,7 +95,7 @@ public class AgreementStudyService {
     }
 
     private String modelArtifactDirectory(AmlTrainingRun run) {
-        for (String modelType : List.of("ISOLATION_FOREST", "AUTOENCODER", "LOCAL_OUTLIER_FACTOR")) {
+        for (String modelType : List.of("ISOLATION_FOREST", "AUTOENCODER", "BEHAVIORAL_CLUSTER_OUTLIER")) {
             String path = artifactPath(modelType, run);
             if (path != null) return path;
         }

@@ -5,6 +5,9 @@ import com.ftd.fraud_transaction_detector.aml.peer.application.PeerContextLoader
 import com.ftd.fraud_transaction_detector.aml.feature.domain.PeerContext;
 import com.ftd.fraud_transaction_detector.transactions.entity.Transaction;
 import com.ftd.fraud_transaction_detector.transactions.repo.TransactionRepository;
+import com.ftd.fraud_transaction_detector.aml.feature.infrastructure.TerminalRiskContextRepository;
+import com.ftd.fraud_transaction_detector.config.service.AppConfigService;
+import com.ftd.fraud_transaction_detector.aml.feature.domain.TerminalRiskContext;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -23,6 +26,8 @@ class FeatureContextLoaderTest {
         TransactionRepository repository = mock(TransactionRepository.class);
         CustomerProfileRepository profileRepository = mock(CustomerProfileRepository.class);
         PeerContextLoader peerContextLoader = mock(PeerContextLoader.class);
+        TerminalRiskContextRepository terminalRiskRepository = mock(TerminalRiskContextRepository.class);
+        AppConfigService appConfigService = mock(AppConfigService.class);
         LocalDateTime currentTime = LocalDateTime.of(2026, 8, 4, 12, 0);
         Transaction current = transaction("T4", 400, currentTime);
         current.setCustomerId("ACCOUNT-1");
@@ -37,8 +42,16 @@ class FeatureContextLoaderTest {
                 current.getCustomerOccupation(), current.getCustomerAge(), "ACCOUNT-1",
                 null, currentTime
         )).thenReturn(PeerContext.empty());
+        when(appConfigService.getTerminalRiskDelayDays()).thenReturn(7);
+        when(appConfigService.getTerminalRiskSmoothingStrength()).thenReturn(20.0);
+        when(appConfigService.getTerminalRiskMinimumTransactions()).thenReturn(3);
+        when(appConfigService.isTerminalRiskEnabled()).thenReturn(true);
+        when(terminalRiskRepository.load("DHAKA", currentTime, 7, 20.0, 3, true))
+                .thenReturn(TerminalRiskContext.disabled());
 
-        var context = new FeatureContextLoader(repository, profileRepository, peerContextLoader).load(current);
+        var context = new FeatureContextLoader(
+                repository, profileRepository, peerContextLoader, terminalRiskRepository, appConfigService
+        ).load(current);
 
         assertEquals("T4", context.currentTransaction().transactionId());
         assertEquals(List.of("T3"), context.recentTransactions().stream()

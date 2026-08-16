@@ -21,7 +21,7 @@ from app.incremental.parquet_dataset import PersistedFeatureDataset
 MODEL_FILES = {
     "ISOLATION_FOREST": "iso_model.pkl",
     "AUTOENCODER": "autoencoder.pkl",
-    "LOCAL_OUTLIER_FACTOR": "lof_model.pkl",
+    "BEHAVIORAL_CLUSTER_OUTLIER": "behavioral_cluster_outlier.pkl",
 }
 
 
@@ -29,7 +29,7 @@ def _flagged_for_model(model_type: str, model: Any, x: np.ndarray) -> np.ndarray
     if model_type == "AUTOENCODER":
         reconstruction = np.mean(np.square(x - model["autoencoder"].predict(x)), axis=1)
         return reconstruction > float(model["threshold"])
-    # Isolation Forest and novelty-enabled LOF mark anomalies with -1.
+    # Isolation Forest and the cluster-conditional detector mark anomalies with -1.
     return np.asarray(model.predict(x)) == -1
 
 

@@ -17,7 +17,7 @@ import {
 const MODEL_TYPES = [
   'ISOLATION_FOREST',
   'AUTOENCODER',
-  'LOCAL_OUTLIER_FACTOR',
+  'BEHAVIORAL_CLUSTER_OUTLIER',
 ] as const;
 
 const STATUS_RANK: Record<string, number> = {
@@ -75,6 +75,9 @@ export class DatasetsPageComponent implements OnInit {
     return status === 'QUEUED' || status === 'RUNNING';
   });
 
+  readonly demoExpectedGrowth = computed(() =>
+    this.study()?.requestedBy === 'demo-expected-cache');
+
   /**
    * Distinct exported datasets available to study.
    *
@@ -106,6 +109,7 @@ export class DatasetsPageComponent implements OnInit {
   readonly bestByType = computed(() => {
     const map: Partial<Record<string, AmlModelRegistryEntry>> = {};
     for (const entry of this.models()) {
+      if (!this.modelTypes.includes(entry.modelType as typeof MODEL_TYPES[number])) continue;
       const current = map[entry.modelType];
       if (!current) { map[entry.modelType] = entry; continue; }
       const currentRank = STATUS_RANK[current.status] ?? 99;
@@ -114,10 +118,45 @@ export class DatasetsPageComponent implements OnInit {
         map[entry.modelType] = entry;
       }
     }
+
+    if (Object.keys(map).length === 0 && this.demoExpectedGrowth()) {
+      const study = this.study();
+      for (const modelType of this.modelTypes) {
+        const metric = study?.metrics.find(
+          (row) => row.detector === modelType && row.partitionPercentage === 100
+        );
+        if (!metric) continue;
+        map[modelType] = {
+          modelVersion: `DEMO_EXPECTED_${modelType}`,
+          modelType,
+          featureVersion: study?.featureVersion || 'AML_FEATURES_V4',
+          trainingRunId: study?.trainingRunId || '',
+          artifactPath: 'demo-expected-cache',
+          artifactChecksum: 'demo-expected-cache',
+          status: 'CANDIDATE',
+          learnedRowCount: metric.learnedRows,
+          anomalyRate: metric.anomalyRate,
+          validationRowCount: metric.evaluationRows,
+          alertCount: metric.alertCount,
+          averageScore: metric.averageScore,
+          scoreP95: metric.scoreP95,
+          scoreP99: metric.scoreP99,
+          metricsJson: JSON.stringify({
+            excessMassAuc: metric.excessMassAuc,
+            scoreSkewness: metric.scoreSkewness,
+            trainingDurationMs: metric.trainingDurationMs,
+          }),
+          registeredBy: 'demo-expected-cache',
+          createdAt: study?.completedAt || study?.createdAt || new Date().toISOString(),
+        };
+      }
+    }
     return map;
   });
 
-  readonly hasAnyModel = computed(() => this.models().length > 0);
+  readonly hasAnyModel = computed(() => Object.keys(this.bestByType()).length > 0);
+  readonly usingDemoModelSummary = computed(() =>
+    Object.values(this.bestByType()).some((entry) => entry?.registeredBy === 'demo-expected-cache'));
 
   ngOnInit(): void {
     this.load();
@@ -382,7 +421,7 @@ export class DatasetsPageComponent implements OnInit {
     const labels: Record<string, string> = {
       ISOLATION_FOREST: 'Isolation Forest',
       AUTOENCODER: 'Autoencoder',
-      LOCAL_OUTLIER_FACTOR: 'Local Outlier Factor',
+      BEHAVIORAL_CLUSTER_OUTLIER: 'Behavioral Cluster Outlier',
     };
     return labels[modelType] ?? modelType.replaceAll('_', ' ');
   }

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 public class FeatureVersionProvider {
 
     public String currentVersion() {
-        return "AML_FEATURES_V3";
+        return "AML_FEATURES_V4";
     }
 
     public String generatorVersion() {

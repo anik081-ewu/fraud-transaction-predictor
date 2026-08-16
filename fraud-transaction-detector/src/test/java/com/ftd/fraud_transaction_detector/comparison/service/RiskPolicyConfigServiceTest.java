@@ -34,7 +34,7 @@ class RiskPolicyConfigServiceTest {
                 null, null, null,
                 java.util.List.of(
                         new RiskPolicyModelConfigRequest("ISOLATION_FOREST", true, 0.50),
-                        new RiskPolicyModelConfigRequest("LOCAL_OUTLIER_FACTOR", true, 0.30),
+                        new RiskPolicyModelConfigRequest("BEHAVIORAL_CLUSTER_OUTLIER", true, 0.30),
                         new RiskPolicyModelConfigRequest("AUTOENCODER", true, 0.20)
                 ),
                 0.40, 0.65, 0.80
@@ -62,7 +62,7 @@ class RiskPolicyConfigServiceTest {
                 null, null, null,
                 java.util.List.of(
                         new RiskPolicyModelConfigRequest("ISOLATION_FOREST", true, 0.60),
-                        new RiskPolicyModelConfigRequest("LOCAL_OUTLIER_FACTOR", true, 0.30)
+                        new RiskPolicyModelConfigRequest("BEHAVIORAL_CLUSTER_OUTLIER", true, 0.30)
                 ),
                 0.40, 0.65, 0.80
         )))
@@ -81,7 +81,7 @@ class RiskPolicyConfigServiceTest {
                 null, null, null,
                 java.util.List.of(
                         new RiskPolicyModelConfigRequest("ISOLATION_FOREST", true, 0.50),
-                        new RiskPolicyModelConfigRequest("LOCAL_OUTLIER_FACTOR", true, 0.30),
+                        new RiskPolicyModelConfigRequest("BEHAVIORAL_CLUSTER_OUTLIER", true, 0.30),
                         new RiskPolicyModelConfigRequest("AUTOENCODER", true, 0.20)
                 ),
                 0.70, 0.65, 0.80
@@ -113,8 +113,32 @@ class RiskPolicyConfigServiceTest {
         var response = service.get();
 
         assertThat(response.models()).extracting(model -> model.modelKey())
-                .containsExactlyInAnyOrder("ISOLATION_FOREST", "AUTOENCODER", "LOCAL_OUTLIER_FACTOR");
+                .containsExactlyInAnyOrder("ISOLATION_FOREST", "AUTOENCODER", "BEHAVIORAL_CLUSTER_OUTLIER");
         assertThat(response.models().stream().mapToDouble(model -> model.weight()).sum()).isEqualTo(1.0);
+    }
+
+    @Test
+    void rejectsStackedEnsembleCombinedWithItsBaseClassifiers() {
+        Map<String, AppConfig> values = new HashMap<>();
+        AppConfig mode = new AppConfig();
+        mode.setConfigKey("system.learning_mode");
+        mode.setConfigValue("SUPERVISED");
+        values.put(mode.getConfigKey(), mode);
+        RiskPolicyConfigService service = new RiskPolicyConfigService(
+                repository(values), new ObjectMapper(), Clock.systemUTC()
+        );
+
+        assertThatThrownBy(() -> service.update(new RiskPolicyConfigUpdateRequest(
+                0.20, 0.15, 0.40, 0.25,
+                null, null, null,
+                java.util.List.of(
+                        new RiskPolicyModelConfigRequest("STACKED_ENSEMBLE", true, 0.50),
+                        new RiskPolicyModelConfigRequest("XGBOOST_CLASSIFIER", true, 0.50)
+                ),
+                0.40, 0.65, 0.80
+        )))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Select it alone");
     }
 
     private AppConfigRepository repository(Map<String, AppConfig> values) {

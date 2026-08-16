@@ -10,6 +10,8 @@ from typing import Iterator
 
 import pyarrow.parquet as parquet
 
+from app.feature_compaction import compact_feature_name, compact_feature_values
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -44,7 +46,7 @@ class PersistedFeatureDataset:
     def collect_feature_columns(self) -> list[str]:
         declared = self.manifest.get("modelFeatureColumns")
         if declared:
-            return sorted(str(column) for column in declared)
+            return sorted({compact_feature_name(str(column)) for column in declared})
         columns: set[str] = set()
         observed_rows = 0
         for features in self.iter_features():
@@ -73,7 +75,7 @@ class PersistedFeatureDataset:
                         if not math.isfinite(numeric):
                             raise ValueError(f"Non-finite feature {name!r} encountered in training dataset")
                         features[str(name)] = numeric
-                    yield features
+                    yield compact_feature_values(features)
 
     def iter_feature_range(self, start: int, stop: int) -> Iterator[dict[str, float]]:
         if start < 0 or stop < start or stop > self.row_count:
@@ -105,7 +107,7 @@ class PersistedFeatureDataset:
                         continue
                     values = json.loads(raw)
                     yield (
-                        {str(name): float(value) for name, value in values.items()},
+                        compact_feature_values({str(name): float(value) for name, value in values.items()}),
                         int(bool(label)),
                         None if label_source is None else str(label_source),
                     )

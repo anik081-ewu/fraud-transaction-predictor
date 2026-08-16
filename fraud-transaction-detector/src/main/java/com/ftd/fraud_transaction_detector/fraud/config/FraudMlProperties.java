@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "fraud.ml")
 public record FraudMlProperties(String baseUrl, Integer trainingTimeoutSeconds) {
 
-    private static final int DEFAULT_TRAINING_TIMEOUT_SECONDS = 1800;
+    private static final int DEFAULT_TRAINING_TIMEOUT_SECONDS = 7200;
 
     public int trainingTimeoutSecondsOrDefault() {
         return trainingTimeoutSeconds == null || trainingTimeoutSeconds <= 0

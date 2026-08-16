@@ -5,6 +5,7 @@ from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
@@ -18,6 +19,7 @@ from sklearn.metrics import (
 )
 
 from app.incremental.parquet_dataset import PersistedFeatureDataset
+from app.research.risk_policy_backtest import evaluate_risk_policy
 from app.supervised_training import (
     SUPPORTED_MODELS,
     WEAK_NEGATIVE_SOURCE,
@@ -71,6 +73,7 @@ def analyze_supervised_growth(
     usable = sorted({value for value in percentages if 0 < value <= 100})
     results = []
     ensemble_results = []
+    risk_policy_results = []
     for percentage in usable:
         partition_rows = max(1, int(len(rows) * percentage / 100))
         if partition_rows < minimum_rows and percentage != 100:
@@ -164,7 +167,7 @@ def analyze_supervised_growth(
                 "trainingDurationMs": round(training_ms, 2),
                 "rowsPerSecond": round(len(y_test) / max(scoring_ms / 1000, 0.000001), 2),
             })
-        ensemble_results.extend(_evaluate_ensembles(
+        partition_ensembles = _evaluate_ensembles(
             percentage=percentage,
             partition_rows=partition_rows,
             training_rows=len(y_train),
@@ -180,7 +183,26 @@ def analyze_supervised_growth(
             minimum_precision=minimum_precision,
             threshold_beta=threshold_beta,
             calibration_weights=weights[tuning_end:calibration_end],
-        ))
+            policy_probabilities=evaluation_probabilities,
+            policy_predictions=evaluation_predictions,
+        )
+        ensemble_results.extend(partition_ensembles)
+        weighted_baseline = next(
+            (row for row in partition_ensembles if row["strategy"] == "WEIGHTED_SOFT_VOTE"),
+            None,
+        )
+        if weighted_baseline is not None:
+            risk_policy_results.append(evaluate_risk_policy(
+                percentage=percentage,
+                partition_rows=partition_rows,
+                evaluation_labels=y_test,
+                evaluation_features=x_test_frame,
+                evaluation_probabilities=evaluation_probabilities,
+                evaluation_predictions=evaluation_predictions,
+                tuning_weights=_normalized_ensemble_weights(tuning_scores, list(SUPPORTED_MODELS)),
+                hyperparams=hyperparams,
+                ml_baseline=weighted_baseline,
+            ))
     if not results:
         raise ValueError("No chronological partition contained both FraudLabel classes in train and evaluation windows")
     return {
@@ -206,13 +228,20 @@ def analyze_supervised_growth(
             ),
             "ensembleEvaluation": (
                 "any-model, majority and unanimous decisions use calibrated model votes; weighted soft voting "
-                "uses tuning-only PR-AUC weights and a calibration-only decision threshold"
+                "uses tuning-only PR-AUC weights; temporal stacking fits its meta-classifier on the first half "
+                "of calibration history and selects its threshold on the second half, leaving evaluation untouched"
+            ),
+            "riskPolicyEvaluation": (
+                "frozen production weights and thresholds replayed without creating cases or STR reports; "
+                "a calibrated fraud decision consumes that model's configured ML share while sub-threshold "
+                "probabilities retain ranking information; MEDIUM/HIGH is the case decision and HIGH is the STR decision"
             ),
             "maximumRows": maximum_rows,
             "blankLabels": "excluded",
         },
         "results": results,
         "ensembles": ensemble_results,
+        "riskPolicyEvaluations": risk_policy_results,
     }
 
 
@@ -232,6 +261,8 @@ def _evaluate_ensembles(
     minimum_precision: float,
     threshold_beta: float,
     calibration_weights: np.ndarray,
+    policy_probabilities: Optional[dict[str, np.ndarray]] = None,
+    policy_predictions: Optional[dict[str, np.ndarray]] = None,
 ) -> list[dict[str, Any]]:
     model_names = list(SUPPORTED_MODELS)
     if any(model_name not in evaluation_predictions for model_name in model_names):
@@ -303,7 +334,109 @@ def _evaluate_ensembles(
         calibration,
         started,
     ))
+    stacked = _stacked_ensemble_metric(
+        percentage,
+        partition_rows,
+        training_rows,
+        tuning_rows,
+        validation_rows,
+        evaluation_rows,
+        validation_labels,
+        evaluation_labels,
+        validation_probabilities,
+        evaluation_probabilities,
+        minimum_precision,
+        threshold_beta,
+        calibration_weights,
+        started,
+        policy_probabilities,
+        policy_predictions,
+    )
+    if stacked is not None:
+        output.append(stacked)
     return output
+
+
+def _stacked_ensemble_metric(
+    percentage: int,
+    partition_rows: int,
+    training_rows: int,
+    tuning_rows: int,
+    validation_rows: int,
+    evaluation_rows: int,
+    validation_labels: np.ndarray,
+    evaluation_labels: np.ndarray,
+    validation_probabilities: dict[str, np.ndarray],
+    evaluation_probabilities: dict[str, np.ndarray],
+    minimum_precision: float,
+    threshold_beta: float,
+    calibration_weights: np.ndarray,
+    started: float,
+    policy_probabilities: Optional[dict[str, np.ndarray]] = None,
+    policy_predictions: Optional[dict[str, np.ndarray]] = None,
+) -> Optional[dict[str, Any]]:
+    model_names = list(SUPPORTED_MODELS)
+    midpoint = len(validation_labels) // 2
+    if midpoint < 10 or len(validation_labels) - midpoint < 10:
+        return None
+    meta_labels = validation_labels[:midpoint]
+    threshold_labels = validation_labels[midpoint:]
+    if len(np.unique(meta_labels)) < 2 or len(np.unique(threshold_labels)) < 2:
+        return None
+    meta_features = np.column_stack([
+        validation_probabilities[name][:midpoint] for name in model_names
+    ])
+    threshold_features = np.column_stack([
+        validation_probabilities[name][midpoint:] for name in model_names
+    ])
+    evaluation_features = np.column_stack([
+        evaluation_probabilities[name] for name in model_names
+    ])
+    meta_model = LogisticRegression(
+        C=1.0,
+        class_weight="balanced",
+        max_iter=1000,
+        solver="liblinear",
+        random_state=42,
+    )
+    meta_model.fit(meta_features, meta_labels, sample_weight=calibration_weights[:midpoint])
+    threshold_probability = meta_model.predict_proba(threshold_features)[:, 1]
+    threshold, calibration = precision_constrained_threshold(
+        threshold_labels,
+        threshold_probability,
+        minimum_precision=minimum_precision,
+        fallback_beta=threshold_beta,
+        sample_weight=calibration_weights[midpoint:],
+    )
+    evaluation_probability = meta_model.predict_proba(evaluation_features)[:, 1]
+    evaluation_prediction = (evaluation_probability >= threshold).astype(int)
+    if policy_probabilities is not None:
+        policy_probabilities["StackedEnsemble"] = evaluation_probability
+    if policy_predictions is not None:
+        policy_predictions["StackedEnsemble"] = evaluation_prediction
+    return _ensemble_metric(
+        percentage,
+        partition_rows,
+        training_rows,
+        tuning_rows,
+        validation_rows,
+        evaluation_rows,
+        "TEMPORAL_STACKED_ENSEMBLE",
+        "Leakage-safe temporal stacking",
+        evaluation_labels,
+        evaluation_probability,
+        evaluation_prediction,
+        threshold,
+        "CALIBRATION_SPLIT_META_PROBABILITY",
+        {name: float(coefficient) for name, coefficient in zip(model_names, meta_model.coef_[0])},
+        {
+            **calibration,
+            "metaTrainingRows": int(midpoint),
+            "thresholdCalibrationRows": int(len(validation_labels) - midpoint),
+            "intercept": float(meta_model.intercept_[0]),
+        },
+        started,
+    )
 
 
 def _normalized_ensemble_weights(

@@ -2,6 +2,7 @@ package com.ftd.fraud_transaction_detector.aml.training.infrastructure;
 
 import com.ftd.fraud_transaction_detector.aml.feature.domain.HistoricalTransaction;
 import com.ftd.fraud_transaction_detector.aml.training.application.MaterializationHistoryIndex;
+import com.ftd.fraud_transaction_detector.aml.training.application.TerminalRiskHistoryIndex;
 import com.ftd.fraud_transaction_detector.aml.training.domain.AmlTrainingRun;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -178,6 +179,37 @@ public class HistoricalFeatureMaterializationRepository {
                             null,
                             true
                     ));
+                });
+        return builder.build();
+    }
+
+    public TerminalRiskHistoryIndex loadTerminalRiskHistory(AmlTrainingRun run) {
+        TerminalRiskHistoryIndex.Builder builder = TerminalRiskHistoryIndex.builder();
+        jdbcTemplate.query("""
+                SELECT transaction_row.location,
+                       transaction_row.transaction_date,
+                       transaction_row.transaction_amount,
+                       transaction_row.fraud_label,
+                       transaction_row.label_source
+                FROM dbo.transactions transaction_row
+                WHERE transaction_row.transaction_date <= :cutoffTimestamp
+                  AND transaction_row.location IS NOT NULL
+                ORDER BY transaction_row.location, transaction_row.transaction_date, transaction_row.id
+                """,
+                new MapSqlParameterSource("cutoffTimestamp", run.cutoffTimestamp()),
+                (ResultSet resultSet) -> {
+                    Timestamp date = resultSet.getTimestamp("transaction_date");
+                    BigDecimal amount = resultSet.getBigDecimal("transaction_amount");
+                    if (date == null || amount == null) return;
+                    boolean fraud = resultSet.getBoolean("fraud_label");
+                    Boolean fraudLabel = resultSet.wasNull() ? null : fraud;
+                    builder.add(
+                            resultSet.getString("location"),
+                            date.toLocalDateTime(),
+                            amount,
+                            fraudLabel,
+                            resultSet.getString("label_source")
+                    );
                 });
         return builder.build();
     }

@@ -7,17 +7,19 @@ import { AlertService } from '../core/alert.service';
 import { AmlTrainingApiService } from '../core/aml-training-api.service';
 import {
   AmlTrainingRun,
+  RiskPolicyDecisionMetric,
   SupervisedEnsembleMetric,
   SupervisedGrowthMetric,
   SupervisedGrowthReport,
   SupervisedGrowthStudy,
+  SupervisedRiskPolicyEvaluation,
 } from '../core/models';
 
 const SUPERVISED_MODEL_TYPES = new Set([
   'SUPERVISED_ENSEMBLE',
   'XGBOOST_CLASSIFIER',
   'RANDOM_FOREST_CLASSIFIER',
-  'LOGISTIC_REGRESSION',
+  'EXTRA_TREES_CLASSIFIER',
 ]);
 
 @Component({
@@ -78,6 +80,13 @@ export class SupervisedComparisonPageComponent implements OnInit, OnDestroy {
     }).sort((a, b) => b.f1 - a.f1 || b.prAuc - a.prAuc);
   });
 
+  readonly fullRiskPolicy = computed(() =>
+    this.report()?.riskPolicyEvaluations?.find((row) => row.partitionPercentage === 100) ?? null);
+
+  readonly demoExpectedResult = computed(() =>
+    this.study()?.requestedBy === 'demo-expected-cache'
+    || this.report()?.methodology?.['resultOrigin'] === 'DEMO_EXPECTED');
+
   ngOnInit(): void {
     this.api.listRuns().subscribe({
       next: (runs) => {
@@ -127,11 +136,26 @@ export class SupervisedComparisonPageComponent implements OnInit, OnDestroy {
   fullEnsembleMetric(strategy: string): SupervisedEnsembleMetric | undefined {
     return this.ensembleMetric(strategy, 100);
   }
+  riskPolicyMetric(percentage: number): SupervisedRiskPolicyEvaluation | undefined {
+    return this.report()?.riskPolicyEvaluations?.find((row) => row.partitionPercentage === percentage);
+  }
+  signedPercent(value?: number): string {
+    if (value == null) return '—';
+    return `${value >= 0 ? '+' : ''}${(value * 100).toFixed(1)} pts`;
+  }
+  modelLabel(modelKey: string): string {
+    return ({
+      XGBoost: 'XGBoost',
+      RandomForestClassifier: 'Class-Balanced Random Forest',
+      ExtraTreesClassifier: 'Extra Trees',
+      StackedEnsemble: 'Temporal Stacked Ensemble',
+    } as Record<string, string>)[modelKey] ?? modelKey;
+  }
   percent(value?: number): string { return value == null ? '—' : `${(value * 100).toFixed(1)}%`; }
-  matrixTotal(metric: SupervisedGrowthMetric | SupervisedEnsembleMetric): number {
+  matrixTotal(metric: SupervisedGrowthMetric | SupervisedEnsembleMetric | RiskPolicyDecisionMetric): number {
     return metric.trueNegative + metric.falsePositive + metric.falseNegative + metric.truePositive;
   }
-  matrixRate(value: number, metric: SupervisedGrowthMetric | SupervisedEnsembleMetric): string {
+  matrixRate(value: number, metric: SupervisedGrowthMetric | SupervisedEnsembleMetric | RiskPolicyDecisionMetric): string {
     return this.percent(value / Math.max(1, this.matrixTotal(metric)));
   }
 

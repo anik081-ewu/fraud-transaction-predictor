@@ -22,8 +22,9 @@ public class AppConfigService {
     public static final String ISO_N_ESTIMATORS = "ml.iso.n_estimators";
     public static final String ISO_MAX_SAMPLES = "ml.iso.max_samples";
     public static final String ISO_CONTAMINATION = "ml.iso.contamination";
-    public static final String LOF_N_NEIGHBORS = "ml.lof.n_neighbors";
-    public static final String LOF_CONTAMINATION = "ml.lof.contamination";
+    public static final String CLUSTER_OUTLIER_N_CLUSTERS = "ml.cluster_outlier.n_clusters";
+    public static final String CLUSTER_OUTLIER_CONTAMINATION = "ml.cluster_outlier.contamination";
+    public static final String CLUSTER_OUTLIER_BATCH_SIZE = "ml.cluster_outlier.batch_size";
     public static final String SVM_KERNEL = "ml.svm.kernel";
     public static final String SVM_GAMMA = "ml.svm.gamma";
     public static final String SVM_NU = "ml.svm.nu";
@@ -75,10 +76,15 @@ public class AppConfigService {
     public static final String AML_RESEARCH_ISOLATION_FOREST_N_ESTIMATORS = "aml.research.isolation_forest_n_estimators";
     public static final String AML_RESEARCH_ISOLATION_FOREST_MAX_TRAINING_ROWS = "aml.research.isolation_forest_max_training_rows";
     public static final String AML_RESEARCH_AUTOENCODER_MAX_TRAINING_ROWS = "aml.research.autoencoder_max_training_rows";
+    public static final String AML_RESEARCH_CLUSTER_OUTLIER_MAX_TRAINING_ROWS = "aml.research.cluster_outlier_max_training_rows";
+    public static final String AML_TERMINAL_RISK_ENABLED = "aml.terminal_risk.enabled";
+    public static final String AML_TERMINAL_RISK_DELAY_DAYS = "aml.terminal_risk.delay_days";
+    public static final String AML_TERMINAL_RISK_SMOOTHING_STRENGTH = "aml.terminal_risk.smoothing_strength";
+    public static final String AML_TERMINAL_RISK_MINIMUM_TRANSACTIONS = "aml.terminal_risk.minimum_transactions";
     private static final TypeReference<List<ProductionModelAllocation>> MODEL_ALLOCATIONS = new TypeReference<>() {};
     private static final Set<String> PRODUCTION_MODEL_KEYS = Set.of(
-            "ISOLATION_FOREST", "AUTOENCODER", "LOCAL_OUTLIER_FACTOR",
-            "XGBOOST_CLASSIFIER", "RANDOM_FOREST_CLASSIFIER", "LOGISTIC_REGRESSION"
+            "ISOLATION_FOREST", "AUTOENCODER", "BEHAVIORAL_CLUSTER_OUTLIER", "LOCAL_OUTLIER_FACTOR",
+            "XGBOOST_CLASSIFIER", "RANDOM_FOREST_CLASSIFIER", "EXTRA_TREES_CLASSIFIER", "STACKED_ENSEMBLE"
     );
 
     private final AppConfigRepository appConfigRepository;
@@ -143,10 +149,11 @@ public class AppConfigService {
     private static final Map<String, String> MODEL_TRAINING_ENABLED_KEYS = Map.of(
             "ISOLATION_FOREST", "aml.isolation_forest.enabled",
             "AUTOENCODER", "aml.autoencoder.enabled",
-            "LOCAL_OUTLIER_FACTOR", "aml.lof.enabled",
+            "BEHAVIORAL_CLUSTER_OUTLIER", "aml.cluster_outlier.enabled",
             "XGBOOST_CLASSIFIER", "ml.xgboost.enabled",
             "RANDOM_FOREST_CLASSIFIER", "ml.random_forest.enabled",
-            "LOGISTIC_REGRESSION", "ml.logistic_regression.enabled"
+            "EXTRA_TREES_CLASSIFIER", "ml.extra_trees.enabled",
+            "STACKED_ENSEMBLE", "ml.stacked_ensemble.enabled"
     );
 
     /** Whether a model type should produce new candidates during a training run. */
@@ -282,12 +289,32 @@ public class AppConfigService {
         return positiveInt(AML_RESEARCH_AUTOENCODER_MAX_TRAINING_ROWS, 50_000);
     }
 
-    public int getLofNeighbors() {
-        return positiveInt(LOF_N_NEIGHBORS, 35);
+    public int getResearchBehavioralClusterMaximumTrainingRows() {
+        return positiveInt(AML_RESEARCH_CLUSTER_OUTLIER_MAX_TRAINING_ROWS, 100_000);
     }
 
-    public double getLofContamination() {
-        return doubleValue(LOF_CONTAMINATION, 0.05);
+    public int getBehavioralClusterCount() {
+        return positiveInt(CLUSTER_OUTLIER_N_CLUSTERS, 16);
+    }
+
+    public double getBehavioralClusterContamination() {
+        return doubleValue(CLUSTER_OUTLIER_CONTAMINATION, 0.01);
+    }
+
+    public boolean isTerminalRiskEnabled() {
+        return booleanValue(AML_TERMINAL_RISK_ENABLED, true);
+    }
+
+    public int getTerminalRiskDelayDays() {
+        return positiveInt(AML_TERMINAL_RISK_DELAY_DAYS, 7);
+    }
+
+    public double getTerminalRiskSmoothingStrength() {
+        return Math.max(0.0, doubleValue(AML_TERMINAL_RISK_SMOOTHING_STRENGTH, 20.0));
+    }
+
+    public int getTerminalRiskMinimumTransactions() {
+        return positiveInt(AML_TERMINAL_RISK_MINIMUM_TRANSACTIONS, 3);
     }
 
     public Map<String, Double> getEnabledRiskPolicyModelWeights() {
@@ -301,12 +328,15 @@ public class AppConfigService {
                         .filter(allocation -> PRODUCTION_MODEL_KEYS.contains(allocation.modelKey().trim().toUpperCase()))
                         .filter(allocation -> Double.isFinite(allocation.weight()) && allocation.weight() > 0.0)
                         .collect(Collectors.toMap(
-                                allocation -> allocation.modelKey().trim().toUpperCase(),
+                                allocation -> canonicalModelKey(allocation.modelKey()),
                                 ProductionModelAllocation::weight,
                                 (_first, second) -> second,
                                 LinkedHashMap::new
-                        ));
+                ));
                 if (!parsed.isEmpty()) {
+                    if (parsed.containsKey("STACKED_ENSEMBLE") && parsed.keySet().stream().anyMatch(this::isSupervisedBaseModel)) {
+                        parsed.remove("STACKED_ENSEMBLE");
+                    }
                     return normalizeWeights(parsed);
                 }
             } catch (Exception ignored) {
@@ -314,15 +344,30 @@ public class AppConfigService {
         }
         Map<String, Double> legacy = new LinkedHashMap<>();
         putIfPositive(legacy, "ISOLATION_FOREST", doubleValue("aml.risk.weight.isolation_forest", 0.0));
-        putIfPositive(legacy, "LOCAL_OUTLIER_FACTOR", doubleValue("aml.risk.weight.local_outlier_factor", 0.0));
+        putIfPositive(legacy, "BEHAVIORAL_CLUSTER_OUTLIER", doubleValue("aml.risk.weight.local_outlier_factor", 0.0));
         if (legacy.isEmpty()) {
             legacy.put("ISOLATION_FOREST", 1.0);
         }
         return normalizeWeights(legacy);
     }
 
+    public String getRiskPolicyVersion() {
+        return getString("aml.risk.policy.version", "AML_RISK_POLICY_V3");
+    }
+
+    private boolean isSupervisedBaseModel(String modelKey) {
+        return Set.of("XGBOOST_CLASSIFIER", "RANDOM_FOREST_CLASSIFIER", "EXTRA_TREES_CLASSIFIER").contains(modelKey);
+    }
+
     public Map<String, Double> getEnabledBatchRiskPolicyModelWeights() {
         return getEnabledRiskPolicyModelWeights();
+    }
+
+    private String canonicalModelKey(String modelKey) {
+        String normalized = modelKey.trim().toUpperCase();
+        return "LOCAL_OUTLIER_FACTOR".equals(normalized)
+                ? "BEHAVIORAL_CLUSTER_OUTLIER"
+                : normalized;
     }
 
     private String getString(String key, String defaultValue) {
@@ -410,8 +455,9 @@ public class AppConfigService {
         putResolved(hp, ISO_N_ESTIMATORS, AML_RESEARCH_ISOLATION_FOREST_N_ESTIMATORS, "200");
         putResolved(hp, ISO_MAX_SAMPLES, "aml.research.isolation_forest_max_samples", "10000");
         putIfPresent(hp, ISO_CONTAMINATION);
-        putIfPresent(hp, LOF_N_NEIGHBORS);
-        putIfPresent(hp, LOF_CONTAMINATION);
+        putIfPresent(hp, CLUSTER_OUTLIER_N_CLUSTERS);
+        putIfPresent(hp, CLUSTER_OUTLIER_CONTAMINATION);
+        putIfPresent(hp, CLUSTER_OUTLIER_BATCH_SIZE);
         putIfPresent(hp, SVM_KERNEL);
         putIfPresent(hp, SVM_GAMMA);
         putIfPresent(hp, SVM_NU);
@@ -441,14 +487,47 @@ public class AppConfigService {
         putIfPresent(hp, "ml.random_forest.n_estimators");
         putIfPresent(hp, "ml.random_forest.max_depth");
         putIfPresent(hp, "ml.random_forest.min_samples_leaf");
-        putIfPresent(hp, "ml.logistic_regression.c");
-        putIfPresent(hp, "ml.logistic_regression.max_iter");
+        putIfPresent(hp, "ml.extra_trees.n_estimators");
+        putIfPresent(hp, "ml.extra_trees.min_samples_leaf");
+        putIfPresent(hp, "ml.extra_trees.max_features");
         putIfPresent(hp, "ml.supervised.tuning_enabled");
         putIfPresent(hp, "ml.supervised.tuning_candidates");
         putIfPresent(hp, "ml.supervised.class_weight_multiplier");
         putIfPresent(hp, "ml.supervised.auto_no_case_weight");
         putIfPresent(hp, "ml.supervised.threshold_beta");
         putIfPresent(hp, "ml.supervised.minimum_precision");
+        for (String key : List.of(
+                "aml.risk.policy.version",
+                "aml.risk.weight.customer_behaviour",
+                "aml.risk.weight.peer_behaviour",
+                "aml.risk.weight.ml_ensemble",
+                "aml.risk.weight.rules",
+                "aml.risk.threshold.low",
+                "aml.risk.threshold.medium",
+                "aml.risk.threshold.high",
+                "aml.risk.weight.customer_behaviour.amount",
+                "aml.risk.weight.customer_behaviour.frequency",
+                "aml.risk.weight.customer_behaviour.time_gap",
+                "aml.risk.weight.customer_behaviour.novelty",
+                "aml.risk.weight.customer_behaviour.unusual_hour",
+                "aml.risk.weight.peer_behaviour.amount",
+                "aml.risk.weight.peer_behaviour.frequency",
+                "aml.risk.weight.peer_behaviour.expected_turnover",
+                "aml.structuring.reporting_threshold",
+                "aml.risk.rules.reporting_threshold",
+                "aml.risk.rules.structuring_count_24h",
+                "aml.risk.rules.rapid_tx_count_10m",
+                "aml.risk.rules.high_tx_count_1h",
+                "aml.risk.rules.multi_beneficiary_count_1h",
+                "aml.risk.rules.repeated_amount_count_24h",
+                "aml.risk.rules.high_customer_amount_ratio",
+                "aml.risk.rules.extreme_customer_amount_ratio",
+                "aml.risk.rules.high_balance_ratio",
+                "aml.risk.rules.high_expected_turnover_ratio"
+        )) {
+            putIfPresent(hp, key);
+        }
+        hp.put("aml.risk.ml_model_allocations", getEnabledRiskPolicyModelWeights());
         return hp;
     }
 

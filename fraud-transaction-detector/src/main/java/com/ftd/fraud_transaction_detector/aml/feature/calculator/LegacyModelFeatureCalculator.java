@@ -4,13 +4,18 @@ import com.ftd.fraud_transaction_detector.aml.feature.domain.FeatureContext;
 import com.ftd.fraud_transaction_detector.aml.feature.domain.HistoricalTransaction;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class LegacyModelFeatureCalculator {
 
     public static final String SCHEMA = "LEGACY_MODEL_INPUT_V1";
+    private static final int LOCATION_HASH_BUCKETS = 128;
 
     public Map<String, Double> calculate(FeatureContext context) {
         var current = context.currentTransaction();
@@ -48,7 +53,7 @@ public class LegacyModelFeatureCalculator {
         features.put("amount_vs_rolling_30d_avg", safeDivide(amount, rolling30));
         features.put("location_changed", locationChanged(previous, current.location()) ? 1.0 : 0.0);
         oneHot(features, "TransactionType", current.transactionType());
-        oneHot(features, "Location", current.location());
+        hashedLocation(features, current.location());
         oneHot(features, "Channel", current.channel());
         oneHot(features, "CustomerOccupation", current.customerOccupation());
         return Map.copyOf(features);
@@ -73,6 +78,22 @@ public class LegacyModelFeatureCalculator {
 
     private void oneHot(Map<String, Double> features, String prefix, String value) {
         features.put(prefix + "_" + (value == null ? "" : value), 1.0);
+    }
+
+    private void hashedLocation(Map<String, Double> features, String value) {
+        String normalized = value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(normalized.getBytes(StandardCharsets.UTF_8));
+            long prefix = 0;
+            for (int index = 0; index < Long.BYTES; index++) {
+                prefix = (prefix << 8) | Byte.toUnsignedLong(digest[index]);
+            }
+            int bucket = (int) Long.remainderUnsigned(prefix, LOCATION_HASH_BUCKETS);
+            features.put("LocationHashBucket_%03d".formatted(bucket), 1.0);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is unavailable", exception);
+        }
     }
 
     private double safeDivide(double numerator, double denominator) {

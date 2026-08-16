@@ -42,7 +42,9 @@ public class SupervisedGrowthStudyService {
 
     public QueueResult queueOrReuse(UUID trainingRunId, String requestedBy) {
         requireSupervisedSnapshot(trainingRunId);
-        Optional<SupervisedGrowthStudy> reusable = repository.findReusable(trainingRunId);
+        Optional<SupervisedGrowthStudy> reusable = repository.findReusable(
+                trainingRunId, appConfigService.getRiskPolicyVersion()
+        );
         if (reusable.isPresent()) return new QueueResult(reusable.get(), false);
         UUID studyId = repository.create(trainingRunId, normalizeActor(requestedBy));
         return new QueueResult(require(studyId), true);
@@ -64,7 +66,7 @@ public class SupervisedGrowthStudyService {
     }
 
     public Optional<SupervisedGrowthStudy> latestRelevant() {
-        return repository.latestRelevant();
+        return repository.latestRelevant(appConfigService.getRiskPolicyVersion());
     }
 
     public SupervisedGrowthStudy require(UUID studyId) {
@@ -81,7 +83,7 @@ public class SupervisedGrowthStudyService {
             throw new IllegalStateException("Supervised comparison requires a verified training snapshot");
         }
         if (!run.modelType().startsWith("SUPERVISED_")
-                && !java.util.Set.of("XGBOOST_CLASSIFIER", "RANDOM_FOREST_CLASSIFIER", "LOGISTIC_REGRESSION")
+                && !java.util.Set.of("XGBOOST_CLASSIFIER", "RANDOM_FOREST_CLASSIFIER", "EXTRA_TREES_CLASSIFIER", "STACKED_ENSEMBLE")
                 .contains(run.modelType())) {
             throw new IllegalArgumentException("Selected snapshot was not created for supervised learning");
         }

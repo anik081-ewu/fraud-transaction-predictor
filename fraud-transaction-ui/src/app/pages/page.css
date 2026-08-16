@@ -258,3 +258,8 @@ code {
     grid-template-columns: 1fr;
   }
 }
+.demo-result {
+  color: #9a5b00;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}

@@ -61,7 +61,7 @@ export class TrainingOperationsPageComponent {
   /** Guards against overlapping background polls piling up on the connection pool. */
   private pollInFlight = false;
 
-  featureVersion = 'AML_FEATURES_V3';
+  featureVersion = 'AML_FEATURES_V4';
   fromBusinessDate = this.today();
   toBusinessDate = this.today();
   cutoffTimestamp = `${this.today()}T23:59`;
@@ -70,6 +70,7 @@ export class TrainingOperationsPageComponent {
   constructor() {
     this.refresh();
     this.loadTrainingOptions();
+    this.fillFromUpload(false);
     // Poll only while a run is mid-pipeline, so the progress bar advances on its own.
     // The in-flight guard matters: setInterval fires on a fixed schedule regardless of
     // whether the previous request returned, so during a slow period (a bulk upload
@@ -92,7 +93,8 @@ export class TrainingOperationsPageComponent {
     }).subscribe({
       next: ({ catalog, tuning, settings }) => {
         const mode = this.systemMode(settings);
-        const models = catalog.find((entry) => entry.mode === mode)?.models ?? [];
+        const models = (catalog.find((entry) => entry.mode === mode)?.models ?? [])
+          .filter((model) => model.modelKey !== 'STACKED_ENSEMBLE');
         const disabled = this.disabledModels(tuning);
         this.learningMode.set(mode);
         this.availableModels.set(models);
@@ -151,7 +153,7 @@ export class TrainingOperationsPageComponent {
     });
   }
 
-  fillFromUpload(): void {
+  fillFromUpload(showConfirmation = true): void {
     this.loadingDates.set(true);
     this.comparisonApi.getLatestBatch()
       .pipe(finalize(() => this.loadingDates.set(false)))
@@ -161,15 +163,23 @@ export class TrainingOperationsPageComponent {
             this.fromBusinessDate = batch.minTransactionDate;
             this.toBusinessDate = batch.maxTransactionDate;
             this.cutoffTimestamp = `${batch.maxTransactionDate}T23:59`;
-            this.alerts.success(
-              'Dates auto-filled',
-              `Batch ${batch.batchNo}: ${batch.minTransactionDate} → ${batch.maxTransactionDate}`
-            );
+            if (showConfirmation) {
+              this.alerts.success(
+                'Dates auto-filled',
+                `Batch ${batch.batchNo}: ${batch.minTransactionDate} → ${batch.maxTransactionDate}`
+              );
+            }
           } else {
-            this.alerts.error('Upload has no transaction date information.', 'Cannot auto-fill');
+            if (showConfirmation) {
+              this.alerts.error('Upload has no transaction date information.', 'Cannot auto-fill');
+            }
           }
         },
-        error: () => this.alerts.error('No completed upload found.', 'Cannot auto-fill dates'),
+        error: () => {
+          if (showConfirmation) {
+            this.alerts.error('No completed upload found.', 'Cannot auto-fill dates');
+          }
+        },
       });
   }
 
@@ -266,10 +276,10 @@ export class TrainingOperationsPageComponent {
     const labels: Record<string, string> = {
       ISOLATION_FOREST: 'Isolation Forest',
       AUTOENCODER: 'Autoencoder',
-      LOCAL_OUTLIER_FACTOR: 'Local Outlier Factor',
+      BEHAVIORAL_CLUSTER_OUTLIER: 'Behavioral Cluster Outlier',
       XGBOOST_CLASSIFIER: 'XGBoost',
-      RANDOM_FOREST_CLASSIFIER: 'Random Forest',
-      LOGISTIC_REGRESSION: 'Logistic Regression',
+      RANDOM_FOREST_CLASSIFIER: 'Class-Balanced Random Forest',
+      EXTRA_TREES_CLASSIFIER: 'Extra Trees',
     };
     return labels[modelType] || modelType.replaceAll('_', ' ');
   }
@@ -277,10 +287,10 @@ export class TrainingOperationsPageComponent {
     const enabledKeys: Record<string, string> = {
       ISOLATION_FOREST: 'aml.isolation_forest.enabled',
       AUTOENCODER: 'aml.autoencoder.enabled',
-      LOCAL_OUTLIER_FACTOR: 'aml.lof.enabled',
+      BEHAVIORAL_CLUSTER_OUTLIER: 'aml.cluster_outlier.enabled',
       XGBOOST_CLASSIFIER: 'ml.xgboost.enabled',
       RANDOM_FOREST_CLASSIFIER: 'ml.random_forest.enabled',
-      LOGISTIC_REGRESSION: 'ml.logistic_regression.enabled',
+      EXTRA_TREES_CLASSIFIER: 'ml.extra_trees.enabled',
     };
     return Object.entries(enabledKeys)
       .filter(([, configKey]) => items.find((item) => item.configKey === configKey)?.configValue === 'false')

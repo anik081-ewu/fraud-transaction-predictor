@@ -54,7 +54,7 @@ public class ApiExceptionHandler {
                 Instant.now(),
                 HttpStatus.PAYLOAD_TOO_LARGE.value(),
                 HttpStatus.PAYLOAD_TOO_LARGE.getReasonPhrase(),
-                "File too large",
+                "The selected file exceeds the server upload limit. Increase APP_UPLOAD_MAX_FILE_SIZE and APP_UPLOAD_MAX_REQUEST_SIZE, then restart the application.",
                 request.getRequestURI()
         ));
     }

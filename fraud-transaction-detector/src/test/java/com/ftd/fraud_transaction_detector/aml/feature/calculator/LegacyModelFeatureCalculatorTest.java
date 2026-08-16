@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LegacyModelFeatureCalculatorTest {
 
@@ -29,5 +31,7 @@ class LegacyModelFeatureCalculatorTest {
         assertEquals(4.0, features.get("amount_vs_user_avg"));
         assertEquals(1.0, features.get("TransactionType_DEBIT"));
         assertEquals(1.0, features.get("CustomerOccupation_SALARIED"));
+        assertTrue(features.keySet().stream().anyMatch(name -> name.matches("LocationHashBucket_\\d{3}")));
+        assertFalse(features.keySet().stream().anyMatch(name -> name.startsWith("Location_")));
     }
 }

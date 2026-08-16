@@ -8,6 +8,7 @@ import com.ftd.fraud_transaction_detector.aml.feature.calculator.LegacyModelFeat
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.ProfileConfidenceCalculator;
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.PeerFeatureCalculator;
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.TimeFeatureCalculator;
+import com.ftd.fraud_transaction_detector.aml.feature.calculator.TerminalRiskFeatureCalculator;
 import com.ftd.fraud_transaction_detector.aml.feature.calculator.VelocityFeatureCalculator;
 import com.ftd.fraud_transaction_detector.aml.feature.domain.FeatureContext;
 import com.ftd.fraud_transaction_detector.aml.feature.domain.TransactionFeatureVector;
@@ -28,6 +29,7 @@ public class FeatureEngineeringService {
     private final NoveltyFeatureCalculator noveltyCalculator;
     private final ProfileConfidenceCalculator profileCalculator;
     private final PeerFeatureCalculator peerCalculator;
+    private final TerminalRiskFeatureCalculator terminalRiskCalculator;
     private final LegacyModelFeatureCalculator modelFeatureCalculator;
     private final ComprehensiveModelFeatureCalculator comprehensiveModelFeatureCalculator;
     private final Clock clock;
@@ -45,6 +47,7 @@ public class FeatureEngineeringService {
                 new NoveltyFeatureCalculator(),
                 new ProfileConfidenceCalculator(),
                 new PeerFeatureCalculator(),
+                new TerminalRiskFeatureCalculator(),
                 new LegacyModelFeatureCalculator(),
                 new ComprehensiveModelFeatureCalculator(),
                 clock
@@ -59,6 +62,7 @@ public class FeatureEngineeringService {
             NoveltyFeatureCalculator noveltyCalculator,
             ProfileConfidenceCalculator profileCalculator,
             PeerFeatureCalculator peerCalculator,
+            TerminalRiskFeatureCalculator terminalRiskCalculator,
             LegacyModelFeatureCalculator modelFeatureCalculator,
             ComprehensiveModelFeatureCalculator comprehensiveModelFeatureCalculator,
             Clock clock
@@ -70,6 +74,7 @@ public class FeatureEngineeringService {
         this.noveltyCalculator = Objects.requireNonNull(noveltyCalculator);
         this.profileCalculator = Objects.requireNonNull(profileCalculator);
         this.peerCalculator = Objects.requireNonNull(peerCalculator);
+        this.terminalRiskCalculator = Objects.requireNonNull(terminalRiskCalculator);
         this.modelFeatureCalculator = Objects.requireNonNull(modelFeatureCalculator);
         this.comprehensiveModelFeatureCalculator = Objects.requireNonNull(comprehensiveModelFeatureCalculator);
         this.clock = Objects.requireNonNull(clock);
@@ -91,8 +96,9 @@ public class FeatureEngineeringService {
         var novelty = noveltyCalculator.calculate(context);
         var profile = profileCalculator.calculate(context);
         var peer = peerCalculator.calculate(context);
+        var terminalRisk = terminalRiskCalculator.calculate(context.terminalRiskContext());
         var modelFeatures = comprehensiveModelFeatureCalculator.calculate(
-                modelFeatureCalculator.calculate(context), amount, behavior, time, velocity, novelty, profile, peer
+                modelFeatureCalculator.calculate(context), amount, behavior, time, velocity, novelty, profile, peer, terminalRisk
         );
         return new TransactionFeatureVector(
                 current.transactionId(),
@@ -108,6 +114,7 @@ public class FeatureEngineeringService {
                 novelty,
                 profile,
                 peer,
+                terminalRisk,
                 ComprehensiveModelFeatureCalculator.SCHEMA,
                 modelFeatures,
                 Instant.now(clock)

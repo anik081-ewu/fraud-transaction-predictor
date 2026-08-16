@@ -1,0 +1,499 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/xnykpl",
+    "id": "xnykpl",
+    "slide": 1,
+    "layoutId": "3adf5354-1ec7-42b6-b3f5-0cb7353a702a",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "d118fce2-1358-4e5a-8327-443c340c8c38",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "3adf5354-1ec7-42b6-b3f5-0cb7353a702a",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "d118fce2-1358-4e5a-8327-443c340c8c38",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "d118fce2-1358-4e5a-8327-443c340c8c38",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/s7qpwzy1",
+      "id": "1",
+      "bbox": [
+        0,
+        0,
+        18,
+        720
+      ],
+      "geometry": "rect",
+      "fillColor": "#3D8DFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/76xonehg",
+      "id": "2",
+      "bbox": [
+        72,
+        70,
+        500,
+        28
+      ],
+      "geometry": "rect",
+      "text": "ACADEMIC PROJECT DEFENSE",
+      "textPreview": "ACADEMIC PROJECT DEFENSE",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "fontSize": 15,
+        "typeface": "+mn-lt",
+        "color": "#3D8DFF",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "ACADEMIC PROJECT DEFENSE"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "ACADEMIC PROJECT DEFENSE",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "color": "#3D8DFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "ACADEMIC PROJECT DEFENSE",
+              "fontSize": 15,
+              "color": "#3D8DFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/65o7u90v",
+      "id": "3",
+      "bbox": [
+        72,
+        145,
+        950,
+        150
+      ],
+      "geometry": "rect",
+      "text": "Intelligent Fraud Transaction Detection\nand AML Case Management",
+      "textPreview": "Intelligent Fraud Transaction Detection | and AML Case Management",
+      "resolvedFontSize": 54,
+      "resolvedTextStyle": {
+        "fontSize": 54,
+        "typeface": "+mn-lt",
+        "color": "#081A3A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Intelligent Fraud Transaction Detection"
+          },
+          {
+            "index": 2,
+            "text": "and AML Case Management"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Intelligent Fraud Transaction Detection",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "color": "#081A3A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Intelligent Fraud Transaction Detection",
+              "fontSize": 54,
+              "color": "#081A3A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "and AML Case Management",
+          "resolvedTextStyle": {
+            "fontSize": 54,
+            "color": "#081A3A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "and AML Case Management",
+              "fontSize": 54,
+              "color": "#081A3A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/54f6l4za",
+      "id": "4",
+      "bbox": [
+        72,
+        330,
+        930,
+        90
+      ],
+      "geometry": "rect",
+      "text": "A dual-mode, research-guided platform for anomaly discovery, supervised fraud classification, explainable risk scoring, and governed investigation.",
+      "textPreview": "A dual-mode, research-guided platform for anomaly discovery, supervised fraud classification, explainable risk scoring, and governed inve...",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#5E6F89",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "A dual-mode, research-guided platform for anomaly discovery, supervised fraud"
+          },
+          {
+            "index": 2,
+            "text": "classification, explainable risk scoring, and governed investigation."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "A dual-mode, research-guided platform for anomaly discovery, supervised fraud classification, explainable risk scoring, and governed investigation.",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#5E6F89",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "A dual-mode, research-guided platform for anomaly discovery, supervised fraud classification, explainable risk scoring, and governed investigation.",
+              "fontSize": 24,
+              "color": "#5E6F89",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/k36pszip",
+      "id": "5",
+      "bbox": [
+        72,
+        470,
+        1136,
+        1
+      ],
+      "geometry": "rect",
+      "fillColor": "#B8C2D0",
+      "lineColor": "#B8C2D0",
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jixojuhk",
+      "id": "6",
+      "bbox": [
+        72,
+        500,
+        900,
+        28
+      ],
+      "geometry": "rect",
+      "text": "Md. Mydul Islam Anik  •  MIT Project  •  August 2026",
+      "textPreview": "Md. Mydul Islam Anik  •  MIT Project  •  August 2026",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "fontSize": 17,
+        "typeface": "+mn-lt",
+        "color": "#081A3A",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Md. Mydul Islam Anik  •  MIT Project  •  August 2026"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Md. Mydul Islam Anik  •  MIT Project  •  August 2026",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "color": "#081A3A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Md. Mydul Islam Anik  •  MIT Project  •  August 2026",
+              "fontSize": 17,
+              "color": "#081A3A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/iho7qp0z",
+      "id": "7",
+      "bbox": [
+        72,
+        538,
+        900,
+        24
+      ],
+      "geometry": "rect",
+      "text": "Institute of Information Technology (IIT), University of Dhaka",
+      "textPreview": "Institute of Information Technology (IIT), University of Dhaka",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "fontSize": 16,
+        "typeface": "+mn-lt",
+        "color": "#5E6F89",
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Institute of Information Technology (IIT), University of Dhaka"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Institute of Information Technology (IIT), University of Dhaka",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "color": "#5E6F89",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Institute of Information Technology (IIT), University of Dhaka",
+              "fontSize": 16,
+              "color": "#5E6F89",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/xgf6hkze",
+      "id": "8",
+      "bbox": [
+        72,
+        635,
+        1000,
+        22
+      ],
+      "geometry": "rect",
+      "text": "MEASURED EVIDENCE • REPRODUCIBLE DATA • EXPLICIT LIMITATIONS",
+      "textPreview": "MEASURED EVIDENCE • REPRODUCIBLE DATA • EXPLICIT LIMITATIONS",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "fontSize": 13,
+        "typeface": "+mn-lt",
+        "color": "#3D8DFF",
+        "bold": true,
+        "alignment": "left",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "MEASURED EVIDENCE • REPRODUCIBLE DATA • EXPLICIT LIMITATIONS"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "MEASURED EVIDENCE • REPRODUCIBLE DATA • EXPLICIT LIMITATIONS",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "color": "#3D8DFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "MEASURED EVIDENCE • REPRODUCIBLE DATA • EXPLICIT LIMITATIONS",
+              "fontSize": 13,
+              "color": "#3D8DFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

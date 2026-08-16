@@ -6,6 +6,7 @@ import com.ftd.fraud_transaction_detector.aml.feature.domain.NoveltyFeatures;
 import com.ftd.fraud_transaction_detector.aml.feature.domain.PeerFeatures;
 import com.ftd.fraud_transaction_detector.aml.feature.domain.ProfileFeatures;
 import com.ftd.fraud_transaction_detector.aml.feature.domain.TimeFeatures;
+import com.ftd.fraud_transaction_detector.aml.feature.domain.TerminalRiskFeatures;
 import com.ftd.fraud_transaction_detector.aml.feature.domain.VelocityFeatures;
 
 import java.util.LinkedHashMap;
@@ -14,7 +15,7 @@ import java.util.Map;
 
 public class ComprehensiveModelFeatureCalculator {
 
-    public static final String SCHEMA = "AML_MODEL_INPUT_V2";
+    public static final String SCHEMA = "AML_MODEL_INPUT_V3";
 
     public Map<String, Double> calculate(
             Map<String, Double> legacy,
@@ -24,7 +25,8 @@ public class ComprehensiveModelFeatureCalculator {
             VelocityFeatures velocity,
             NoveltyFeatures novelty,
             ProfileFeatures profile,
-            PeerFeatures peer
+            PeerFeatures peer,
+            TerminalRiskFeatures terminalRisk
     ) {
         Map<String, Double> features = new LinkedHashMap<>(legacy);
         put(features, "current_amount", amount.currentAmount());
@@ -96,6 +98,19 @@ public class ComprehensiveModelFeatureCalculator {
         oneHot(features, "peer_group", peer.peerGroupCode());
         oneHot(features, "customer_type", peer.customerType());
         oneHot(features, "customer_risk_rating", peer.customerRiskRating());
+        put(features, "terminal_tx_count_1d", terminalRisk.transactionCount1Day());
+        put(features, "terminal_fraud_count_1d", terminalRisk.confirmedFraudCount1Day());
+        put(features, "terminal_fraud_rate_1d", terminalRisk.fraudRate1Day());
+        put(features, "terminal_avg_amount_1d", terminalRisk.averageAmount1Day());
+        put(features, "terminal_tx_count_7d", terminalRisk.transactionCount7Days());
+        put(features, "terminal_fraud_count_7d", terminalRisk.confirmedFraudCount7Days());
+        put(features, "terminal_fraud_rate_7d", terminalRisk.fraudRate7Days());
+        put(features, "terminal_avg_amount_7d", terminalRisk.averageAmount7Days());
+        put(features, "terminal_tx_count_30d", terminalRisk.transactionCount30Days());
+        put(features, "terminal_fraud_count_30d", terminalRisk.confirmedFraudCount30Days());
+        put(features, "terminal_fraud_rate_30d", terminalRisk.fraudRate30Days());
+        put(features, "terminal_avg_amount_30d", terminalRisk.averageAmount30Days());
+        put(features, "terminal_risk_available", terminalRisk.available());
         return Map.copyOf(features);
     }
 

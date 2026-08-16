@@ -30,10 +30,11 @@ bank deploys a model trained on past transactions to future transactions.
 
 ## Feature contract
 
-`AML_FEATURES_V3` adds the already-computed amount, velocity, novelty, customer profile, and peer
-signals to `model_features_json`. Missing peer or profile values receive explicit availability
-indicators. Existing categorical legacy features remain available, so the new contract is richer
-without discarding prior signals.
+`AML_FEATURES_V4` retains the V3 amount, velocity, novelty, customer profile, and peer signals and
+adds point-in-time terminal volume, amount, and delayed confirmed-fraud-rate features to
+`model_features_json`. Missing peer or profile values retain explicit availability indicators.
+Existing categorical legacy features remain available, so the new contract is richer without
+discarding prior signals.
 
 ## Operating steps
 
@@ -41,9 +42,9 @@ without discarding prior signals.
 2. Run `database/phase_29_versioned_transaction_features.sql` once so V2 and V3 feature rows can coexist.
 3. Restart Spring Boot, FastAPI, and Angular.
 4. Keep **System Type** set to **Supervised Learning**.
-5. Create a new training run using feature version `AML_FEATURES_V3`.
+5. Create a new training run using feature version `AML_FEATURES_V4`.
 6. Generate the snapshot, then train the selected supervised models.
 7. Run Supervised Comparison against that same snapshot.
 
-Old V2 snapshots and old model artifacts are retained for audit but should not be used to judge the
-new supervised pipeline.
+Old V2/V3 snapshots and old model artifacts are retained for audit but should not be used to judge
+the new supervised pipeline.

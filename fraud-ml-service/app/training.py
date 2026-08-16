@@ -17,12 +17,12 @@ from sklearn.covariance import EllipticEnvelope
 from sklearn.decomposition import PCA
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import average_precision_score, roc_auc_score
-from sklearn.neighbors import LocalOutlierFactor
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import OneClassSVM
 
 from app.quality_metrics import excess_mass_auc, score_skewness, uniform_reference_matrix
+from app.models.behavioral_cluster_outlier import BehavioralClusterOutlier
 
 
 
@@ -34,7 +34,7 @@ class TrainArtifacts:
     optimization_metrics: Dict[str, Dict[str, Any]]
 
 
-DEFAULT_MODEL_NAMES = ["IsolationForest", "Autoencoder", "LOF"]
+DEFAULT_MODEL_NAMES = ["IsolationForest", "Autoencoder", "BehavioralClusterOutlier"]
 SUPPORTED_MODEL_NAMES = list(DEFAULT_MODEL_NAMES)
 
 # Models whose fitted artifact is a bundle dict rather than a bare sklearn estimator.
@@ -132,14 +132,18 @@ def _candidate_params(model_name: str, hyperparams: Optional[Dict[str, Any]], ro
             for trees in sorted({200, 400, configured_trees})
             for samples in list(dict.fromkeys(["auto", 0.8, configured_samples]))
         ]
-    if model_name == "LOF":
-        contamination = float(_get(hyperparams, "ml.lof.contamination", target_anomaly_rate))
-        configured_neighbors = int(_get(hyperparams, "ml.lof.n_neighbors", 35))
-        neighbors = sorted({
-            max(5, min(row_count - 1, value))
-            for value in (20, 35, 50, configured_neighbors)
-        })
-        return [{"n_neighbors": value, "contamination": contamination, "novelty": True} for value in neighbors]
+    if model_name == "BehavioralClusterOutlier":
+        contamination = float(_get(hyperparams, "ml.cluster_outlier.contamination", target_anomaly_rate))
+        configured_clusters = int(_get(hyperparams, "ml.cluster_outlier.n_clusters", 16))
+        return [
+            {
+                "n_clusters": max(2, min(row_count, clusters)),
+                "contamination": contamination,
+                "batch_size": int(_get(hyperparams, "ml.cluster_outlier.batch_size", 2048)),
+                "random_state": random_state,
+            }
+            for clusters in sorted({8, 16, 32, configured_clusters})
+        ]
     if model_name == "OneClassSVM":
         configured_kernel = str(_get(hyperparams, "ml.svm.kernel", "rbf"))
         configured_gamma = _get(hyperparams, "ml.svm.gamma", "scale")
@@ -205,11 +209,12 @@ def _configured_params(
             "contamination": _parse_contamination(_get(hyperparams, "ml.iso.contamination", 0.05)),
             "random_state": random_state,
         }
-    if model_name == "LOF":
+    if model_name == "BehavioralClusterOutlier":
         return {
-            "n_neighbors": max(2, min(row_count - 1, int(_get(hyperparams, "ml.lof.n_neighbors", 35)))),
-            "novelty": True,
-            "contamination": _parse_contamination(_get(hyperparams, "ml.lof.contamination", 0.05)),
+            "n_clusters": max(2, min(row_count, int(_get(hyperparams, "ml.cluster_outlier.n_clusters", 16)))),
+            "contamination": float(_get(hyperparams, "ml.cluster_outlier.contamination", 0.01)),
+            "batch_size": int(_get(hyperparams, "ml.cluster_outlier.batch_size", 2048)),
+            "random_state": random_state,
         }
     if model_name == "OneClassSVM":
         return {
@@ -247,8 +252,8 @@ def _configured_params(
 def _fit_model(model_name: str, x: np.ndarray, params: Dict[str, Any]) -> Any:
     if model_name == "IsolationForest":
         model = IsolationForest(**params)
-    elif model_name == "LOF":
-        model = LocalOutlierFactor(**params)
+    elif model_name == "BehavioralClusterOutlier":
+        model = BehavioralClusterOutlier(**params)
     elif model_name == "OneClassSVM":
         model = OneClassSVM(**params)
     elif model_name == "EllipticEnvelope":
@@ -505,7 +510,7 @@ def _save_artifacts_to_dir(artifacts: TrainArtifacts, models_dir: str) -> None:
     os.makedirs(models_dir, exist_ok=True)
     model_file_map = {
         "IsolationForest": "iso_model.pkl",
-        "LOF": "lof_model.pkl",
+        "BehavioralClusterOutlier": "behavioral_cluster_outlier.pkl",
         "OneClassSVM": "svm_model.pkl",
         "EllipticEnvelope": "elliptic_envelope.pkl",
         "PCAReconstruction": "pca_reconstruction.pkl",
@@ -604,7 +609,7 @@ def build_training_metrics(
         if model_name == "IsolationForest":
             raw_predictions = model.predict(x)
             decision_values = model.decision_function(x)
-        elif model_name == "LOF":
+        elif model_name == "BehavioralClusterOutlier":
             raw_predictions = model.predict(x)
             decision_values = model.decision_function(x)
         elif model_name == "OneClassSVM":
@@ -696,7 +701,7 @@ def build_training_metrics(
 def _add_artifact_sizes(metrics: Dict[str, Dict[str, Any]], models_dir: str) -> None:
     model_files = {
         "IsolationForest": "iso_model.pkl",
-        "LOF": "lof_model.pkl",
+        "BehavioralClusterOutlier": "behavioral_cluster_outlier.pkl",
         "OneClassSVM": "svm_model.pkl",
         "EllipticEnvelope": "elliptic_envelope.pkl",
         "PCAReconstruction": "pca_reconstruction.pkl",

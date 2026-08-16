@@ -18,7 +18,7 @@ import java.util.Set;
 @Service
 public class AnomalyConfigService {
 
-    private static final Set<String> SUPPORTED_MODELS = Set.of("IsolationForest", "Autoencoder", "LOF");
+    private static final Set<String> SUPPORTED_MODELS = Set.of("IsolationForest", "Autoencoder", "BehavioralClusterOutlier");
 
     private final AnomalyConfigRepository anomalyConfigRepository;
     private final ObjectMapper objectMapper;

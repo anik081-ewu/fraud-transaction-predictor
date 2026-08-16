@@ -110,15 +110,15 @@ public class WeightedRiskAggregationEngine implements RiskAggregationEngine {
             if (score != null) {
                 availableModelCount++;
                 if (score.anomaly()) anomalyModelCount++;
-                weightedSum += score.score().normalizedScore() * w;
+                double decisionAwareScore = score.anomaly() ? 1.0 : score.score().normalizedScore();
+                weightedSum += decisionAwareScore * w;
                 totalWeight += w;
                 mlReasons.addAll(score.reasonCodes());
             } else {
                 operationalReasons.add(entry.getKey() + "_SCORE_UNAVAILABLE");
             }
         }
-        if (selectedModelCount > 0
-                && availableModelCount == selectedModelCount
+        if (availableModelCount == selectedModelCount
                 && anomalyModelCount == selectedModelCount) {
             operationalReasons.add("ML_ENSEMBLE_UNANIMOUS_ANOMALY");
             return 1.0;

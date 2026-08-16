@@ -9,17 +9,17 @@ import numpy as np
 from scipy.stats import skew as scipy_skew
 from sklearn.ensemble import IsolationForest
 from sklearn.neural_network import MLPRegressor
-from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler
 
 from app.incremental.parquet_dataset import PersistedFeatureDataset
 from app.quality_metrics import excess_mass_auc, uniform_reference_matrix
+from app.models.behavioral_cluster_outlier import BehavioralClusterOutlier
 
 
 DETECTORS = (
     "ISOLATION_FOREST",
     "AUTOENCODER",
-    "LOCAL_OUTLIER_FACTOR",
+    "BEHAVIORAL_CLUSTER_OUTLIER",
 )
 
 
@@ -51,9 +51,9 @@ class GrowthAnalysisOptions:
     autoencoder_max_training_rows: int = 50_000
     autoencoder_hidden_layer_sizes: tuple[int, ...] = (32, 8, 32)
     autoencoder_max_iter: int = 200
-    lof_max_training_rows: int = 50_000
-    lof_n_neighbors: int = 35
-    lof_contamination: float = 0.05
+    cluster_outlier_max_training_rows: int = 100_000
+    cluster_outlier_clusters: int = 16
+    cluster_outlier_contamination: float = 0.01
     random_seed: int = 42
 
 
@@ -97,8 +97,8 @@ def analyze_detector_growth(
             "isolationForestEstimators": options.isolation_forest_estimators,
             "autoencoderMaxTrainingRows": options.autoencoder_max_training_rows,
             "autoencoderHiddenLayers": list(options.autoencoder_hidden_layer_sizes),
-            "localOutlierFactorMaxTrainingRows": options.lof_max_training_rows,
-            "localOutlierFactorNeighbors": options.lof_n_neighbors,
+            "behavioralClusterMaximumTrainingRows": options.cluster_outlier_max_training_rows,
+            "behavioralClusterCount": options.cluster_outlier_clusters,
             "labelsAvailable": False,
             "scoringVersion": "2.0",
             "qualityStatement": (
@@ -130,7 +130,7 @@ def _evaluate_detector(
     elif detector == "AUTOENCODER":
         result = _autoencoder(dataset, columns, training_rows, evaluation, reference, options)
     else:
-        result = _local_outlier_factor(dataset, columns, training_rows, evaluation, reference, options)
+        result = _behavioral_cluster_outlier(dataset, columns, training_rows, evaluation, reference, options)
     scores, threshold, learned_rows = result.scores, result.threshold, result.learned_rows
     duration_ms = (time.perf_counter() - started) * 1000.0
     anomaly_flags = scores >= threshold
@@ -185,7 +185,7 @@ def _isolation_forest(
     )
 
 
-def _local_outlier_factor(
+def _behavioral_cluster_outlier(
     dataset: PersistedFeatureDataset,
     columns: list[str],
     training_rows: int,
@@ -193,23 +193,21 @@ def _local_outlier_factor(
     reference: np.ndarray,
     options: GrowthAnalysisOptions,
 ) -> DetectorScores:
-    learned_rows = min(training_rows, options.lof_max_training_rows)
+    learned_rows = min(training_rows, options.cluster_outlier_max_training_rows)
     training = _matrix(dataset.iter_feature_range(0, learned_rows), columns)
     scaler = StandardScaler().fit(training)
     scaled_training = scaler.transform(training)
-    neighbors = max(2, min(options.lof_n_neighbors, learned_rows - 1))
-    model = LocalOutlierFactor(
-        n_neighbors=neighbors,
-        contamination=options.lof_contamination,
-        novelty=True,
-        n_jobs=-1,
+    model = BehavioralClusterOutlier(
+        n_clusters=options.cluster_outlier_clusters,
+        contamination=options.cluster_outlier_contamination,
+        random_state=options.random_seed,
     ).fit(scaled_training)
-    training_scores = -model.decision_function(scaled_training)
-    scores = -model.decision_function(scaler.transform(evaluation))
-    reference_scores = -model.decision_function(scaler.transform(reference))
+    training_scores = model.anomaly_score(scaled_training)
+    scores = model.anomaly_score(scaler.transform(evaluation))
+    reference_scores = model.anomaly_score(scaler.transform(reference))
     return DetectorScores(
         scores,
-        float(np.quantile(training_scores, 1.0 - options.lof_contamination)),
+        float(np.quantile(training_scores, 1.0 - options.cluster_outlier_contamination)),
         learned_rows,
         reference_scores,
     )

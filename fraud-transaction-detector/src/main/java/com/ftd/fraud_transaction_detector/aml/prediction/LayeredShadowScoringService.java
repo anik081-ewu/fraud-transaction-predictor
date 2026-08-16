@@ -139,16 +139,18 @@ public class LayeredShadowScoringService {
         addModel(scores, legacy, "IsolationForest", "ISOLATION_FOREST",
                 "ISOLATION_FOREST_MARGIN_PROXY_V1", "ISOLATION_FOREST_HIGH_ANOMALY_SCORE",
                 "ISOLATION_FOREST_DEFAULT");
-        addModel(scores, legacy, "LOF", "LOCAL_OUTLIER_FACTOR",
-                "LOF_MARGIN_PROXY_V1", "LOF_HIGH_ANOMALY_SCORE", "LOF_DEFAULT");
+        addModel(scores, legacy, "BehavioralClusterOutlier", "BEHAVIORAL_CLUSTER_OUTLIER",
+                "CLUSTER_CONDITIONAL_DISTANCE_V1", "BEHAVIORAL_CLUSTER_OUTLIER_HIGH_SCORE", "BCO_DEFAULT");
         addModel(scores, legacy, "Autoencoder", "AUTOENCODER",
                 "AUTOENCODER_RECONSTRUCTION_MARGIN_PROXY_V1", "AUTOENCODER_HIGH_ANOMALY_SCORE", "AUTOENCODER_DEFAULT");
         addModel(scores, legacy, "XGBoost", "XGBOOST_CLASSIFIER",
                 "SUPERVISED_PROBABILITY_V1", "XGBOOST_HIGH_FRAUD_PROBABILITY", "XGBOOST_DEFAULT");
         addModel(scores, legacy, "RandomForestClassifier", "RANDOM_FOREST_CLASSIFIER",
                 "SUPERVISED_PROBABILITY_V1", "RANDOM_FOREST_HIGH_FRAUD_PROBABILITY", "RANDOM_FOREST_DEFAULT");
-        addModel(scores, legacy, "LogisticRegression", "LOGISTIC_REGRESSION",
-                "SUPERVISED_PROBABILITY_V1", "LOGISTIC_REGRESSION_HIGH_FRAUD_PROBABILITY", "LOGISTIC_REGRESSION_DEFAULT");
+        addModel(scores, legacy, "ExtraTreesClassifier", "EXTRA_TREES_CLASSIFIER",
+                "SUPERVISED_PROBABILITY_V1", "EXTRA_TREES_HIGH_FRAUD_PROBABILITY", "EXTRA_TREES_DEFAULT");
+        addModel(scores, legacy, "StackedEnsemble", "STACKED_ENSEMBLE",
+                "TEMPORAL_STACKED_PROBABILITY_V1", "STACKED_ENSEMBLE_HIGH_FRAUD_PROBABILITY", "STACKED_ENSEMBLE_DEFAULT");
         return new MlModelScores(scores);
     }
 

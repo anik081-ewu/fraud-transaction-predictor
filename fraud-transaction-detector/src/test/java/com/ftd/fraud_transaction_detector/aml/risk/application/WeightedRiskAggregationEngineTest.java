@@ -136,6 +136,22 @@ class WeightedRiskAggregationEngineTest {
         assertTrue(result.reasonCodes().contains("ML_ENSEMBLE_UNANIMOUS_ANOMALY"));
     }
 
+    @Test
+    void aSingleSelectedFraudDecisionConsumesTheFullMlAllocation() {
+        RiskPolicy mlLedPolicy = new RiskPolicy(
+                "AML_RISK_POLICY_ML_LED", 0.24, 0.09, 0.65, 0.02,
+                0.40, 0.65, 0.80
+        );
+        FinalRiskResult result = engine.aggregate(
+                customer(0.0), peer(0.0), anomalousModels(0.61, 0.0, 0.0),
+                rules(0.0, false), mlLedPolicy, Map.of("ISOLATION_FOREST", 1.0)
+        );
+
+        assertEquals(1.0, result.componentScores().mlEnsemble(), 0.000001);
+        assertEquals(0.65, result.finalRiskScore(), 0.000001);
+        assertTrue(result.reasonCodes().contains("ML_ENSEMBLE_UNANIMOUS_ANOMALY"));
+    }
+
     private CustomerBehaviourScore customer(double value, String... reasons) {
         return new CustomerBehaviourScore(score(value, "CUSTOMER_V1"), band(value), 1.0, List.of(reasons));
     }

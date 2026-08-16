@@ -29,12 +29,13 @@ public class ProductionCandidateTrainingService {
     private static final Map<String, String> UNSUPERVISED_MODELS = Map.of(
             "ISOLATION_FOREST", "IsolationForest",
             "AUTOENCODER", "Autoencoder",
-            "LOCAL_OUTLIER_FACTOR", "LOF"
+            "BEHAVIORAL_CLUSTER_OUTLIER", "BehavioralClusterOutlier"
     );
     private static final Map<String, String> SUPERVISED_MODELS = Map.of(
             "XGBOOST_CLASSIFIER", "XGBoost",
             "RANDOM_FOREST_CLASSIFIER", "RandomForestClassifier",
-            "LOGISTIC_REGRESSION", "LogisticRegression"
+            "EXTRA_TREES_CLASSIFIER", "ExtraTreesClassifier",
+            "STACKED_ENSEMBLE", "StackedEnsemble"
     );
 
     private static final Logger log = LoggerFactory.getLogger(ProductionCandidateTrainingService.class);
@@ -170,7 +171,7 @@ public class ProductionCandidateTrainingService {
         String prefix = switch (modelType) {
             case "ISOLATION_FOREST" -> "IF";
             case "AUTOENCODER" -> "AE";
-            case "LOCAL_OUTLIER_FACTOR" -> "LOF";
+            case "BEHAVIORAL_CLUSTER_OUTLIER" -> "BCO";
             default -> modelType.replaceAll("[^A-Z0-9]+", "-");
         };
         String date = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
@@ -211,6 +212,7 @@ public class ProductionCandidateTrainingService {
         List<String> requested = selectedModels.stream()
                 .filter(java.util.Objects::nonNull)
                 .map(value -> value.trim().toUpperCase(Locale.ROOT))
+                .map(this::currentModelKey)
                 .distinct()
                 .toList();
         List<String> unsupported = requested.stream().filter(model -> !all.contains(model)).toList();
@@ -229,6 +231,10 @@ public class ProductionCandidateTrainingService {
             log.info("Skipping models not selected or disabled for this run: {}", skipped);
         }
         return requested;
+    }
+
+    private String currentModelKey(String modelType) {
+        return "LOGISTIC_REGRESSION".equals(modelType) ? "EXTRA_TREES_CLASSIFIER" : modelType;
     }
 
     private TrainModelRequest.TrainingTransaction toTrainingTransaction(Transaction transaction) {

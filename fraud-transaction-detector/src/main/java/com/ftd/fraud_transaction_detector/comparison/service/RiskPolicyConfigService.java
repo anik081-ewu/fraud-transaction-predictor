@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -333,6 +334,7 @@ public class RiskPolicyConfigService {
         if (allocations.stream().noneMatch(StoredModelAllocation::enabled)) {
             throw new IllegalArgumentException("Select at least one ML model for production scoring");
         }
+        rejectStackedAndBaseModelCombination(allocations);
         if (Math.abs(enabledTotal - 1.0) > 0.000001) {
             throw new IllegalArgumentException("Enabled ML model weights must total exactly 1.0");
         }
@@ -392,6 +394,7 @@ public class RiskPolicyConfigService {
     }
 
     private Map<String, StoredModelAllocation> normalizedAllocations(Map<String, StoredModelAllocation> allocations) {
+        allocations = withoutStackedModelWhenBaseModelsAreEnabled(allocations);
         double total = allocations.values().stream()
                 .filter(StoredModelAllocation::enabled)
                 .mapToDouble(StoredModelAllocation::weight)
@@ -409,6 +412,39 @@ public class RiskPolicyConfigService {
                 (_first, second) -> second,
                 LinkedHashMap::new
         ));
+    }
+
+    private void rejectStackedAndBaseModelCombination(List<StoredModelAllocation> allocations) {
+        boolean stackedEnabled = allocations.stream()
+                .anyMatch(allocation -> allocation.enabled() && "STACKED_ENSEMBLE".equals(allocation.modelKey()));
+        boolean baseEnabled = allocations.stream()
+                .anyMatch(allocation -> allocation.enabled() && isSupervisedBaseModel(allocation.modelKey()));
+        if (stackedEnabled && baseEnabled) {
+            throw new IllegalArgumentException(
+                    "Temporal Stacked Ensemble already combines the three base classifiers. "
+                            + "Select it alone, or choose weighted base classifiers."
+            );
+        }
+    }
+
+    private Map<String, StoredModelAllocation> withoutStackedModelWhenBaseModelsAreEnabled(
+            Map<String, StoredModelAllocation> allocations
+    ) {
+        boolean baseEnabled = allocations.values().stream()
+                .anyMatch(allocation -> allocation.enabled() && isSupervisedBaseModel(allocation.modelKey()));
+        if (!baseEnabled) return allocations;
+        return allocations.values().stream()
+                .filter(allocation -> !"STACKED_ENSEMBLE".equals(allocation.modelKey()))
+                .collect(Collectors.toMap(
+                        StoredModelAllocation::modelKey,
+                        allocation -> allocation,
+                        (_first, second) -> second,
+                        LinkedHashMap::new
+                ));
+    }
+
+    private boolean isSupervisedBaseModel(String modelKey) {
+        return Set.of("XGBOOST_CLASSIFIER", "RANDOM_FOREST_CLASSIFIER", "EXTRA_TREES_CLASSIFIER").contains(modelKey);
     }
 
     private String json(Object value) {
@@ -445,15 +481,16 @@ public class RiskPolicyConfigService {
         Map<String, SupportedModel> models = new LinkedHashMap<>();
         models.put("ISOLATION_FOREST", new SupportedModel("ISOLATION_FOREST", "Isolation Forest", "UNSUPERVISED", true));
         models.put("AUTOENCODER", new SupportedModel("AUTOENCODER", "Autoencoder", "UNSUPERVISED", true));
-        models.put("LOCAL_OUTLIER_FACTOR", new SupportedModel("LOCAL_OUTLIER_FACTOR", "Local Outlier Factor", "UNSUPERVISED", true));
+        models.put("BEHAVIORAL_CLUSTER_OUTLIER", new SupportedModel("BEHAVIORAL_CLUSTER_OUTLIER", "Behavioral Cluster Outlier", "UNSUPERVISED", true));
         return Map.copyOf(models);
     }
 
     private static Map<String, SupportedModel> supervisedModels() {
         Map<String, SupportedModel> models = new LinkedHashMap<>();
         models.put("XGBOOST_CLASSIFIER", new SupportedModel("XGBOOST_CLASSIFIER", "XGBoost", "SUPERVISED", true));
-        models.put("RANDOM_FOREST_CLASSIFIER", new SupportedModel("RANDOM_FOREST_CLASSIFIER", "Random Forest", "SUPERVISED", true));
-        models.put("LOGISTIC_REGRESSION", new SupportedModel("LOGISTIC_REGRESSION", "Logistic Regression", "SUPERVISED", true));
+        models.put("RANDOM_FOREST_CLASSIFIER", new SupportedModel("RANDOM_FOREST_CLASSIFIER", "Class-Balanced Random Forest", "SUPERVISED", true));
+        models.put("EXTRA_TREES_CLASSIFIER", new SupportedModel("EXTRA_TREES_CLASSIFIER", "Extra Trees", "SUPERVISED", true));
+        models.put("STACKED_ENSEMBLE", new SupportedModel("STACKED_ENSEMBLE", "Temporal Stacked Ensemble", "SUPERVISED", true));
         return Map.copyOf(models);
     }
 

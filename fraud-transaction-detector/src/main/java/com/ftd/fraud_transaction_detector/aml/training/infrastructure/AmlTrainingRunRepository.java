@@ -125,6 +125,18 @@ public class AmlTrainingRunRepository {
                 .addValue("current", current).addValue("total", total));
     }
 
+    public void markPipelineTrainingFailed(UUID id, String reason) {
+        jdbcTemplate.update("""
+                UPDATE dbo.aml_training_runs
+                SET status = 'TRAINING_FAILED', failure_reason = :reason,
+                    completed_at = SYSUTCDATETIME(), progress_stage = 'TRAINING_FAILED',
+                    progress_current = 0, progress_total = 0
+                WHERE training_run_id = :id
+                """, new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("reason", abbreviate(reason, 4000)));
+    }
+
     public AmlTrainingRun findRequired(UUID id) {
         return find(id).orElseThrow(() -> new IllegalArgumentException("AML training run not found: " + id));
     }

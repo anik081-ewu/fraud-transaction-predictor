@@ -13,9 +13,9 @@ public record GrowthAnalysisRequest(
         int isolationForestMaximumTrainingRows,
         int isolationForestEstimators,
         int autoencoderMaxTrainingRows,
-        int localOutlierFactorMaxTrainingRows,
-        int localOutlierFactorNeighbors,
-        double localOutlierFactorContamination,
+        int behavioralClusterMaximumTrainingRows,
+        int behavioralClusterCount,
+        double behavioralClusterContamination,
         int randomSeed,
         String learningMode,
         Map<String, Object> hyperparams
@@ -24,13 +24,13 @@ public record GrowthAnalysisRequest(
             String datasetPath, String datasetChecksum, List<Integer> percentages, int minimumRows,
             double holdoutFraction, int maximumEvaluationRows, int isolationForestMaximumTrainingRows,
             int isolationForestEstimators, int autoencoderMaxTrainingRows,
-            int localOutlierFactorMaxTrainingRows, int localOutlierFactorNeighbors,
-            double localOutlierFactorContamination, int randomSeed
+            int behavioralClusterMaximumTrainingRows, int behavioralClusterCount,
+            double behavioralClusterContamination, int randomSeed
     ) {
         this(datasetPath, datasetChecksum, percentages, minimumRows, holdoutFraction,
                 maximumEvaluationRows, isolationForestMaximumTrainingRows,
                 isolationForestEstimators, autoencoderMaxTrainingRows,
-                localOutlierFactorMaxTrainingRows, localOutlierFactorNeighbors,
-                localOutlierFactorContamination, randomSeed, "UNSUPERVISED", Map.of());
+                behavioralClusterMaximumTrainingRows, behavioralClusterCount,
+                behavioralClusterContamination, randomSeed, "UNSUPERVISED", Map.of());
     }
 }

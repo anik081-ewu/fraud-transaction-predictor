@@ -37,7 +37,7 @@ public class PartitionTrainingService {
     private static final List<String> DEFAULT_COMPARISON_MODELS = List.of(
             "IsolationForest",
             "Autoencoder",
-            "LOF"
+            "BehavioralClusterOutlier"
     );
 
     private final DatasetPartitionRepository datasetPartitionRepository;
@@ -261,7 +261,7 @@ public class PartitionTrainingService {
     private static String artifactKeyForModel(String modelName) {
         return switch (modelName) {
             case "IsolationForest" -> "isolationForest";
-            case "LOF" -> "localOutlierFactor";
+            case "BehavioralClusterOutlier" -> "behavioralClusterOutlier";
             case "OneClassSVM" -> "oneClassSvm";
             case "EllipticEnvelope" -> "ellipticEnvelope";
             case "PCAReconstruction" -> "pcaReconstruction";

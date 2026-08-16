@@ -12,6 +12,7 @@ public record GrowthAnalysisResponse(
         List<String> detectors,
         Map<String, Object> methodology,
         List<Map<String, Object>> results,
-        List<Map<String, Object>> ensembles
+        List<Map<String, Object>> ensembles,
+        List<Map<String, Object>> riskPolicyEvaluations
 ) {
 }

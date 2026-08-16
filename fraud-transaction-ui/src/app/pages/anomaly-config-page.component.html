@@ -122,7 +122,7 @@
     <header class="cb-modal-header">
       <div>
         <span class="policy-eyebrow">ML ensemble</span>
-        <h3>Choose the production ML models</h3>
+        <h3>Choose the production ML decision</h3>
         <p>Choose participating {{ learningMode === 'SUPERVISED' ? 'fraud classifiers' : 'anomaly detectors' }} for the active {{ learningMode.toLowerCase() }} system and assign their internal share.</p>
       </div>
       <button type="button" class="cb-modal-close" (click)="mlModalOpen.set(false)">✕</button>
@@ -142,7 +142,7 @@
             <span class="selection-badge">{{ model.enabled ? 'Selected' : 'Not selected' }}</span>
           </button>
 
-          <p>Trained from the same immutable transaction snapshot and available for weighted production scoring.</p>
+          <p>{{ modelDescription(model) }}</p>
 
           <div class="model-weight" *ngIf="model.enabled">
             <div class="weight-meta">

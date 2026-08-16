@@ -9,6 +9,8 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
+from app.feature_compaction import LOCATION_HASH_BUCKETS, location_bucket, location_bucket_column
+
 
 def _safe_div(n: float, d: float) -> float:
     if d is None or d == 0:
@@ -122,13 +124,22 @@ def build_training_features(df: pd.DataFrame) -> pd.DataFrame:
         ]
     ].copy()
 
-    cats = data[["transaction_type", "location", "channel", "customer_occupation"]].copy()
-    cats.columns = ["TransactionType", "Location", "Channel", "CustomerOccupation"]
-    dummies = pd.get_dummies(cats, prefix=cats.columns, dtype=int)
+    cats = data[["transaction_type", "channel", "customer_occupation"]].copy()
+    cats.columns = ["TransactionType", "Channel", "CustomerOccupation"]
+    dummies = pd.get_dummies(cats, prefix=cats.columns, dtype=np.float32)
+    location_buckets = pd.get_dummies(
+        data["location"].map(location_bucket),
+        prefix="LocationHashBucket",
+        dtype=np.float32,
+    )
+    location_buckets.columns = [f"LocationHashBucket_{int(column.rsplit('_', 1)[1]):03d}" for column in location_buckets]
 
-    features = pd.concat([base_features.reset_index(drop=True), dummies.reset_index(drop=True)], axis=1)
+    features = pd.concat(
+        [base_features.reset_index(drop=True), dummies.reset_index(drop=True), location_buckets.reset_index(drop=True)],
+        axis=1,
+    )
     features.index = data["__feature_row_id"].to_numpy()
-    return features.astype(float)
+    return features.astype(np.float32)
 
 
 @dataclass(frozen=True)
@@ -215,13 +226,13 @@ def build_single_features(
 
     cat_map = {
         f"TransactionType_{tx_type}": 1.0,
-        f"Location_{loc}": 1.0,
+        location_bucket_column(loc): 1.0,
         f"Channel_{channel}": 1.0,
         f"CustomerOccupation_{occupation}": 1.0,
     }
 
     row = {**base, **cat_map}
-    features = pd.DataFrame([row]).astype(float)
+    features = pd.DataFrame([row], dtype=np.float32)
 
     reasons: list[str] = []
     if amount_vs_user_avg >= 3:

@@ -42,6 +42,7 @@ public class TrainingPipelineJobLauncher {
 
         int trained = 0;
         int totalModels = 0;
+        String trainingFailure = null;
         try {
             runRepository.updateProgress(snapshotRunId, "TRAINING", 0, 0);
             var response = candidateTrainingService.start(snapshotRunId, selectedModels, requestedBy);
@@ -49,6 +50,7 @@ public class TrainingPipelineJobLauncher {
             trained = totalModels;
             runRepository.updateProgress(snapshotRunId, "TRAINING", trained, totalModels);
         } catch (Exception e) {
+            trainingFailure = e.getMessage();
             log.error("Training failed for run {}: {}", snapshotRunId, e.getMessage(), e);
         }
 
@@ -56,7 +58,12 @@ public class TrainingPipelineJobLauncher {
         // produced anything at all. The last is a failure, not a partial result, and must not
         // be reported as one.
         if (totalModels == 0) {
-            runRepository.updateProgress(snapshotRunId, "TRAINING_FAILED", 0, 0);
+            runRepository.markPipelineTrainingFailed(
+                    snapshotRunId,
+                    trainingFailure == null || trainingFailure.isBlank()
+                            ? "Training produced no models"
+                            : trainingFailure
+            );
             log.error("Training produced no models for run {} — see the error above", snapshotRunId);
         } else if (trained == totalModels) {
             runRepository.updateProgress(snapshotRunId, "COMPLETED", trained, totalModels);

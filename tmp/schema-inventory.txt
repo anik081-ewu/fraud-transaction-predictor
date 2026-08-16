@@ -1,0 +1,752 @@
+aml_active_models|1|model_type|varchar|50|0|0|0|0
+aml_active_models|2|model_segment|varchar|50|0|0|1|0
+aml_active_models|3|model_segment_key|varchar|50|0|0|0|0
+aml_active_models|4|active_model_version|varchar|100|0|0|0|0
+aml_active_models|5|previous_model_version|varchar|100|0|0|1|0
+aml_active_models|6|pointer_version|bigint|8|19|0|0|0
+aml_active_models|7|activated_by|varchar|100|0|0|0|0
+aml_active_models|8|activated_at|datetime2|8|27|7|0|0
+aml_agreement_studies|1|study_id|uniqueidentifier|16|0|0|0|0
+aml_agreement_studies|2|training_run_id|uniqueidentifier|16|0|0|0|0
+aml_agreement_studies|3|status|varchar|30|0|0|0|0
+aml_agreement_studies|4|evaluated_rows|bigint|8|19|0|1|0
+aml_agreement_studies|5|model_count|int|4|10|0|1|0
+aml_agreement_studies|6|result_json|nvarchar|-1|0|0|1|0
+aml_agreement_studies|7|requested_by|varchar|100|0|0|1|0
+aml_agreement_studies|8|failure_reason|nvarchar|8000|0|0|1|0
+aml_agreement_studies|9|started_at|datetime2|7|23|3|1|0
+aml_agreement_studies|10|completed_at|datetime2|7|23|3|1|0
+aml_agreement_studies|11|created_at|datetime2|7|23|3|0|0
+aml_business_days|1|business_date|date|3|10|0|0|0
+aml_business_days|2|status|varchar|20|0|0|0|0
+aml_business_days|3|closed_at|datetime2|8|27|7|1|0
+aml_business_days|4|closed_by|varchar|100|0|0|1|0
+aml_business_days|5|updated_at|datetime2|8|27|7|0|0
+aml_customer_observed_profile|1|customer_id|varchar|100|0|0|0|0
+aml_customer_observed_profile|2|total_transaction_count|bigint|8|19|0|0|0
+aml_customer_observed_profile|3|total_transaction_amount|decimal|9|19|4|0|0
+aml_customer_observed_profile|4|last_transaction_id|varchar|50|0|0|1|0
+aml_customer_observed_profile|5|last_transaction_date|datetime2|8|27|7|1|0
+aml_customer_observed_profile|6|last_transaction_amount|decimal|9|19|4|1|0
+aml_customer_observed_profile|7|last_location_code|varchar|100|0|0|1|0
+aml_customer_observed_profile|8|last_channel|varchar|50|0|0|1|0
+aml_customer_observed_profile|9|last_beneficiary_id|varchar|100|0|0|1|0
+aml_customer_observed_profile|10|observed_avg_amount|float|8|53|0|1|0
+aml_customer_observed_profile|11|observed_std_amount|float|8|53|0|1|0
+aml_customer_observed_profile|12|observed_max_amount|float|8|53|0|1|0
+aml_customer_observed_profile|13|updated_at|datetime2|8|27|7|0|0
+aml_customer_observed_profile|14|row_version|timestamp|8|0|0|0|0
+aml_customer_recent_transactions|1|customer_id|varchar|100|0|0|0|0
+aml_customer_recent_transactions|2|transaction_id|varchar|50|0|0|0|0
+aml_customer_recent_transactions|3|transaction_date|datetime2|8|27|7|0|0
+aml_customer_recent_transactions|4|transaction_amount|decimal|9|19|4|0|0
+aml_customer_recent_transactions|5|transaction_type|varchar|50|0|0|1|0
+aml_customer_recent_transactions|6|channel|varchar|50|0|0|1|0
+aml_customer_recent_transactions|7|location_code|varchar|100|0|0|1|0
+aml_customer_recent_transactions|8|beneficiary_id|varchar|100|0|0|1|0
+aml_customer_recent_transactions|9|device_id|varchar|200|0|0|1|0
+aml_customer_recent_transactions|10|trusted_flag|bit|1|1|0|0|0
+aml_customer_recent_transactions|11|anomaly_risk_level|varchar|20|0|0|1|0
+aml_customer_recent_transactions|12|inserted_at|datetime2|8|27|7|0|0
+aml_customer_trusted_profile|1|customer_id|varchar|100|0|0|0|0
+aml_customer_trusted_profile|2|trusted_transaction_count|bigint|8|19|0|0|0
+aml_customer_trusted_profile|3|trusted_avg_amount|float|8|53|0|1|0
+aml_customer_trusted_profile|4|trusted_variance_amount|float|8|53|0|1|0
+aml_customer_trusted_profile|5|trusted_std_amount|float|8|53|0|1|0
+aml_customer_trusted_profile|6|trusted_max_amount|float|8|53|0|1|0
+aml_customer_trusted_profile|7|trusted_min_amount|float|8|53|0|1|0
+aml_customer_trusted_profile|8|usual_start_hour|int|4|10|0|1|0
+aml_customer_trusted_profile|9|usual_end_hour|int|4|10|0|1|0
+aml_customer_trusted_profile|10|dominant_channel|varchar|50|0|0|1|0
+aml_customer_trusted_profile|11|dominant_location_code|varchar|100|0|0|1|0
+aml_customer_trusted_profile|12|profile_confidence|float|8|53|0|0|0
+aml_customer_trusted_profile|13|profile_status|varchar|30|0|0|0|0
+aml_customer_trusted_profile|14|last_learned_transaction_id|varchar|50|0|0|1|0
+aml_customer_trusted_profile|15|last_learned_at|datetime2|8|27|7|1|0
+aml_customer_trusted_profile|16|updated_at|datetime2|8|27|7|0|0
+aml_customer_trusted_profile|17|row_version|timestamp|8|0|0|0|0
+aml_feature_learning_status|1|transaction_id|varchar|50|0|0|0|0
+aml_feature_learning_status|2|eligibility_status|varchar|30|0|0|0|0
+aml_feature_learning_status|3|eligibility_reason|varchar|500|0|0|1|0
+aml_feature_learning_status|4|eligible_for_incremental_model|bit|1|1|0|0|0
+aml_feature_learning_status|5|eligible_for_trusted_profile|bit|1|1|0|0|0
+aml_feature_learning_status|6|eligible_for_batch_training|bit|1|1|0|0|0
+aml_feature_learning_status|7|reviewed_by|varchar|100|0|0|1|0
+aml_feature_learning_status|8|reviewed_at|datetime2|8|27|7|1|0
+aml_feature_learning_status|9|updated_at|datetime2|8|27|7|0|0
+aml_growth_metrics|1|id|bigint|8|19|0|0|1
+aml_growth_metrics|2|study_id|uniqueidentifier|16|0|0|0|0
+aml_growth_metrics|3|detector|varchar|50|0|0|0|0
+aml_growth_metrics|4|partition_percentage|int|4|10|0|0|0
+aml_growth_metrics|5|partition_rows|bigint|8|19|0|1|0
+aml_growth_metrics|6|training_rows|bigint|8|19|0|1|0
+aml_growth_metrics|7|learned_rows|bigint|8|19|0|1|0
+aml_growth_metrics|8|evaluation_rows|bigint|8|19|0|1|0
+aml_growth_metrics|9|excess_mass_auc|float|8|53|0|1|0
+aml_growth_metrics|10|score_skewness|float|8|53|0|1|0
+aml_growth_metrics|11|rank_stability|float|8|53|0|1|0
+aml_growth_metrics|12|anomaly_rate|float|8|53|0|1|0
+aml_growth_metrics|13|alert_count|bigint|8|19|0|1|0
+aml_growth_metrics|14|threshold|float|8|53|0|1|0
+aml_growth_metrics|15|average_score|float|8|53|0|1|0
+aml_growth_metrics|16|score_p50|float|8|53|0|1|0
+aml_growth_metrics|17|score_p95|float|8|53|0|1|0
+aml_growth_metrics|18|score_p99|float|8|53|0|1|0
+aml_growth_metrics|19|training_duration_ms|float|8|53|0|1|0
+aml_growth_metrics|20|rows_per_second|float|8|53|0|1|0
+aml_growth_metrics|21|bounded_training_sample|bit|1|1|0|0|0
+aml_growth_metrics|22|created_at|datetime2|7|23|3|0|0
+aml_growth_studies|1|study_id|uniqueidentifier|16|0|0|0|0
+aml_growth_studies|2|training_run_id|uniqueidentifier|16|0|0|0|0
+aml_growth_studies|3|status|varchar|30|0|0|0|0
+aml_growth_studies|4|feature_version|varchar|30|0|0|1|0
+aml_growth_studies|5|dataset_rows|bigint|8|19|0|1|0
+aml_growth_studies|6|feature_count|int|4|10|0|1|0
+aml_growth_studies|7|partition_percentages|varchar|100|0|0|1|0
+aml_growth_studies|8|methodology_json|nvarchar|-1|0|0|1|0
+aml_growth_studies|9|requested_by|varchar|100|0|0|1|0
+aml_growth_studies|10|failure_reason|nvarchar|8000|0|0|1|0
+aml_growth_studies|11|started_at|datetime2|7|23|3|1|0
+aml_growth_studies|12|completed_at|datetime2|7|23|3|1|0
+aml_growth_studies|13|created_at|datetime2|7|23|3|0|0
+aml_layered_deployment_events|1|deployment_id|uniqueidentifier|16|0|0|0|0
+aml_layered_deployment_events|2|action_id|uniqueidentifier|16|0|0|0|0
+aml_layered_deployment_events|3|deployment_action|varchar|30|0|0|0|0
+aml_layered_deployment_events|4|peer_group_code|varchar|50|0|0|0|0
+aml_layered_deployment_events|5|previous_mode|varchar|40|0|0|1|0
+aml_layered_deployment_events|6|activated_mode|varchar|40|0|0|0|0
+aml_layered_deployment_events|7|risk_policy_version|varchar|50|0|0|0|0
+aml_layered_deployment_events|8|hst_model_version|varchar|100|0|0|0|0
+aml_layered_deployment_events|9|online_ocsvm_model_version|varchar|100|0|0|0|0
+aml_layered_deployment_events|10|validation_id|uniqueidentifier|16|0|0|0|0
+aml_layered_deployment_events|11|previous_canary_percentage|int|4|10|0|1|0
+aml_layered_deployment_events|12|activated_canary_percentage|int|4|10|0|0|0
+aml_layered_deployment_events|13|reason|varchar|1000|0|0|0|0
+aml_layered_deployment_events|14|performed_by|varchar|100|0|0|0|0
+aml_layered_deployment_events|15|performed_at|datetime2|8|27|7|0|0
+aml_layered_deployment_pointers|1|peer_group_code|varchar|50|0|0|0|0
+aml_layered_deployment_pointers|2|deployment_mode|varchar|40|0|0|0|0
+aml_layered_deployment_pointers|3|risk_policy_version|varchar|50|0|0|0|0
+aml_layered_deployment_pointers|4|hst_model_version|varchar|100|0|0|0|0
+aml_layered_deployment_pointers|5|online_ocsvm_model_version|varchar|100|0|0|0|0
+aml_layered_deployment_pointers|6|validation_id|uniqueidentifier|16|0|0|0|0
+aml_layered_deployment_pointers|7|canary_percentage|int|4|10|0|0|0
+aml_layered_deployment_pointers|8|pointer_version|bigint|8|19|0|0|0
+aml_layered_deployment_pointers|9|activated_by|varchar|100|0|0|0|0
+aml_layered_deployment_pointers|10|activated_at|datetime2|8|27|7|0|0
+aml_layered_validations|1|validation_id|uniqueidentifier|16|0|0|0|0
+aml_layered_validations|2|risk_policy_version|varchar|50|0|0|0|0
+aml_layered_validations|3|peer_group_code|varchar|50|0|0|1|0
+aml_layered_validations|4|window_started_at|datetime2|8|27|7|0|0
+aml_layered_validations|5|window_ended_at|datetime2|8|27|7|0|0
+aml_layered_validations|6|sample_count|bigint|8|19|0|0|0
+aml_layered_validations|7|observation_days|int|4|10|0|0|0
+aml_layered_validations|8|legacy_alert_count|bigint|8|19|0|0|0
+aml_layered_validations|9|layered_alert_count|bigint|8|19|0|0|0
+aml_layered_validations|10|overlap_count|bigint|8|19|0|0|0
+aml_layered_validations|11|alert_jaccard|float|8|53|0|1|0
+aml_layered_validations|12|top_risk_overlap_rate|float|8|53|0|1|0
+aml_layered_validations|13|daily_alert_rate_stddev|float|8|53|0|1|0
+aml_layered_validations|14|max_segment_daily_stddev|float|8|53|0|1|0
+aml_layered_validations|15|synthetic_scenario_recall|float|8|53|0|1|0
+aml_layered_validations|16|reviewed_false_positive_rate|float|8|53|0|1|0
+aml_layered_validations|17|prediction_latency_p95_ms|float|8|53|0|1|0
+aml_layered_validations|18|average_incremental_update_ms|float|8|53|0|1|0
+aml_layered_validations|19|hst_availability_rate|float|8|53|0|0|0
+aml_layered_validations|20|online_ocsvm_availability_rate|float|8|53|0|0|0
+aml_layered_validations|21|validation_status|varchar|30|0|0|0|0
+aml_layered_validations|22|blocking_reasons_json|nvarchar|-1|0|0|0|0
+aml_layered_validations|23|warnings_json|nvarchar|-1|0|0|0|0
+aml_layered_validations|24|metrics_json|nvarchar|-1|0|0|0|0
+aml_layered_validations|25|validated_by|varchar|100|0|0|0|0
+aml_layered_validations|26|validated_at|datetime2|8|27|7|0|0
+aml_model_deployments|1|deployment_id|uniqueidentifier|16|0|0|0|0
+aml_model_deployments|2|action_id|uniqueidentifier|16|0|0|0|0
+aml_model_deployments|3|deployment_action|varchar|20|0|0|0|0
+aml_model_deployments|4|model_type|varchar|50|0|0|0|0
+aml_model_deployments|5|model_segment|varchar|50|0|0|1|0
+aml_model_deployments|6|previous_model_version|varchar|100|0|0|1|0
+aml_model_deployments|7|activated_model_version|varchar|100|0|0|0|0
+aml_model_deployments|8|reason|nvarchar|1000|0|0|0|0
+aml_model_deployments|9|performed_by|varchar|100|0|0|0|0
+aml_model_deployments|10|performed_at|datetime2|8|27|7|0|0
+aml_model_registry|1|model_version|varchar|100|0|0|0|0
+aml_model_registry|2|model_type|varchar|50|0|0|0|0
+aml_model_registry|3|model_segment|varchar|50|0|0|1|0
+aml_model_registry|4|feature_version|varchar|30|0|0|0|0
+aml_model_registry|5|training_run_id|uniqueidentifier|16|0|0|0|0
+aml_model_registry|6|artifact_path|varchar|1000|0|0|0|0
+aml_model_registry|7|artifact_checksum|varchar|200|0|0|0|0
+aml_model_registry|8|status|varchar|30|0|0|0|0
+aml_model_registry|9|anomaly_rate|float|8|53|0|1|0
+aml_model_registry|10|validation_row_count|bigint|8|19|0|1|0
+aml_model_registry|11|alert_count|bigint|8|19|0|1|0
+aml_model_registry|12|average_score|float|8|53|0|1|0
+aml_model_registry|13|score_p95|float|8|53|0|1|0
+aml_model_registry|14|score_p99|float|8|53|0|1|0
+aml_model_registry|15|created_at|datetime2|8|27|7|0|0
+aml_model_registry|16|approved_at|datetime2|8|27|7|1|0
+aml_model_registry|17|deployed_at|datetime2|8|27|7|1|0
+aml_model_registry|18|retired_at|datetime2|8|27|7|1|0
+aml_model_registry|19|dataset_checksum|varchar|200|0|0|1|0
+aml_model_registry|20|base_model_version|varchar|100|0|0|1|0
+aml_model_registry|21|feature_schema_checksum|varchar|200|0|0|1|0
+aml_model_registry|22|parameters_json|nvarchar|-1|0|0|1|0
+aml_model_registry|23|metrics_json|nvarchar|-1|0|0|1|0
+aml_model_registry|24|artifact_size_bytes|bigint|8|19|0|1|0
+aml_model_registry|25|registered_by|varchar|100|0|0|1|0
+aml_model_validations|1|validation_id|uniqueidentifier|16|0|0|0|0
+aml_model_validations|2|model_version|varchar|100|0|0|0|0
+aml_model_validations|3|comparison_target|varchar|100|0|0|0|0
+aml_model_validations|4|window_started_at|datetime2|8|27|7|0|0
+aml_model_validations|5|window_ended_at|datetime2|8|27|7|0|0
+aml_model_validations|6|sample_count|bigint|8|19|0|0|0
+aml_model_validations|7|candidate_anomaly_count|bigint|8|19|0|0|0
+aml_model_validations|8|production_alert_count|bigint|8|19|0|0|0
+aml_model_validations|9|overlap_count|bigint|8|19|0|0|0
+aml_model_validations|10|candidate_only_count|bigint|8|19|0|0|0
+aml_model_validations|11|production_only_count|bigint|8|19|0|0|0
+aml_model_validations|12|candidate_anomaly_rate|float|8|53|0|0|0
+aml_model_validations|13|production_alert_rate|float|8|53|0|0|0
+aml_model_validations|14|agreement_rate|float|8|53|0|0|0
+aml_model_validations|15|alert_jaccard|float|8|53|0|1|0
+aml_model_validations|16|average_score|float|8|53|0|1|0
+aml_model_validations|17|score_stddev|float|8|53|0|1|0
+aml_model_validations|18|score_p50|float|8|53|0|1|0
+aml_model_validations|19|score_p95|float|8|53|0|1|0
+aml_model_validations|20|score_p99|float|8|53|0|1|0
+aml_model_validations|21|daily_anomaly_rate_stddev|float|8|53|0|1|0
+aml_model_validations|22|reviewed_overlap_count|bigint|8|19|0|0|0
+aml_model_validations|23|false_positive_overlap_count|bigint|8|19|0|0|0
+aml_model_validations|24|str_overlap_count|bigint|8|19|0|0|0
+aml_model_validations|25|reviewed_precision|float|8|53|0|1|0
+aml_model_validations|26|validation_status|varchar|30|0|0|0|0
+aml_model_validations|27|failure_reason|varchar|1000|0|0|1|0
+aml_model_validations|28|metrics_json|nvarchar|-1|0|0|0|0
+aml_model_validations|29|validated_by|varchar|100|0|0|0|0
+aml_model_validations|30|validated_at|datetime2|8|27|7|0|0
+aml_shadow_predictions|1|shadow_prediction_id|uniqueidentifier|16|0|0|0|0
+aml_shadow_predictions|2|transaction_id|varchar|50|0|0|0|0
+aml_shadow_predictions|3|account_id|varchar|50|0|0|0|0
+aml_shadow_predictions|4|peer_group_code|varchar|50|0|0|0|0
+aml_shadow_predictions|5|feature_version|varchar|30|0|0|0|0
+aml_shadow_predictions|6|risk_policy_version|varchar|50|0|0|0|0
+aml_shadow_predictions|7|legacy_risk_level|varchar|20|0|0|0|0
+aml_shadow_predictions|8|legacy_suspicious|bit|1|1|0|0|0
+aml_shadow_predictions|9|legacy_anomaly_votes|int|4|10|0|0|0
+aml_shadow_predictions|10|layered_final_risk_score|float|8|53|0|0|0
+aml_shadow_predictions|11|layered_risk_level|varchar|20|0|0|0|0
+aml_shadow_predictions|12|layered_suspicious|bit|1|1|0|0|0
+aml_shadow_predictions|13|hard_rule_override|bit|1|1|0|0|0
+aml_shadow_predictions|14|customer_behaviour_score|float|8|53|0|0|0
+aml_shadow_predictions|15|customer_behaviour_confidence|float|8|53|0|0|0
+aml_shadow_predictions|16|peer_behaviour_score|float|8|53|0|0|0
+aml_shadow_predictions|17|peer_behaviour_confidence|float|8|53|0|0|0
+aml_shadow_predictions|18|hst_score|float|8|53|0|1|0
+aml_shadow_predictions|19|hst_model_version|varchar|100|0|0|1|0
+aml_shadow_predictions|20|online_ocsvm_score|float|8|53|0|1|0
+aml_shadow_predictions|21|online_ocsvm_model_version|varchar|100|0|0|1|0
+aml_shadow_predictions|22|rule_score|float|8|53|0|0|0
+aml_shadow_predictions|23|suspicious_changed|bit|1|1|0|0|0
+aml_shadow_predictions|24|risk_level_changed|bit|1|1|0|0|0
+aml_shadow_predictions|25|alert_overlap|bit|1|1|0|0|0
+aml_shadow_predictions|26|component_scores_json|nvarchar|-1|0|0|0|0
+aml_shadow_predictions|27|triggered_rules_json|nvarchar|-1|0|0|0|0
+aml_shadow_predictions|28|reason_codes_json|nvarchar|-1|0|0|0|0
+aml_shadow_predictions|29|layered_result_json|nvarchar|-1|0|0|0|0
+aml_shadow_predictions|30|evaluated_at|datetime2|8|27|7|0|0
+aml_shadow_predictions|31|duration_ms|bigint|8|19|0|0|0
+aml_shadow_scenario_labels|1|scenario_label_id|uniqueidentifier|16|0|0|0|0
+aml_shadow_scenario_labels|2|transaction_id|varchar|50|0|0|0|0
+aml_shadow_scenario_labels|3|scenario_code|varchar|100|0|0|0|0
+aml_shadow_scenario_labels|4|expected_suspicious|bit|1|1|0|0|0
+aml_shadow_scenario_labels|5|labeled_by|varchar|100|0|0|0|0
+aml_shadow_scenario_labels|6|created_at|datetime2|8|27|7|0|0
+aml_supervised_growth_studies|1|study_id|uniqueidentifier|16|0|0|0|0
+aml_supervised_growth_studies|2|training_run_id|uniqueidentifier|16|0|0|0|0
+aml_supervised_growth_studies|3|status|varchar|30|0|0|0|0
+aml_supervised_growth_studies|4|result_json|nvarchar|-1|0|0|1|0
+aml_supervised_growth_studies|5|requested_by|varchar|100|0|0|1|0
+aml_supervised_growth_studies|6|failure_reason|nvarchar|8000|0|0|1|0
+aml_supervised_growth_studies|7|started_at|datetime2|7|23|3|1|0
+aml_supervised_growth_studies|8|completed_at|datetime2|7|23|3|1|0
+aml_supervised_growth_studies|9|created_at|datetime2|7|23|3|0|0
+aml_training_runs|1|training_run_id|uniqueidentifier|16|0|0|0|0
+aml_training_runs|2|training_type|varchar|50|0|0|0|0
+aml_training_runs|3|feature_version|varchar|30|0|0|0|0
+aml_training_runs|4|model_type|varchar|50|0|0|0|0
+aml_training_runs|5|model_segment|varchar|50|0|0|1|0
+aml_training_runs|6|from_business_date|date|3|10|0|0|0
+aml_training_runs|7|to_business_date|date|3|10|0|0|0
+aml_training_runs|8|cutoff_timestamp|datetime2|8|27|7|0|0
+aml_training_runs|9|requested_row_count|bigint|8|19|0|1|0
+aml_training_runs|10|exported_row_count|bigint|8|19|0|1|0
+aml_training_runs|11|learned_row_count|bigint|8|19|0|1|0
+aml_training_runs|12|dataset_path|varchar|1000|0|0|1|0
+aml_training_runs|13|dataset_checksum|varchar|200|0|0|1|0
+aml_training_runs|14|base_model_version|varchar|100|0|0|1|0
+aml_training_runs|15|candidate_model_version|varchar|100|0|0|1|0
+aml_training_runs|16|status|varchar|30|0|0|0|0
+aml_training_runs|17|started_at|datetime2|8|27|7|1|0
+aml_training_runs|18|completed_at|datetime2|8|27|7|1|0
+aml_training_runs|19|failure_reason|nvarchar|-1|0|0|1|0
+aml_training_runs|20|created_at|datetime2|8|27|7|0|0
+aml_training_runs|21|progress_stage|nvarchar|80|0|0|1|0
+aml_training_runs|22|progress_current|bigint|8|19|0|1|0
+aml_training_runs|23|progress_total|bigint|8|19|0|1|0
+aml_transaction_features|1|id|bigint|8|19|0|0|1
+aml_transaction_features|2|transaction_id|varchar|50|0|0|0|0
+aml_transaction_features|3|customer_id|varchar|100|0|0|0|0
+aml_transaction_features|4|account_id|varchar|50|0|0|0|0
+aml_transaction_features|5|business_date|date|3|10|0|0|0
+aml_transaction_features|6|transaction_date|datetime2|8|27|7|0|0
+aml_transaction_features|7|feature_version|varchar|30|0|0|0|0
+aml_transaction_features|8|current_amount|decimal|9|19|4|0|0
+aml_transaction_features|9|current_balance|decimal|9|19|4|1|0
+aml_transaction_features|10|amount_balance_ratio|float|8|53|0|1|0
+aml_transaction_features|11|transaction_hour|int|4|10|0|0|0
+aml_transaction_features|12|transaction_day_of_week|int|4|10|0|0|0
+aml_transaction_features|13|is_night|bit|1|1|0|0|0
+aml_transaction_features|14|is_weekend|bit|1|1|0|0|0
+aml_transaction_features|15|customer_history_count|bigint|8|19|0|0|0
+aml_transaction_features|16|trusted_history_count|bigint|8|19|0|0|0
+aml_transaction_features|17|recent_transaction_count|int|4|10|0|0|0
+aml_transaction_features|18|profile_confidence|float|8|53|0|0|0
+aml_transaction_features|19|last_5_avg_amount|float|8|53|0|1|0
+aml_transaction_features|20|last_5_median_amount|float|8|53|0|1|0
+aml_transaction_features|21|last_30_avg_amount|float|8|53|0|1|0
+aml_transaction_features|22|last_30_median_amount|float|8|53|0|1|0
+aml_transaction_features|23|last_30_std_amount|float|8|53|0|1|0
+aml_transaction_features|24|last_30_max_amount|float|8|53|0|1|0
+aml_transaction_features|25|last_30_min_amount|float|8|53|0|1|0
+aml_transaction_features|26|amount_vs_last_30_avg|float|8|53|0|1|0
+aml_transaction_features|27|amount_vs_last_30_median|float|8|53|0|1|0
+aml_transaction_features|28|amount_z_score_last_30|float|8|53|0|1|0
+aml_transaction_features|29|last_30_debit_ratio|float|8|53|0|1|0
+aml_transaction_features|30|last_30_credit_ratio|float|8|53|0|1|0
+aml_transaction_features|31|last_30_cash_ratio|float|8|53|0|1|0
+aml_transaction_features|32|last_30_unique_beneficiaries|int|4|10|0|1|0
+aml_transaction_features|33|last_30_unique_locations|int|4|10|0|1|0
+aml_transaction_features|34|last_30_unique_channels|int|4|10|0|1|0
+aml_transaction_features|35|last_30_avg_time_gap_minutes|float|8|53|0|1|0
+aml_transaction_features|36|transaction_count_10m|int|4|10|0|0|0
+aml_transaction_features|37|transaction_count_1h|int|4|10|0|0|0
+aml_transaction_features|38|transaction_count_24h|int|4|10|0|0|0
+aml_transaction_features|39|transaction_count_7d|int|4|10|0|0|0
+aml_transaction_features|40|transaction_count_30d|int|4|10|0|0|0
+aml_transaction_features|41|amount_sum_10m|float|8|53|0|0|0
+aml_transaction_features|42|amount_sum_1h|float|8|53|0|0|0
+aml_transaction_features|43|amount_sum_24h|float|8|53|0|0|0
+aml_transaction_features|44|amount_sum_7d|float|8|53|0|0|0
+aml_transaction_features|45|amount_sum_30d|float|8|53|0|0|0
+aml_transaction_features|46|unique_beneficiaries_1h|int|4|10|0|0|0
+aml_transaction_features|47|unique_beneficiaries_24h|int|4|10|0|0|0
+aml_transaction_features|48|unique_beneficiaries_7d|int|4|10|0|0|0
+aml_transaction_features|49|repeated_amount_count_24h|int|4|10|0|0|0
+aml_transaction_features|50|below_threshold_count_24h|int|4|10|0|0|0
+aml_transaction_features|51|below_threshold_amount_sum_24h|float|8|53|0|0|0
+aml_transaction_features|52|new_beneficiary|bit|1|1|0|0|0
+aml_transaction_features|53|new_location|bit|1|1|0|0|0
+aml_transaction_features|54|new_channel|bit|1|1|0|0|0
+aml_transaction_features|55|new_device|bit|1|1|0|0|0
+aml_transaction_features|56|unusual_transaction_hour|bit|1|1|0|0|0
+aml_transaction_features|57|time_since_previous_transaction_minutes|float|8|53|0|1|0
+aml_transaction_features|58|peer_group_code|varchar|50|0|0|1|0
+aml_transaction_features|59|peer_avg_amount|float|8|53|0|1|0
+aml_transaction_features|60|peer_median_amount|float|8|53|0|1|0
+aml_transaction_features|61|peer_std_amount|float|8|53|0|1|0
+aml_transaction_features|62|amount_vs_peer_avg|float|8|53|0|1|0
+aml_transaction_features|63|peer_amount_z_score|float|8|53|0|1|0
+aml_transaction_features|64|peer_frequency_percentile|float|8|53|0|1|0
+aml_transaction_features|65|customer_type|varchar|50|0|0|1|0
+aml_transaction_features|66|customer_risk_rating|varchar|30|0|0|1|0
+aml_transaction_features|67|expected_monthly_turnover|float|8|53|0|1|0
+aml_transaction_features|68|amount_vs_expected_turnover|float|8|53|0|1|0
+aml_transaction_features|69|generated_at|datetime2|8|27|7|0|0
+aml_transaction_features|70|generator_service_version|varchar|50|0|0|0|0
+aml_transaction_features|71|model_feature_schema|varchar|50|0|0|0|0
+aml_transaction_features|72|model_features_json|nvarchar|-1|0|0|0|0
+aml_transaction_features|73|terminal_tx_count_1d|bigint|8|19|0|0|0
+aml_transaction_features|74|terminal_fraud_count_1d|bigint|8|19|0|0|0
+aml_transaction_features|75|terminal_fraud_rate_1d|float|8|53|0|0|0
+aml_transaction_features|76|terminal_avg_amount_1d|float|8|53|0|0|0
+aml_transaction_features|77|terminal_tx_count_7d|bigint|8|19|0|0|0
+aml_transaction_features|78|terminal_fraud_count_7d|bigint|8|19|0|0|0
+aml_transaction_features|79|terminal_fraud_rate_7d|float|8|53|0|0|0
+aml_transaction_features|80|terminal_avg_amount_7d|float|8|53|0|0|0
+aml_transaction_features|81|terminal_tx_count_30d|bigint|8|19|0|0|0
+aml_transaction_features|82|terminal_fraud_count_30d|bigint|8|19|0|0|0
+aml_transaction_features|83|terminal_fraud_rate_30d|float|8|53|0|0|0
+aml_transaction_features|84|terminal_avg_amount_30d|float|8|53|0|0|0
+aml_transaction_features|85|terminal_risk_available|bit|1|1|0|0|0
+anomaly_configs|1|id|bigint|8|19|0|0|1
+anomaly_configs|2|config_no|varchar|50|0|0|0|0
+anomaly_configs|3|config_name|varchar|150|0|0|0|0
+anomaly_configs|4|enabled_models_json|nvarchar|-1|0|0|0|0
+anomaly_configs|5|voting_strategy|varchar|50|0|0|0|0
+anomaly_configs|6|suspicious_vote_threshold|int|4|10|0|0|0
+anomaly_configs|7|high_risk_vote_threshold|int|4|10|0|0|0
+anomaly_configs|8|medium_risk_vote_threshold|int|4|10|0|0|0
+anomaly_configs|9|gating_enabled|bit|1|1|0|0|0
+anomaly_configs|10|gating_config_json|nvarchar|-1|0|0|1|0
+anomaly_configs|11|is_active|bit|1|1|0|0|0
+anomaly_configs|12|created_by|varchar|100|0|0|1|0
+anomaly_configs|13|created_at|datetime2|8|27|7|0|0
+anomaly_configs|14|updated_at|datetime2|8|27|7|1|0
+anomaly_configs|15|dataset_partition_id|bigint|8|19|0|1|0
+anomaly_configs|16|artifact_base_path|varchar|500|0|0|1|0
+app_config|1|config_key|varchar|100|0|0|0|0
+app_config|2|config_value|nvarchar|-1|0|0|0|0
+app_config|3|value_type|varchar|30|0|0|0|0
+app_config|4|description|varchar|500|0|0|1|0
+app_config|5|updated_at|datetime2|8|27|7|0|0
+app_users|1|id|bigint|8|19|0|0|1
+app_users|2|username|varchar|100|0|0|0|0
+app_users|3|password_hash|varchar|255|0|0|0|0
+app_users|4|full_name|varchar|150|0|0|0|0
+app_users|5|role_name|varchar|50|0|0|0|0
+app_users|6|is_active|bit|1|1|0|0|0
+app_users|7|created_at|datetime2|8|27|7|0|0
+bulk_upload_batches|1|id|bigint|8|19|0|0|1
+bulk_upload_batches|2|batch_no|varchar|50|0|0|0|0
+bulk_upload_batches|3|file_name|varchar|255|0|0|1|0
+bulk_upload_batches|4|total_rows|int|4|10|0|0|0
+bulk_upload_batches|5|success_rows|int|4|10|0|0|0
+bulk_upload_batches|6|failed_rows|int|4|10|0|0|0
+bulk_upload_batches|7|uploaded_by|varchar|100|0|0|1|0
+bulk_upload_batches|8|uploaded_at|datetime2|8|27|7|0|0
+bulk_upload_batches|9|status|varchar|30|0|0|0|0
+case_notes|1|id|bigint|8|19|0|0|1
+case_notes|2|case_record_id|bigint|8|19|0|0|0
+case_notes|3|note_text|nvarchar|-1|0|0|0|0
+case_notes|4|created_by|varchar|100|0|0|0|0
+case_notes|5|created_at|datetime2|8|27|7|0|0
+case_records|1|id|bigint|8|19|0|0|1
+case_records|2|case_no|varchar|50|0|0|0|0
+case_records|3|fraud_alert_id|bigint|8|19|0|1|0
+case_records|4|transaction_id|varchar|50|0|0|0|0
+case_records|5|account_id|varchar|50|0|0|0|0
+case_records|6|title|varchar|200|0|0|0|0
+case_records|7|status|varchar|30|0|0|0|0
+case_records|8|priority|varchar|20|0|0|0|0
+case_records|9|assigned_to|varchar|100|0|0|1|0
+case_records|10|created_by|varchar|100|0|0|1|0
+case_records|11|created_at|datetime2|8|27|7|0|0
+case_records|12|updated_at|datetime2|8|27|7|1|0
+comparison_results|1|id|bigint|8|19|0|0|1
+comparison_results|2|comparison_run_id|bigint|8|19|0|0|0
+comparison_results|3|scenario_id|bigint|8|19|0|0|0
+comparison_results|4|dataset_partition_id|bigint|8|19|0|0|0
+comparison_results|5|model_version_id|bigint|8|19|0|0|0
+comparison_results|6|model_name|varchar|100|0|0|0|0
+comparison_results|7|raw_prediction|int|4|10|0|1|0
+comparison_results|8|anomaly_vote|int|4|10|0|0|0
+comparison_results|9|risk_level|varchar|20|0|0|1|0
+comparison_results|10|suspicious|bit|1|1|0|1|0
+comparison_results|11|recommended_action|varchar|50|0|0|1|0
+comparison_results|12|score_value|float|8|53|0|1|0
+comparison_results|13|decision_value|float|8|53|0|1|0
+comparison_results|14|reasons_json|nvarchar|-1|0|0|1|0
+comparison_results|15|response_json|nvarchar|-1|0|0|1|0
+comparison_results|16|prediction_duration_ms|bigint|8|19|0|1|0
+comparison_results|17|created_at|datetime2|8|27|7|0|0
+comparison_runs|1|id|bigint|8|19|0|0|1
+comparison_runs|2|comparison_run_no|varchar|50|0|0|0|0
+comparison_runs|3|uploaded_dataset_id|bigint|8|19|0|0|0
+comparison_runs|4|scenario_set_id|bigint|8|19|0|0|0
+comparison_runs|5|selected_partition_sizes|varchar|200|0|0|0|0
+comparison_runs|6|selected_models|varchar|500|0|0|0|0
+comparison_runs|7|run_status|varchar|30|0|0|0|0
+comparison_runs|8|requested_by|varchar|100|0|0|1|0
+comparison_runs|9|started_at|datetime2|8|27|7|1|0
+comparison_runs|10|completed_at|datetime2|8|27|7|1|0
+comparison_runs|11|created_at|datetime2|8|27|7|0|0
+comparison_scenarios|1|id|bigint|8|19|0|0|1
+comparison_scenarios|2|scenario_no|varchar|50|0|0|0|0
+comparison_scenarios|3|scenario_set_id|bigint|8|19|0|0|0
+comparison_scenarios|4|scenario_name|varchar|150|0|0|0|0
+comparison_scenarios|5|scenario_type|varchar|100|0|0|1|0
+comparison_scenarios|6|transaction_json|nvarchar|-1|0|0|0|0
+comparison_scenarios|7|customer_json|nvarchar|-1|0|0|1|0
+comparison_scenarios|8|account_profile_json|nvarchar|-1|0|0|0|0
+comparison_scenarios|9|expected_notes|varchar|500|0|0|1|0
+comparison_scenarios|10|created_at|datetime2|8|27|7|0|0
+dataset_partitions|1|id|bigint|8|19|0|0|1
+dataset_partitions|2|uploaded_dataset_id|bigint|8|19|0|0|0
+dataset_partitions|3|partition_no|varchar|50|0|0|0|0
+dataset_partitions|4|partition_label|varchar|100|0|0|0|0
+dataset_partitions|5|partition_size|int|4|10|0|0|0
+dataset_partitions|6|ordering_strategy|varchar|50|0|0|0|0
+dataset_partitions|7|start_row_no|int|4|10|0|0|0
+dataset_partitions|8|end_row_no|int|4|10|0|0|0
+dataset_partitions|9|created_at|datetime2|8|27|7|0|0
+fraud_alerts|1|id|bigint|8|19|0|0|1
+fraud_alerts|2|alert_no|varchar|50|0|0|0|0
+fraud_alerts|3|transaction_id|varchar|50|0|0|0|0
+fraud_alerts|4|account_id|varchar|50|0|0|0|0
+fraud_alerts|5|risk_level|varchar|20|0|0|0|0
+fraud_alerts|6|anomaly_votes|int|4|10|0|0|0
+fraud_alerts|7|iso_anomaly|bit|1|1|0|0|0
+fraud_alerts|8|lof_anomaly|bit|1|1|0|0|0
+fraud_alerts|9|svm_anomaly|bit|1|1|0|0|0
+fraud_alerts|10|anomaly_reason|nvarchar|-1|0|0|1|0
+fraud_alerts|11|recommended_action|varchar|50|0|0|1|0
+fraud_alerts|12|review_status|varchar|30|0|0|0|0
+fraud_alerts|13|reviewed_by|varchar|100|0|0|1|0
+fraud_alerts|14|reviewed_at|datetime2|8|27|7|1|0
+fraud_alerts|15|str_file_path|varchar|500|0|0|1|0
+fraud_alerts|16|str_generated_at|datetime2|8|27|7|1|0
+fraud_alerts|17|created_at|datetime2|8|27|7|0|0
+fraud_prediction_logs|1|id|bigint|8|19|0|0|1
+fraud_prediction_logs|2|transaction_id|varchar|50|0|0|0|0
+fraud_prediction_logs|3|account_id|varchar|50|0|0|0|0
+fraud_prediction_logs|4|risk_level|varchar|20|0|0|1|0
+fraud_prediction_logs|5|anomaly_votes|int|4|10|0|1|0
+fraud_prediction_logs|6|request_json|nvarchar|-1|0|0|1|0
+fraud_prediction_logs|7|response_json|nvarchar|-1|0|0|1|0
+fraud_prediction_logs|8|created_at|datetime2|8|27|7|0|0
+fraud_prediction_logs|9|feature_version|varchar|30|0|0|1|0
+fraud_prediction_logs|10|model_version|varchar|100|0|0|1|0
+fraud_prediction_logs|11|customer_statistical_score|float|8|53|0|1|0
+fraud_prediction_logs|12|incremental_model_score|float|8|53|0|1|0
+fraud_prediction_logs|13|batch_model_score|float|8|53|0|1|0
+fraud_prediction_logs|14|rule_score|float|8|53|0|1|0
+fraud_prediction_logs|15|final_risk_score|float|8|53|0|1|0
+fraud_prediction_logs|16|suspicious_flag|bit|1|1|0|1|0
+fraud_prediction_logs|17|learning_decision|varchar|30|0|0|1|0
+fraud_prediction_logs|18|learning_decision_reason|varchar|500|0|0|1|0
+fraud_prediction_logs|19|reason_codes|nvarchar|-1|0|0|1|0
+fraud_prediction_logs|20|prediction_started_at|datetime2|8|27|7|1|0
+fraud_prediction_logs|21|prediction_completed_at|datetime2|8|27|7|1|0
+fraud_prediction_logs|22|prediction_duration_ms|bigint|8|19|0|1|0
+fraud_prediction_logs|23|risk_policy_version|varchar|50|0|0|1|0
+model_versions|1|id|bigint|8|19|0|0|1
+model_versions|2|model_version_no|varchar|50|0|0|0|0
+model_versions|3|training_run_id|bigint|8|19|0|0|0
+model_versions|4|model_name|varchar|100|0|0|0|0
+model_versions|5|partition_size|int|4|10|0|0|0
+model_versions|6|artifact_base_path|varchar|500|0|0|0|0
+model_versions|7|feature_columns_path|varchar|500|0|0|1|0
+model_versions|8|scaler_path|varchar|500|0|0|1|0
+model_versions|9|model_path|varchar|500|0|0|0|0
+model_versions|10|metrics_json|nvarchar|-1|0|0|1|0
+model_versions|11|is_active|bit|1|1|0|0|0
+model_versions|12|created_at|datetime2|8|27|7|0|0
+model_versions|13|dataset_partition_id|bigint|8|19|0|1|0
+model_versions|14|lifecycle_status|varchar|30|0|0|0|0
+model_versions|15|promoted_at|datetime2|8|27|7|1|0
+model_versions|16|promoted_by|varchar|100|0|0|1|0
+scenario_sets|1|id|bigint|8|19|0|0|1
+scenario_sets|2|scenario_set_no|varchar|50|0|0|0|0
+scenario_sets|3|name|varchar|150|0|0|0|0
+scenario_sets|4|description|varchar|500|0|0|1|0
+scenario_sets|5|created_by|varchar|100|0|0|1|0
+scenario_sets|6|created_at|datetime2|8|27|7|0|0
+str_reports|1|id|bigint|8|19|0|0|1
+str_reports|2|fraud_alert_id|bigint|8|19|0|0|0
+str_reports|3|str_no|varchar|50|0|0|0|0
+str_reports|4|transaction_id|varchar|50|0|0|0|0
+str_reports|5|account_id|varchar|50|0|0|0|0
+str_reports|6|file_path|varchar|500|0|0|1|0
+str_reports|7|generated_by|varchar|100|0|0|1|0
+str_reports|8|generated_at|datetime2|8|27|7|0|0
+str_reports|9|status|varchar|30|0|0|0|0
+training_runs|1|id|bigint|8|19|0|0|1
+training_runs|2|training_run_no|varchar|50|0|0|0|0
+training_runs|3|dataset_partition_id|bigint|8|19|0|1|0
+training_runs|4|model_name|varchar|100|0|0|1|0
+training_runs|5|training_status|varchar|30|0|0|1|0
+training_runs|6|rows_used|int|4|10|0|1|0
+training_runs|7|feature_count|int|4|10|0|1|0
+training_runs|8|hyperparams_json|nvarchar|-1|0|0|1|0
+training_runs|9|training_started_at|datetime2|8|27|7|1|0
+training_runs|10|training_completed_at|datetime2|8|27|7|1|0
+training_runs|11|training_duration_ms|bigint|8|19|0|1|0
+training_runs|12|requested_by|varchar|100|0|0|1|0
+training_runs|13|created_at|datetime2|8|27|7|0|0
+training_runs|14|artifacts_json|nvarchar|-1|0|0|1|0
+training_runs|15|response_status|varchar|30|0|0|1|0
+training_runs|16|duration_ms|bigint|8|19|0|1|0
+training_runs|17|training_row_count|int|4|10|0|1|0
+training_runs|18|models_json|nvarchar|-1|0|0|1|0
+training_runs|19|message|nvarchar|-1|0|0|1|0
+training_runs|20|started_at|datetime2|8|27|7|1|0
+training_runs|21|completed_at|datetime2|8|27|7|1|0
+training_runs|22|run_no|varchar|50|0|0|1|0
+training_runs|23|source|varchar|50|0|0|1|0
+training_runs|24|status|varchar|30|0|0|1|0
+transactions|1|id|bigint|8|19|0|0|1
+transactions|2|transaction_id|varchar|50|0|0|0|0
+transactions|3|account_id|varchar|50|0|0|0|0
+transactions|4|transaction_amount|decimal|9|18|2|0|0
+transactions|5|transaction_type|varchar|50|0|0|0|0
+transactions|6|transaction_date|datetime2|8|27|7|0|0
+transactions|7|location|varchar|100|0|0|0|0
+transactions|8|channel|varchar|50|0|0|0|0
+transactions|9|customer_age|int|4|10|0|1|0
+transactions|10|customer_occupation|varchar|100|0|0|1|0
+transactions|11|login_attempts|int|4|10|0|0|0
+transactions|12|account_balance|decimal|9|18|2|0|0
+transactions|13|source_type|varchar|30|0|0|0|0
+transactions|14|upload_batch_id|bigint|8|19|0|1|0
+transactions|15|created_at|datetime2|8|27|7|0|0
+transactions|16|customer_id|varchar|100|0|0|1|0
+transactions|17|business_date|date|3|10|0|1|0
+transactions|18|processing_status|varchar|30|0|0|0|0
+transactions|19|feature_status|varchar|30|0|0|0|0
+transactions|20|prediction_status|varchar|30|0|0|0|0
+transactions|21|updated_at|datetime2|8|27|7|0|0
+transactions|22|fraud_label|bit|1|1|0|1|0
+transactions|23|label_source|varchar|50|0|0|1|0
+transactions|24|labeled_by|varchar|100|0|0|1|0
+transactions|25|labeled_at|datetime2|8|27|7|1|0
+uploaded_datasets|1|id|bigint|8|19|0|0|1
+uploaded_datasets|2|dataset_no|varchar|50|0|0|0|0
+uploaded_datasets|3|file_name|varchar|255|0|0|0|0
+uploaded_datasets|4|total_rows|int|4|10|0|0|0
+uploaded_datasets|5|uploaded_by|varchar|100|0|0|1|0
+uploaded_datasets|6|uploaded_at|datetime2|8|27|7|0|0
+uploaded_datasets|7|status|varchar|30|0|0|0|0
+uploaded_datasets|8|notes|varchar|500|0|0|1|0
+uploaded_datasets|9|source_batch_id|bigint|8|19|0|1|0
+uploaded_datasets|10|source_type|varchar|30|0|0|0|0
+uploaded_datasets|11|snapshot_max_transaction_id|bigint|8|19|0|1|0
+===CONFIG===
+aml.autoencoder.enabled|true|BOOLEAN|Generate new Autoencoder candidates during training runs.
+aml.cluster_outlier.enabled|true|BOOLEAN|Generate Behavioral Cluster Outlier candidates during unsupervised training.
+aml.elliptic_envelope.contamination|0.05|DECIMAL|Expected proportion of anomalies in training data � sets the decision boundary.
+aml.elliptic_envelope.enabled|true|BOOLEAN|Generate new Elliptic Envelope candidates during training runs.
+aml.elliptic_envelope.max_training_rows|100000|INTEGER|Maximum rows loaded from historical data for each training run.
+aml.elliptic_envelope.parquet_batch_size|65536|INTEGER|Feature rows decoded per Python batch during training.
+aml.export.base_path|outputs/training-datasets|STRING|Base directory for versioned Parquet training datasets.
+aml.export.chunk_size|50000|INTEGER|Maximum eligible feature rows read from SQL Server per keyset-paginated chunk.
+aml.export.rows_per_file|100000|INTEGER|Maximum rows written to each Parquet part file.
+aml.isolation_forest.enabled|true|BOOLEAN|Generate new Isolation Forest candidates during training runs.
+aml.isolation_forest.parquet_batch_size|65536|INTEGER|Feature rows decoded per Python batch during training.
+aml.isolation_forest.threshold_quantile|0.99|DECIMAL|Training score quantile used as the anomaly decision boundary.
+aml.layered_deployment.max_validation_age_days|7|INTEGER|Maximum age of a passing layered validation used for promotion.
+aml.layered_validation.max_alert_rate|0.10|DECIMAL|Maximum acceptable layered suspicious rate.
+aml.layered_validation.max_alert_volume_increase|0.50|DECIMAL|Maximum relative alert-volume increase over legacy.
+aml.layered_validation.max_average_incremental_update_ms|3600000|DECIMAL|Maximum average completed incremental update duration.
+aml.layered_validation.max_daily_rate_stddev|0.05|DECIMAL|Maximum daily layered-alert-rate standard deviation.
+aml.layered_validation.max_p95_latency_ms|250|DECIMAL|Maximum layered shadow p95 latency in milliseconds.
+aml.layered_validation.max_reviewed_false_positive_rate|0.80|DECIMAL|Maximum false-positive share among reviewed layered alerts.
+aml.layered_validation.max_segment_daily_stddev|0.08|DECIMAL|Maximum daily alert-rate deviation in any segment.
+aml.layered_validation.min_legacy_alerts|20|INTEGER|Minimum legacy alerts needed for overlap comparison.
+aml.layered_validation.min_model_availability|0.99|DECIMAL|Minimum score availability for each production ML model.
+aml.layered_validation.min_observation_days|7|INTEGER|Minimum distinct observation days required.
+aml.layered_validation.min_reviewed_alerts|20|INTEGER|Minimum reviewed layered alerts required.
+aml.layered_validation.min_rows|1000|INTEGER|Minimum shadow comparisons required.
+aml.layered_validation.min_synthetic_recall|0.80|DECIMAL|Minimum recall on labeled synthetic AML scenarios.
+aml.layered_validation.min_synthetic_scenarios|20|INTEGER|Minimum expected-positive synthetic scenarios required.
+aml.layered_validation.min_top_risk_overlap|0.50|DECIMAL|Minimum legacy-alert coverage among the layered top one percent.
+aml.lof.max_training_rows|100000|INTEGER|Maximum rows loaded from historical data for each training run.
+aml.lof.n_neighbors|20|INTEGER|Local neighbourhood size � smaller values are more sensitive to local patterns.
+aml.lof.parquet_batch_size|65536|INTEGER|Feature rows decoded per Python batch during training.
+aml.lof.threshold_quantile|0.99|DECIMAL|Training score quantile used as the anomaly decision boundary.
+aml.model.artifact_base_path|outputs/model-artifacts|STRING|Base directory containing immutable candidate model bundles.
+aml.ocsvm_batch.enabled|true|BOOLEAN|Generate new batch One-Class SVM candidates during training runs.
+aml.ocsvm_batch.gamma|0.1|DECIMAL|Kernel coefficient � lower values produce smoother boundaries.
+aml.ocsvm_batch.max_training_rows|50000|INTEGER|Maximum rows used for fitting � SVM training scales quadratically so keep this conservative.
+aml.ocsvm_batch.nu|0.05|DECIMAL|Upper bound on the fraction of training errors and support vectors.
+aml.ocsvm_batch.parquet_batch_size|65536|INTEGER|Feature rows decoded per Python batch during training.
+aml.ocsvm_batch.threshold_quantile|0.99|DECIMAL|Training score quantile used as the anomaly decision boundary.
+aml.pca.batch_size|1000|INTEGER|Rows per incremental PCA fitting step � must be = max components.
+aml.pca.enabled|true|BOOLEAN|Generate new PCA Reconstruction candidates during training runs.
+aml.pca.max_training_rows|100000|INTEGER|Maximum rows loaded from historical data for each training run.
+aml.pca.parquet_batch_size|65536|INTEGER|Feature rows decoded per Python batch during training.
+aml.pca.threshold_quantile|0.99|DECIMAL|Reconstruction error quantile used as the anomaly decision boundary.
+aml.research.autoencoder_hidden_layer_sizes|32,8,32|TEXT|Comma-separated neuron counts per layer. The middle value is the bottleneck � smaller forces tighter compression and stronger anomaly signal.
+aml.research.autoencoder_max_iter|200|INTEGER|Maximum gradient descent epochs � early stopping may terminate training before this limit.
+aml.research.autoencoder_max_training_rows|50000|INTEGER|Maximum rows used for fitting the autoencoder.
+aml.research.cluster_outlier_max_training_rows|100000|INTEGER|Maximum rows used by Behavioral Cluster Outlier in each growth partition.
+aml.research.holdout_fraction|0.1|DECIMAL|Newest fraction of each partition reserved for evaluation; the remainder trains each model.
+aml.research.incremental_pca_max_components|20|INTEGER|Principal components retained � higher values preserve more variance but slow scoring.
+aml.research.isolation_forest_max_samples|20000|INTEGER|Rows sampled per tree � default 256 is too small for large datasets; 10,000 gives much stronger isolation signal.
+aml.research.isolation_forest_max_training_rows|100000|INTEGER|Maximum rows loaded from historical data for each training run.
+aml.research.isolation_forest_n_estimators|200|INTEGER|More trees improve anomaly score stability at higher training time cost.
+aml.research.maximum_evaluation_rows|20000|INTEGER|Maximum holdout rows scored per model per partition during comparison.
+aml.research.minimum_rows|200|INTEGER|Skip data partitions with fewer rows than this limit during comparison training.
+aml.research.ocsvm_max_training_rows|1000000|INTEGER|Maximum rows used for fitting � set high to train on all available data.
+aml.research.random_seed|42|INTEGER|Shared reproducibility seed for all model training and comparison runs.
+aml.risk.layered_shadow_enabled|true|BOOLEAN|Allow layered scoring to run without changing production outcomes.
+aml.risk.legacy_comparison_enabled|true|BOOLEAN|Retain legacy production scoring for shadow comparison.
+aml.risk.ml_model_allocations_json|[{"modelKey":"EXTRA_TREES_CLASSIFIER","enabled":true,"weight":0.3333333333333333},{"modelKey":"RANDOM_FOREST_CLASSIFIER","enabled":true,"weight":0.3333333333333333},{"modelKey":"STACKED_ENSEMBLE","enabled":false,"weight":0.0},{"modelKey":"XGBOOST_CLASSIFIER","enabled":true,"weight":0.3333333333333333}]|JSON|Selected production ML models and their relative ensemble weights.
+aml.risk.policy.version|AML_RISK_POLICY_20260814190156806|STRING|Active layered risk policy version.
+aml.risk.rules.extreme_customer_amount_ratio|8|DECIMAL|Multiplier vs 30-day customer average that triggers the extreme-amount rule.
+aml.risk.rules.high_balance_ratio|0.8|DECIMAL|Transaction-to-balance ratio threshold that triggers the high-balance rule.
+aml.risk.rules.high_customer_amount_ratio|4|DECIMAL|Multiplier vs 30-day customer average that triggers the high-amount rule.
+aml.risk.rules.high_expected_turnover_ratio|0.5|DECIMAL|Transaction-to-expected-turnover ratio threshold that triggers the turnover rule.
+aml.risk.rules.high_tx_count_1h|10|INTEGER|Transaction count in 1 hour that triggers high velocity rule.
+aml.risk.rules.multi_beneficiary_count_1h|4|INTEGER|Unique beneficiary count in 1 hour that triggers the multiple-beneficiary rule.
+aml.risk.rules.rapid_tx_count_10m|5|INTEGER|Transaction count in 10 minutes that triggers rapid velocity rule.
+aml.risk.rules.repeated_amount_count_24h|4|INTEGER|Identical-amount transaction count in 24 h that triggers the repeated-amount rule.
+aml.risk.rules.reporting_threshold|10000|DECIMAL|Regulatory reporting threshold used in structuring detection.
+aml.risk.rules.structuring_count_24h|3|INTEGER|Minimum below-threshold transaction count in 24 h to flag structuring.
+aml.risk.threshold.high|0.8|DECIMAL|Inclusive HIGH risk threshold.
+aml.risk.threshold.low|0.4|DECIMAL|Inclusive LOW risk threshold.
+aml.risk.threshold.medium|0.65|DECIMAL|Inclusive MEDIUM risk and automatic case threshold.
+aml.risk.weight.customer_behaviour|0.2|DECIMAL|Customer behaviour contribution to final risk.
+aml.risk.weight.customer_behaviour.amount|0.7|DECIMAL|Amount deviation sub-weight within customer behaviour scoring.
+aml.risk.weight.customer_behaviour.frequency|0.0796|DECIMAL|Velocity burst sub-weight within customer behaviour scoring.
+aml.risk.weight.customer_behaviour.novelty|0.1335|DECIMAL|Novelty (new beneficiary/location/channel/device) sub-weight within customer behaviour scoring.
+aml.risk.weight.customer_behaviour.time_gap|0.0531|DECIMAL|Rapid time-gap sub-weight within customer behaviour scoring.
+aml.risk.weight.customer_behaviour.unusual_hour|0.03380000000000005|DECIMAL|Unusual transaction hour sub-weight within customer behaviour scoring.
+aml.risk.weight.half_space_trees|0.25|DECIMAL|Half-Space Trees normalized-score weight.
+aml.risk.weight.ml_ensemble|0.65|DECIMAL|ML model ensemble contribution to final risk.
+aml.risk.weight.online_ocsvm|0.15|DECIMAL|Online One-Class SVM normalized-score weight.
+aml.risk.weight.peer_behaviour|0.1|DECIMAL|Peer behaviour contribution to final risk.
+aml.risk.weight.peer_behaviour.amount|0.77|DECIMAL|Amount deviation sub-weight within peer behaviour scoring.
+aml.risk.weight.peer_behaviour.expected_turnover|0.08619999999999994|DECIMAL|Expected turnover sub-weight within peer behaviour scoring.
+aml.risk.weight.peer_behaviour.frequency|0.1438|DECIMAL|Frequency percentile sub-weight within peer behaviour scoring.
+aml.risk.weight.rules|0.05|DECIMAL|Deterministic AML rules contribution to final risk.
+aml.terminal_risk.delay_days|7|INTEGER|Investigation delay applied only to confirmed-label terminal risk features.
+aml.terminal_risk.enabled|true|BOOLEAN|Enable point-in-time terminal history features.
+aml.terminal_risk.minimum_transactions|3|INTEGER|Minimum 30-day terminal volume required for terminal risk availability.
+aml.terminal_risk.smoothing_strength|20|DECIMAL|Bayesian prior strength for terminal confirmed-fraud rates.
+aml.training.schedule.batch|WEEKLY|STRING|Retraining cadence for batch production detectors.
+aml.training.schedule.incremental|DAILY|STRING|Retraining cadence for incremental production detectors.
+aml.validation.max_anomaly_rate|0.10|DECIMAL|Maximum acceptable challenger anomaly rate.
+aml.validation.max_daily_rate_stddev|0.05|DECIMAL|Maximum acceptable daily anomaly-rate standard deviation.
+aml.validation.min_anomaly_rate|0.001|DECIMAL|Minimum acceptable challenger anomaly rate.
+aml.validation.min_reviewed_alerts|20|INTEGER|Minimum reviewed overlap alerts before analyst precision becomes a gate.
+aml.validation.min_reviewed_precision|0.20|DECIMAL|Minimum STR share among reviewed overlapping alerts.
+aml.validation.min_rows|1000|INTEGER|Minimum silent predictions required to validate a candidate.
+ml.cluster_outlier.batch_size|2048|INTEGER|Rows processed per MiniBatch K-Means update.
+ml.cluster_outlier.contamination|0.01|DECIMAL|Expected cluster-conditional anomaly fraction.
+ml.cluster_outlier.n_clusters|16|INTEGER|Number of broad transaction-behaviour groups.
+ml.cold_start.default_recommended_action|ALLOW|STRING|Recommended action returned during cold start
+ml.cold_start.default_risk_level|NORMAL|STRING|Risk level returned during cold start
+ml.cold_start.enabled|true|STRING|Enable or disable cold start handling
+ml.cold_start.high_login_attempt_threshold|5|STRING|Optional login-attempt threshold for cold start warning
+ml.cold_start.max_amount_multiplier_for_warn|3.0|STRING|Optional multiplier for warning on unusually high amount during cold start
+ml.cold_start.reason_message|Insufficient transaction history for ML prediction.|STRING|Reason shown when cold start is triggered
+ml.cold_start.use_rules_before_ml|false|STRING|Whether simple rules should still run during cold start
+ml.extra_trees.enabled|true|BOOLEAN|Generate Extra Trees candidates during supervised training.
+ml.extra_trees.max_features|0.8|DECIMAL|Feature fraction considered at each Extra Trees split.
+ml.extra_trees.min_samples_leaf|2|INTEGER|Minimum labelled rows in each Extra Trees terminal leaf.
+ml.extra_trees.n_estimators|400|INTEGER|Number of highly randomized Extra Trees estimators.
+ml.iso.contamination|0.01|STRING|IsolationForest contamination (auto or float like 0.01)
+ml.iso.n_estimators|500|INT|IsolationForest n_estimators
+ml.min_transaction_count_before_predict|5|INT|Minimum prior transaction count required before ML prediction
+ml.random_forest.enabled|true|BOOLEAN|Generate Random Forest candidates during supervised training.
+ml.random_forest.max_depth|16|INTEGER|Maximum Random Forest tree depth.
+ml.random_forest.min_samples_leaf|2|INTEGER|Minimum rows in a Random Forest terminal leaf.
+ml.random_forest.n_estimators|500|INTEGER|Number of Random Forest trees.
+ml.random_state|42|INT|Random seed used for training where applicable
+ml.stacked_ensemble.enabled|true|BOOLEAN|Train the leakage-safe temporal supervised stack.
+ml.supervised.stacking_protocol|CALIBRATION_SPLIT|TEXT|Fit stack weights on the first calibration half and its threshold on the second half.
+ml.supervised.threshold_beta|1.0|DECIMAL|F-beta used to calibrate each supervised model decision threshold.
+ml.svm.gamma|scale|STRING|OneClassSVM gamma (scale/auto/float)
+ml.svm.kernel|rbf|STRING|OneClassSVM kernel
+ml.svm.nu|0.02|DECIMAL|OneClassSVM nu
+ml.xgboost.colsample_bytree|0.85|DECIMAL|XGBoost feature sample fraction.
+ml.xgboost.enabled|true|BOOLEAN|Generate XGBoost candidates during supervised training.
+ml.xgboost.learning_rate|0.03|DECIMAL|XGBoost learning rate.
+ml.xgboost.max_depth|4|INTEGER|Maximum XGBoost tree depth.
+ml.xgboost.min_child_weight|3.0|DECIMAL|Minimum XGBoost child weight used to reduce minority-class overfitting.
+ml.xgboost.n_estimators|500|INTEGER|Number of XGBoost boosting trees.
+ml.xgboost.reg_alpha|0.05|DECIMAL|XGBoost L1 regularization for weak or noisy feature effects.
+ml.xgboost.reg_lambda|2.0|DECIMAL|XGBoost L2 regularization for stable imbalanced classification.
+ml.xgboost.subsample|0.85|DECIMAL|XGBoost row sample fraction.
+system.learning_mode|SUPERVISED|SELECT|Global learning mode. Allowed values: UNSUPERVISED or SUPERVISED.

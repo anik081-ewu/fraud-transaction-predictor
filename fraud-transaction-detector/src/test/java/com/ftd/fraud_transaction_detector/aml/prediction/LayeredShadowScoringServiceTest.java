@@ -59,7 +59,7 @@ class LayeredShadowScoringServiceTest {
         when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of(
                 "ISOLATION_FOREST", 0.25,
                 "AUTOENCODER", 0.375,
-                "LOCAL_OUTLIER_FACTOR", 0.375
+                "BEHAVIORAL_CLUSTER_OUTLIER", 0.375
         ));
         FraudPredictionResponse legacy = legacyResponse(Map.of(
                 "IsolationForest", Map.of(
@@ -74,11 +74,11 @@ class LayeredShadowScoringServiceTest {
                         "modelVersion", "AE-7",
                         "anomaly", true
                 ),
-                "LOF", Map.of(
+                "BehavioralClusterOutlier", Map.of(
                         "decisionFunction", -3.2,
                         "normalizedScore", 0.70,
-                        "normalizationVersion", "LOF_MARGIN_PROXY_V1",
-                        "modelVersion", "LOF-4",
+                        "normalizationVersion", "CLUSTER_CONDITIONAL_DISTANCE_V1",
+                        "modelVersion", "BCO-4",
                         "anomaly", false
                 )
         ));
@@ -90,12 +90,12 @@ class LayeredShadowScoringServiceTest {
 
         LayeredShadowComparison result = service.evaluateAndPersist(features, legacy);
 
-        assertEquals(0.706683, result.layeredResult().finalRiskScore(), 0.000001);
+        assertEquals(0.73, result.layeredResult().finalRiskScore(), 0.000001);
         assertEquals(RiskBand.MEDIUM, result.layeredResult().riskLevel());
         assertEquals(0.916828, result.modelScores().get("ISOLATION_FOREST").score().normalizedScore(), 0.000001);
         assertEquals("AE-7", result.modelScores().get("AUTOENCODER").modelVersion());
         assertEquals(0.90, result.modelScores().get("AUTOENCODER").score().normalizedScore());
-        assertEquals(0.70, result.modelScores().get("LOCAL_OUTLIER_FACTOR").score().normalizedScore());
+        assertEquals(0.70, result.modelScores().get("BEHAVIORAL_CLUSTER_OUTLIER").score().normalizedScore());
         assertTrue(result.modelScores().get("AUTOENCODER").reasonCodes().contains("AUTOENCODER_HIGH_ANOMALY_SCORE"));
         assertFalse(result.suspiciousChanged());
         assertTrue(result.riskLevelChanged());
@@ -122,7 +122,7 @@ class LayeredShadowScoringServiceTest {
         when(configService.getEnabledRiskPolicyModelWeights()).thenReturn(Map.of(
                 "ISOLATION_FOREST", 0.25,
                 "AUTOENCODER", 0.375,
-                "LOCAL_OUTLIER_FACTOR", 0.375
+                "BEHAVIORAL_CLUSTER_OUTLIER", 0.375
         ));
         LayeredShadowScoringService service = new LayeredShadowScoringService(
                 customerScorer, peerScorer, ruleEngine, new WeightedRiskAggregationEngine(),
@@ -134,7 +134,7 @@ class LayeredShadowScoringServiceTest {
 
         assertTrue(result.layeredResult().reasonCodes().contains("ISOLATION_FOREST_SCORE_UNAVAILABLE"));
         assertTrue(result.layeredResult().reasonCodes().contains("AUTOENCODER_SCORE_UNAVAILABLE"));
-        assertTrue(result.layeredResult().reasonCodes().contains("LOCAL_OUTLIER_FACTOR_SCORE_UNAVAILABLE"));
+        assertTrue(result.layeredResult().reasonCodes().contains("BEHAVIORAL_CLUSTER_OUTLIER_SCORE_UNAVAILABLE"));
         assertTrue(result.suspiciousChanged());
         assertFalse(result.alertOverlap());
     }

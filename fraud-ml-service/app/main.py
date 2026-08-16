@@ -35,10 +35,10 @@ app = FastAPI(title="Fraud ML Service", version="0.1.0")
 MODELS_DIR = os.getenv("MODELS_DIR", os.path.join(os.path.dirname(__file__), "..", "models"))
 MODELS = None
 
-DEFAULT_TRAINING_MODELS = ["IsolationForest", "Autoencoder", "LOF"]
+DEFAULT_TRAINING_MODELS = ["IsolationForest", "Autoencoder", "BehavioralClusterOutlier"]
 PRODUCTION_MODELS = {
     "IsolationForest",
-    "LOF",
+    "BehavioralClusterOutlier",
     "Autoencoder",
 }
 
@@ -155,11 +155,12 @@ def _evaluate_models(loaded_models, x, selected_models: list[str]) -> Dict[str, 
                 "decisionFunction": decision,
                 "predictionDurationMs": round((__import__("time").perf_counter() - started) * 1000),
             }
-        elif model_name == "LOF" and loaded_models.lof_model is not None:
-            raw_prediction = int(loaded_models.lof_model.predict(x)[0])
+        elif model_name == "BehavioralClusterOutlier" and loaded_models.behavioral_cluster_outlier_model is not None:
+            model = loaded_models.behavioral_cluster_outlier_model
+            raw_prediction = int(model.predict(x)[0])
             decision = None
             try:
-                decision = float(loaded_models.lof_model.decision_function(x)[0])
+                decision = float(model.decision_function(x)[0])
             except Exception:
                 pass
             results[model_name] = {
@@ -280,7 +281,7 @@ def predict_persisted_features(req: PersistedFeaturePredictRequest) -> Compariso
     if loaded_models is None:
         raise HTTPException(status_code=503, detail="Models are not loaded")
     selected_models = req.modelNames if req.modelNames is not None else ["IsolationForest"]
-    supervised_models = {"XGBoost", "RandomForestClassifier", "LogisticRegression"}
+    supervised_models = {"XGBoost", "RandomForestClassifier", "ExtraTreesClassifier", "StackedEnsemble"}
     allowed_models = supervised_models if req.learningMode.strip().upper() == "SUPERVISED" else set(PRODUCTION_MODELS)
     non_production_models = [name for name in selected_models if name not in allowed_models]
     if non_production_models:
@@ -558,9 +559,9 @@ def growth_analysis_endpoint(req: GrowthAnalysisRequest) -> GrowthAnalysisRespon
                 isolation_forest_max_training_rows=req.isolationForestMaximumTrainingRows,
                 isolation_forest_estimators=req.isolationForestEstimators,
                 autoencoder_max_training_rows=req.autoencoderMaxTrainingRows,
-                lof_max_training_rows=req.localOutlierFactorMaxTrainingRows,
-                lof_n_neighbors=req.localOutlierFactorNeighbors,
-                lof_contamination=req.localOutlierFactorContamination,
+                cluster_outlier_max_training_rows=req.behavioralClusterMaximumTrainingRows,
+                cluster_outlier_clusters=req.behavioralClusterCount,
+                cluster_outlier_contamination=req.behavioralClusterContamination,
                 random_seed=req.randomSeed,
             ),
         )
@@ -591,16 +592,17 @@ def model_agreement_endpoint(req: ModelAgreementRequest) -> Dict[str, Any]:
 def _build_training_artifacts(models_dir: str, selected_models: list[str]) -> Dict[str, str]:
     file_map = {
         "IsolationForest": ("isolationForest", "iso_model.pkl"),
-        "LOF": ("localOutlierFactor", "lof_model.pkl"),
+        "BehavioralClusterOutlier": ("behavioralClusterOutlier", "behavioral_cluster_outlier.pkl"),
         "OneClassSVM": ("oneClassSvm", "svm_model.pkl"),
         "EllipticEnvelope": ("ellipticEnvelope", "elliptic_envelope.pkl"),
         "PCAReconstruction": ("pcaReconstruction", "pca_reconstruction.pkl"),
         "Autoencoder": ("autoencoder", "autoencoder.pkl"),
         "XGBoost": ("xgboost", "xgboost_classifier.pkl"),
         "RandomForestClassifier": ("randomForestClassifier", "random_forest_classifier.pkl"),
-        "LogisticRegression": ("logisticRegression", "logistic_regression.pkl"),
+        "ExtraTreesClassifier": ("extraTreesClassifier", "extra_trees_classifier.pkl"),
+        "StackedEnsemble": ("stackedEnsemble", "stacked_ensemble.pkl"),
     }
-    supervised = any(name in {"XGBoost", "RandomForestClassifier", "LogisticRegression"} for name in selected_models)
+    supervised = any(name in {"XGBoost", "RandomForestClassifier", "ExtraTreesClassifier"} for name in selected_models)
     artifacts: Dict[str, str] = ({
         "featureColumns": os.path.join(models_dir, "supervised_feature_columns.pkl"),
         "decisionThresholds": os.path.join(models_dir, "supervised_thresholds.json"),

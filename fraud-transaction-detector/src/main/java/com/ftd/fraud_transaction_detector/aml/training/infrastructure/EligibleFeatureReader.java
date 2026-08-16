@@ -61,6 +61,13 @@ public class EligibleFeatureReader {
                     f.new_beneficiary, f.new_location, f.new_channel, f.new_device,
                     f.unusual_transaction_hour, f.peer_group_code, f.peer_avg_amount,
                     f.peer_std_amount, f.amount_vs_peer_avg, f.peer_amount_z_score,
+                    f.terminal_tx_count_1d, f.terminal_fraud_count_1d,
+                    f.terminal_fraud_rate_1d, f.terminal_avg_amount_1d,
+                    f.terminal_tx_count_7d, f.terminal_fraud_count_7d,
+                    f.terminal_fraud_rate_7d, f.terminal_avg_amount_7d,
+                    f.terminal_tx_count_30d, f.terminal_fraud_count_30d,
+                    f.terminal_fraud_rate_30d, f.terminal_avg_amount_30d,
+                    f.terminal_risk_available,
                     tx.fraud_label, tx.label_source
                 FROM dbo.aml_transaction_features f
                 INNER JOIN dbo.aml_feature_learning_status learning
@@ -118,6 +125,13 @@ public class EligibleFeatureReader {
                 resultSet.getString("peer_group_code"), nullableDouble(resultSet, "peer_avg_amount"),
                 nullableDouble(resultSet, "peer_std_amount"), nullableDouble(resultSet, "amount_vs_peer_avg"),
                 nullableDouble(resultSet, "peer_amount_z_score"),
+                resultSet.getLong("terminal_tx_count_1d"), resultSet.getLong("terminal_fraud_count_1d"),
+                resultSet.getDouble("terminal_fraud_rate_1d"), resultSet.getDouble("terminal_avg_amount_1d"),
+                resultSet.getLong("terminal_tx_count_7d"), resultSet.getLong("terminal_fraud_count_7d"),
+                resultSet.getDouble("terminal_fraud_rate_7d"), resultSet.getDouble("terminal_avg_amount_7d"),
+                resultSet.getLong("terminal_tx_count_30d"), resultSet.getLong("terminal_fraud_count_30d"),
+                resultSet.getDouble("terminal_fraud_rate_30d"), resultSet.getDouble("terminal_avg_amount_30d"),
+                resultSet.getBoolean("terminal_risk_available"),
                 nullableBoolean(resultSet, "fraud_label"), resultSet.getString("label_source")
         );
     }

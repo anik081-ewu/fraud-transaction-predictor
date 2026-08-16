@@ -9,7 +9,8 @@ public record FeatureContext(
         long customerHistoryCount,
         TrustedProfileSnapshot trustedProfile,
         List<HistoricalTransaction> recentTransactions,
-        PeerContext peerContext
+        PeerContext peerContext,
+        TerminalRiskContext terminalRiskContext
 ) {
     public FeatureContext(
             TransactionSnapshot currentTransaction,
@@ -17,7 +18,17 @@ public record FeatureContext(
             TrustedProfileSnapshot trustedProfile,
             List<HistoricalTransaction> recentTransactions
     ) {
-        this(currentTransaction, customerHistoryCount, trustedProfile, recentTransactions, PeerContext.empty());
+        this(currentTransaction, customerHistoryCount, trustedProfile, recentTransactions, PeerContext.empty(), TerminalRiskContext.disabled());
+    }
+
+    public FeatureContext(
+            TransactionSnapshot currentTransaction,
+            long customerHistoryCount,
+            TrustedProfileSnapshot trustedProfile,
+            List<HistoricalTransaction> recentTransactions,
+            PeerContext peerContext
+    ) {
+        this(currentTransaction, customerHistoryCount, trustedProfile, recentTransactions, peerContext, TerminalRiskContext.disabled());
     }
 
     public FeatureContext {
@@ -27,6 +38,7 @@ public record FeatureContext(
         }
         trustedProfile = trustedProfile == null ? TrustedProfileSnapshot.empty() : trustedProfile;
         peerContext = peerContext == null ? PeerContext.empty() : peerContext;
+        terminalRiskContext = terminalRiskContext == null ? TerminalRiskContext.disabled() : terminalRiskContext;
         recentTransactions = recentTransactions == null ? List.of() : recentTransactions;
         if (recentTransactions.stream().anyMatch(transaction ->
                 !transaction.transactionDate().isBefore(currentTransaction.transactionDate()))) {

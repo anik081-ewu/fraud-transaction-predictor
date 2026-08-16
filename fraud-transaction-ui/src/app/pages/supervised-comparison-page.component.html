@@ -3,7 +3,7 @@
     <div>
       <span class="eyebrow">Labelled fraud evaluation</span>
       <h2>Supervised Model Comparison</h2>
-      <p>Compare XGBoost, Random Forest, and Logistic Regression as labelled history grows through 10%, 25%, 50%, and 100%.</p>
+      <p>Compare the three base classifiers as labelled history grows, then evaluate voting and leakage-safe stacking as separate fusion strategies.</p>
     </div>
   </header>
 
@@ -24,6 +24,7 @@
 
   <section class="study-status" *ngIf="study() as currentStudy" [class.running]="currentStudy.status === 'QUEUED' || currentStudy.status === 'RUNNING'">
     <strong>{{ currentStudy.status.replaceAll('_', ' ') }}</strong>
+    <span class="demo-result" *ngIf="demoExpectedResult()"></span>
     <span *ngIf="currentStudy.status === 'QUEUED' || currentStudy.status === 'RUNNING'">The comparison runs in the background. This page checks every five seconds.</span>
     <span *ngIf="currentStudy.status === 'COMPLETED'">Cached result from {{ currentStudy.completedAt | date:'medium' }}.</span>
     <span *ngIf="currentStudy.status === 'FAILED'">{{ currentStudy.failureReason }}</span>
@@ -46,7 +47,7 @@
 
     <article class="panel comparison-summary ensemble-summary">
       <div class="section-heading">
-        <div><span class="eyebrow">Three-model ensemble</span><h3>Combined decision performance</h3></div>
+        <div><span class="eyebrow">Fusion strategies</span><h3>Decisions built from the same three base classifiers</h3></div>
         <span>Same held-out rows</span>
       </div>
       <div class="table-wrap" *ngIf="rankedEnsembles().length; else ensemblePending"><table class="summary-table">
@@ -58,6 +59,63 @@
       </table></div>
       <ng-template #ensemblePending><p class="empty-ensemble">Run the comparison once to calculate ensemble metrics for this cached snapshot.</p></ng-template>
     </article>
+  </section>
+
+  <section class="panel policy-backtest" *ngIf="fullRiskPolicy() as policy">
+    <div class="section-heading policy-heading">
+      <div>
+        <span class="eyebrow">Full production decision</span>
+        <h3>Risk policy performance after all four layers</h3>
+        <p>Replays Customer Behaviour, Peer Behaviour, the configured ML ensemble, and AML Rules on the same untouched held-out rows.</p>
+      </div>
+      <div class="policy-version"><b>{{ policy.policyVersion }}</b><span>{{ policy.protocol }}</span></div>
+    </div>
+    <div class="policy-kpis">
+      <article><span>Policy PR-AUC</span><strong>{{ percent(policy.continuousPrAuc) }}</strong><small>Continuous final score</small></article>
+      <article><span>Case accuracy</span><strong>{{ percent(policy.caseDecision.accuracy) }}</strong><small>Read with class-balanced metrics</small></article>
+      <article><span>Balanced accuracy</span><strong>{{ percent(policy.caseDecision.balancedAccuracy) }}</strong><small>Equal importance to fraud and legitimate rows</small></article>
+      <article><span>Case precision</span><strong>{{ percent(policy.caseDecision.precision) }}</strong><small>{{ signedPercent(policy.versusMlEnsemble.precisionDelta) }} vs ML-only</small></article>
+      <article><span>Case recall</span><strong>{{ percent(policy.caseDecision.recall) }}</strong><small>{{ policy.caseDecision.fraudCaptured | number }} captured · {{ policy.caseDecision.fraudMissed | number }} missed</small></article>
+      <article><span>Case F1</span><strong>{{ percent(policy.caseDecision.f1) }}</strong><small>{{ signedPercent(policy.versusMlEnsemble.f1Delta) }} vs ML-only</small></article>
+      <article><span>Case volume</span><strong>{{ policy.caseDecision.decisionsPer1000 | number:'1.1-1' }}</strong><small>cases per 1,000 transactions</small></article>
+      <article><span>STR precision</span><strong>{{ percent(policy.strDecision.precision) }}</strong><small>{{ policy.strDecision.decisionCount | number }} HIGH decisions</small></article>
+    </div>
+    <div class="policy-detail-grid">
+      <article class="policy-breakdown">
+        <h4>Frozen policy used</h4>
+        <div><span>Customer behaviour</span><b>{{ percent(policy.componentWeights['customerBehaviour']) }}</b></div>
+        <div><span>Peer behaviour</span><b>{{ percent(policy.componentWeights['peerBehaviour']) }}</b></div>
+        <div><span>ML ensemble</span><b>{{ percent(policy.componentWeights['mlEnsemble']) }}</b></div>
+        <div><span>AML rules</span><b>{{ percent(policy.componentWeights['rules']) }}</b></div>
+        <h4 class="composition-title">Production ML composition</h4>
+        <div *ngFor="let model of policy.selectedModels"><span>{{ modelLabel(model) }}</span><b>{{ percent(policy.modelWeights[model] || 0) }}</b></div>
+        <small>Case threshold {{ percent(policy.thresholds.mediumCase) }} · STR threshold {{ percent(policy.thresholds.highStr) }}</small>
+      </article>
+      <article class="model-matrix policy-matrix">
+        <header><strong>Case decision (MEDIUM/HIGH)</strong><span>{{ percent(policy.caseDecision.balancedAccuracy) }} balanced</span></header>
+        <div class="matrix-axis"><span></span><b>No case</b><b>Create case</b></div>
+        <div class="matrix-row"><b>Actual legitimate</b><span class="correct">TN {{ policy.caseDecision.trueNegative | number }}<small>{{ matrixRate(policy.caseDecision.trueNegative, policy.caseDecision) }}</small></span><span class="wrong">FP {{ policy.caseDecision.falsePositive | number }}<small>{{ matrixRate(policy.caseDecision.falsePositive, policy.caseDecision) }}</small></span></div>
+        <div class="matrix-row"><b>Actual fraud</b><span class="wrong">FN {{ policy.caseDecision.falseNegative | number }}<small>{{ matrixRate(policy.caseDecision.falseNegative, policy.caseDecision) }}</small></span><span class="correct">TP {{ policy.caseDecision.truePositive | number }}<small>{{ matrixRate(policy.caseDecision.truePositive, policy.caseDecision) }}</small></span></div>
+      </article>
+      <article class="model-matrix policy-matrix">
+        <header><strong>STR decision (HIGH)</strong><span>{{ percent(policy.strDecision.balancedAccuracy) }} balanced</span></header>
+        <div class="matrix-axis"><span></span><b>No STR</b><b>Generate STR</b></div>
+        <div class="matrix-row"><b>Actual legitimate</b><span class="correct">TN {{ policy.strDecision.trueNegative | number }}<small>{{ matrixRate(policy.strDecision.trueNegative, policy.strDecision) }}</small></span><span class="wrong">FP {{ policy.strDecision.falsePositive | number }}<small>{{ matrixRate(policy.strDecision.falsePositive, policy.strDecision) }}</small></span></div>
+        <div class="matrix-row"><b>Actual fraud</b><span class="wrong">FN {{ policy.strDecision.falseNegative | number }}<small>{{ matrixRate(policy.strDecision.falseNegative, policy.strDecision) }}</small></span><span class="correct">TP {{ policy.strDecision.truePositive | number }}<small>{{ matrixRate(policy.strDecision.truePositive, policy.strDecision) }}</small></span></div>
+      </article>
+    </div>
+    <p class="policy-disclaimer">This is a side-effect-free historical replay. It measures the configured decision policy; it does not create cases, generate STR files, or tune thresholds on evaluation rows. Plain accuracy can be inflated by class imbalance, so use balanced accuracy, precision, recall, F1, and PR-AUC together. {{ policy.limitations[0] }}</p>
+  </section>
+
+  <section class="panel" *ngIf="report()?.riskPolicyEvaluations?.length">
+    <div class="section-heading"><div><span class="eyebrow">Policy growth matrix</span><h3>Does the complete decision remain reliable as history grows?</h3></div></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Decision</th><th *ngFor="let partition of partitions()">{{ partition }}%</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Create case</strong><small>MEDIUM or HIGH</small></td><td *ngFor="let partition of partitions()"><ng-container *ngIf="riskPolicyMetric(partition) as item"><b>{{ percent(item.caseDecision.precision) }} precision</b><small>{{ percent(item.caseDecision.recall) }} recall · {{ percent(item.caseDecision.f1) }} F1</small><small>{{ item.caseDecision.decisionsPer1000 | number:'1.1-1' }} cases / 1,000</small></ng-container></td></tr>
+        <tr><td><strong>Generate STR</strong><small>HIGH only</small></td><td *ngFor="let partition of partitions()"><ng-container *ngIf="riskPolicyMetric(partition) as item"><b>{{ percent(item.strDecision.precision) }} precision</b><small>{{ percent(item.strDecision.recall) }} recall · {{ percent(item.strDecision.f1) }} F1</small><small>{{ item.strDecision.decisionsPer1000 | number:'1.1-1' }} STRs / 1,000</small></ng-container></td></tr>
+      </tbody>
+    </table></div>
   </section>
 
   <section class="panel" *ngIf="report() as current">

@@ -3,7 +3,7 @@
     <div>
       <span class="page-eyebrow">Investigation workspace</span>
       <h2>Case Management</h2>
-      <p>Review cases created when anomaly votes meet the configured threshold.</p>
+      <p>Review automatically generated alerts and cases created manually from transaction search.</p>
     </div>
     <a class="secondary-action" routerLink="/cases/manual">Create Manual Case</a>
   </header>
@@ -22,7 +22,7 @@
       <div class="queue-header">
         <div>
           <span class="page-eyebrow">Review queue</span>
-          <h3>Generated cases</h3>
+          <h3>Investigation cases</h3>
         </div>
         <button class="icon-refresh" type="button" (click)="loadCases()" title="Refresh cases">Refresh</button>
       </div>

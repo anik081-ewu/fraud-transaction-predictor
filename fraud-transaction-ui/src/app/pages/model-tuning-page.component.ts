@@ -11,10 +11,10 @@ const GROUP_DESCRIPTIONS: Record<string, string> = {
   'Evaluation Protocol': 'Controls chronological holdout size, evaluation row cap, minimum partition data, and the shared reproducibility seed used across all training and comparison runs.',
   'Isolation Forest': 'Tree-based anomaly detector trained on the selected immutable transaction snapshot.',
   'Autoencoder': 'Neural reconstruction detector that learns normal behaviour and flags high reconstruction error.',
-  'Local Outlier Factor': 'Local-density detector that identifies transactions unlike their nearest neighbours.',
+  'Behavioral Cluster Outlier': 'Groups similar transaction behaviour, then detects unusual rows inside each group.',
   'XGBoost': 'Gradient-boosted decision trees optimized for nonlinear fraud classification on labelled transactions.',
-  'Random Forest': 'Class-balanced tree ensemble providing a robust supervised benchmark.',
-  'Logistic Regression': 'Regularized, interpretable probability baseline for labelled fraud detection.',
+  'Class-Balanced Random Forest': 'Balances fraud and legitimate classes inside each bootstrap tree.',
+  'Extra Trees': 'Highly randomized decision trees that capture nonlinear and complementary fraud patterns.',
 };
 
 @Component({
@@ -99,8 +99,8 @@ export class ModelTuningPageComponent implements OnInit {
 
   private groupOrder(): string[] {
     return this.learningMode() === 'SUPERVISED'
-      ? ['Evaluation Protocol', 'XGBoost', 'Random Forest', 'Logistic Regression']
-      : ['Evaluation Protocol', 'Isolation Forest', 'Autoencoder', 'Local Outlier Factor'];
+      ? ['Evaluation Protocol', 'XGBoost', 'Class-Balanced Random Forest', 'Extra Trees']
+      : ['Evaluation Protocol', 'Isolation Forest', 'Autoencoder', 'Behavioral Cluster Outlier'];
   }
 
   private extractMessage(error: unknown): string {

@@ -335,7 +335,7 @@ public class TransactionCreateService {
         alert.setRiskLevel(response.riskLevel());
         alert.setAnomalyVotes(response.anomalyVotes());
         alert.setIsoAnomaly(isModelAnomaly(response, "IsolationForest"));
-        alert.setLofAnomaly(isModelAnomaly(response, "LOF"));
+        alert.setLofAnomaly(isModelAnomaly(response, "BehavioralClusterOutlier"));
         alert.setSvmAnomaly(isModelAnomaly(response, "OneClassSVM"));
         alert.setAnomalyReason(joinReasons(response.reasons()));
         alert.setRecommendedAction(response.recommendedAction());

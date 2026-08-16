@@ -1,0 +1,406 @@
+{"kind":"deck","id":"pr/4gc87a","name":"Deck"}
+{"kind":"layout","layoutId":"d118fce2-1358-4e5a-8327-443c340c8c38","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"3adf5354-1ec7-42b6-b3f5-0cb7353a702a","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/xnykpl","slide":1,"title":"ACADEMIC PROJECT DEFENSE","textShapes":6}
+{"kind":"shape","id":"sh/s7qpwzy1","slide":1,"bbox":[0,0,18,720]}
+{"kind":"textbox","id":"sh/76xonehg","slide":1,"text":"ACADEMIC PROJECT DEFENSE","textPreview":"ACADEMIC PROJECT DEFENSE","textChars":24,"textLines":1,"bbox":[72,70,500,28]}
+{"kind":"textbox","id":"sh/65o7u90v","slide":1,"text":"Intelligent Fraud Transaction Detection\nand AML Case Management","textPreview":"Intelligent Fraud Transaction Detection | and AML Case Management","textChars":63,"textLines":2,"bbox":[72,145,950,150]}
+{"kind":"textbox","id":"sh/54f6l4za","slide":1,"text":"A dual-mode, research-guided platform for anomaly discovery, supervised fraud classification, explainable risk scoring, and governed investigation.","textPreview":"A dual-mode, research-guided platform for anomaly discovery, supervised fraud classification, explainable risk scoring, and governed inve...","textChars":147,"textLines":1,"bbox":[72,330,930,90]}
+{"kind":"shape","id":"sh/k36pszip","slide":1,"bbox":[72,470,1136,1]}
+{"kind":"textbox","id":"sh/jixojuhk","slide":1,"text":"Md. Mydul Islam Anik  •  MIT Project  •  August 2026","textPreview":"Md. Mydul Islam Anik  •  MIT Project  •  August 2026","textChars":52,"textLines":1,"bbox":[72,500,900,28]}
+{"kind":"textbox","id":"sh/iho7qp0z","slide":1,"text":"Institute of Information Technology (IIT), University of Dhaka","textPreview":"Institute of Information Technology (IIT), University of Dhaka","textChars":62,"textLines":1,"bbox":[72,538,900,24]}
+{"kind":"textbox","id":"sh/xgf6hkze","slide":1,"text":"MEASURED EVIDENCE • REPRODUCIBLE DATA • EXPLICIT LIMITATIONS","textPreview":"MEASURED EVIDENCE • REPRODUCIBLE DATA • EXPLICIT LIMITATIONS","textChars":60,"textLines":1,"bbox":[72,635,1000,22]}
+{"kind":"notes","id":"nt/xnykpl","slide":1,"text":"Open by framing this as a complete investigation platform, not only a classifier. The defense will separate measured evidence from demo-only values."}
+{"kind":"slide","id":"sl/be6jx2","slide":2,"title":"THE PROBLEM","textShapes":18}
+{"kind":"textbox","id":"sh/behwju90","slide":2,"text":"THE PROBLEM","textPreview":"THE PROBLEM","textChars":11,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/cfaxcza5","slide":2,"text":"Fraud monitoring fails when one constraint is solved in isolation","textPreview":"Fraud monitoring fails when one constraint is solved in isolation","textChars":65,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/dgjel4rq","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/yhsfe9sb","slide":2,"bbox":[64,126,1152,1]}
+{"kind":"textbox","id":"sh/zi1wne9w","slide":2,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,166,90,60]}
+{"kind":"textbox","id":"sh/03axgjah","slide":2,"text":"Labels are often absent","textPreview":"Labels are often absent","textChars":23,"textLines":1,"bbox":[160,170,420,34]}
+{"kind":"textbox","id":"sh/l4jep4r2","slide":2,"text":"A new client may have transactions but no reviewed fraud outcomes.","textPreview":"A new client may have transactions but no reviewed fraud outcomes.","textChars":66,"textLines":1,"bbox":[160,210,440,52]}
+{"kind":"textbox","id":"sh/m5sfi9sn","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[64,310,90,60]}
+{"kind":"textbox","id":"sh/n61wre9s","slide":2,"text":"Fraud is rare and time-dependent","textPreview":"Fraud is rare and time-dependent","textChars":32,"textLines":1,"bbox":[160,314,450,34]}
+{"kind":"textbox","id":"sh/3mdg7e1k","slide":2,"text":"Random splits and plain accuracy can hide leakage and missed fraud.","textPreview":"Random splits and plain accuracy can hide leakage and missed fraud.","textChars":67,"textLines":1,"bbox":[160,354,440,52]}
+{"kind":"textbox","id":"sh/2l4fy9kf","slide":2,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[660,166,90,60]}
+{"kind":"textbox","id":"sh/povy9ojq","slide":2,"text":"Real-time decisions must stay fast","textPreview":"Real-time decisions must stay fast","textChars":34,"textLines":1,"bbox":[756,170,440,34]}
+{"kind":"textbox","id":"sh/onmx0ji5","slide":2,"text":"Millions of rows belong in offline training—not inside one transaction request.","textPreview":"Millions of rows belong in offline training—not inside one transaction request.","textChars":79,"textLines":1,"bbox":[756,210,450,52]}
+{"kind":"textbox","id":"sh/fydg3u1o","slide":2,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[660,310,90,60]}
+{"kind":"textbox","id":"sh/exkfu9k3","slide":2,"text":"A score must be explainable","textPreview":"A score must be explainable","textChars":27,"textLines":1,"bbox":[756,314,430,34]}
+{"kind":"textbox","id":"sh/10vy54ju","slide":2,"text":"AML staff need reasons, policy versions, cases, and auditable outcomes.","textPreview":"AML staff need reasons, policy versions, cases, and auditable outcomes.","textChars":71,"textLines":1,"bbox":[756,354,440,52]}
+{"kind":"shape","id":"sh/gzmxwz29","slide":2,"bbox":[64,500,1152,112]}
+{"kind":"textbox","id":"sh/zuxgfy1s","slide":2,"text":"Design question","textPreview":"Design question","textChars":15,"textLines":1,"bbox":[88,520,210,24]}
+{"kind":"textbox","id":"sh/ytoz6t07","slide":2,"text":"How can one system learn before labels exist, improve after labels arrive, scale to bank volumes, and still explain every decision?","textPreview":"How can one system learn before labels exist, improve after labels arrive, scale to bank volumes, and still explain every decision?","textChars":131,"textLines":1,"bbox":[88,552,1080,42]}
+{"kind":"textbox","id":"sh/upsjyxkv","slide":2,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/be6jx2","slide":2,"text":"Use this slide to establish the four problems the architecture must solve together.\n\n[Sources]\n- https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_4_PerformanceMetrics/Summary.html\n- https://proceedings.mlr.press/v151/bach-nguyen22a.html\n[/Sources]"}
+{"kind":"slide","id":"sl/uv6g8u","slide":3,"title":"RESEARCH-GUIDED APPROACH","textShapes":20}
+{"kind":"textbox","id":"sh/nahcnix8","slide":3,"text":"RESEARCH-GUIDED APPROACH","textPreview":"RESEARCH-GUIDED APPROACH","textChars":24,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/obqdgnet","slide":3,"text":"Published methods shaped the design—not the claimed results","textPreview":"Published methods shaped the design—not the claimed results","textChars":59,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/pwzupsfe","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/ax8vidwj","slide":3,"bbox":[64,126,1152,1]}
+{"kind":"textbox","id":"sh/byhcrix4","slide":3,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,174,48,26]}
+{"kind":"textbox","id":"sh/czqdknep","slide":3,"text":"Fraud Detection Handbook","textPreview":"Fraud Detection Handbook","textChars":24,"textLines":1,"bbox":[132,166,330,32]}
+{"kind":"textbox","id":"sh/x0jetsfa","slide":3,"text":"Chronological evaluation, rare-event metrics, reproducible simulator","textPreview":"Chronological evaluation, rare-event metrics, reproducible simulator","textChars":68,"textLines":1,"bbox":[500,166,670,48]}
+{"kind":"shape","id":"sh/y1svmxwv","slide":3,"bbox":[132,232,1038,1]}
+{"kind":"textbox","id":"sh/z21wv2xg","slide":3,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[64,262,48,26]}
+{"kind":"textbox","id":"sh/b2h43uto","slide":3,"text":"Isolation Forest + autoencoder literature","textPreview":"Isolation Forest + autoencoder literature","textChars":41,"textLines":1,"bbox":[132,254,330,32]}
+{"kind":"textbox","id":"sh/a18nupsj","slide":3,"text":"Complementary unsupervised anomaly views","textPreview":"Complementary unsupervised anomaly views","textChars":40,"textLines":1,"bbox":[500,254,670,48]}
+{"kind":"shape","id":"sh/x4zm54bu","slide":3,"bbox":[132,320,1038,1]}
+{"kind":"textbox","id":"sh/w3q5wza9","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[64,350,48,26]}
+{"kind":"textbox","id":"sh/nyx4zuts","slide":3,"text":"Random Forest, Extra Trees, XGBoost","textPreview":"Random Forest, Extra Trees, XGBoost","textChars":35,"textLines":1,"bbox":[132,342,330,32]}
+{"kind":"textbox","id":"sh/mxonqps7","slide":3,"text":"Robust nonlinear supervised baselines","textPreview":"Robust nonlinear supervised baselines","textChars":37,"textLines":1,"bbox":[500,342,670,48]}
+{"kind":"shape","id":"sh/90fm14by","slide":3,"bbox":[132,408,1038,1]}
+{"kind":"textbox","id":"sh/oz65szad","slide":3,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[64,438,48,26]}
+{"kind":"textbox","id":"sh/7u1obetw","slide":3,"text":"Excess-Mass and anomaly-evaluation research","textPreview":"Excess-Mass and anomaly-evaluation research","textChars":43,"textLines":1,"bbox":[132,430,330,32]}
+{"kind":"textbox","id":"sh/6tsn29sb","slide":3,"text":"Label-free comparison without calling it fraud accuracy","textPreview":"Label-free comparison without calling it fraud accuracy","textChars":55,"textLines":1,"bbox":[500,430,670,48]}
+{"kind":"shape","id":"sh/2pc7udcz","slide":3,"bbox":[132,496,1038,1]}
+{"kind":"textbox","id":"sh/3ql83id4","slide":3,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[64,526,48,26]}
+{"kind":"textbox","id":"sh/4rupwnup","slide":3,"text":"Future-information research","textPreview":"Future-information research","textChars":27,"textLines":1,"bbox":[132,518,330,32]}
+{"kind":"textbox","id":"sh/psnq5sva","slide":3,"text":"Point-in-time features and leakage-safe holdouts","textPreview":"Point-in-time features and leakage-safe holdouts","textChars":48,"textLines":1,"bbox":[500,518,670,48]}
+{"kind":"shape","id":"sh/qtwryxcv","slide":3,"bbox":[132,584,1038,1]}
+{"kind":"textbox","id":"sh/ru5872dg","slide":3,"text":"Research determines the protocol. Project measurements determine the conclusion.","textPreview":"Research determines the protocol. Project measurements determine the conclusion.","textChars":80,"textLines":1,"bbox":[132,626,980,28]}
+{"kind":"textbox","id":"sh/cve907u1","slide":3,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/uv6g8u","slide":3,"text":"Make the distinction explicit: the project follows journal and handbook methods, but does not present published authors' numbers as its own.\n\n[Sources]\n- https://github.com/Fraud-Detection-Handbook/fraud-detection-handbook\n- https://doi.org/10.1109/ICDM.2008.17\n- https://doi.org/10.1007/s10994-006-6226-1\n- https://doi.org/10.1145/2939672.2939785\n- https://proceedings.mlr.press/v38/goix15.html\n- https://arxiv.org/abs/1607.01152\n- https://proceedings.mlr.press/v151/bach-nguyen22a.html\n[/Sources]"}
+{"kind":"slide","id":"sl/e4v8we","slide":4,"title":"DATASET PROVENANCE","textShapes":23}
+{"kind":"textbox","id":"sh/bu1or218","slide":4,"text":"DATASET PROVENANCE","textPreview":"DATASET PROVENANCE","textChars":18,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/cva507it","slide":4,"text":"The main supervised benchmark preserves chronology and rarity","textPreview":"The main supervised benchmark preserves chronology and rarity","textChars":61,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/xwj6tsjy","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/yxsn2x0j","slide":4,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/zy1ov214","slide":4,"bbox":[64,164,250,5]}
+{"kind":"textbox","id":"sh/kzu547ip","slide":4,"text":"TRANSACTIONS","textPreview":"TRANSACTIONS","textChars":12,"textLines":1,"bbox":[64,180,250,22]}
+{"kind":"textbox","id":"sh/lk36xcja","slide":4,"text":"264,500","textPreview":"264,500","textChars":7,"textLines":1,"bbox":[64,207,250,56]}
+{"kind":"textbox","id":"sh/e18nqdkf","slide":4,"text":"Adapted simulator rows","textPreview":"Adapted simulator rows","textChars":22,"textLines":1,"bbox":[64,264,250,36]}
+{"kind":"shape","id":"sh/f2h4ji10","slide":4,"bbox":[350,164,250,5]}
+{"kind":"textbox","id":"sh/3e9krmd0","slide":4,"text":"FRAUD ROWS","textPreview":"FRAUD ROWS","textChars":10,"textLines":1,"bbox":[350,180,250,22]}
+{"kind":"textbox","id":"sh/2d0jyhwf","slide":4,"text":"2,340","textPreview":"2,340","textChars":5,"textLines":1,"bbox":[350,207,250,56]}
+{"kind":"textbox","id":"sh/p0b2twvq","slide":4,"text":"0.8847% prevalence","textPreview":"0.8847% prevalence","textChars":18,"textLines":1,"bbox":[350,264,250,36]}
+{"kind":"shape","id":"sh/of210re5","slide":4,"bbox":[636,164,250,5]}
+{"kind":"textbox","id":"sh/fa9knmdo","slide":4,"text":"CUSTOMERS","textPreview":"CUSTOMERS","textChars":9,"textLines":1,"bbox":[636,180,250,22]}
+{"kind":"textbox","id":"sh/e90juhw3","slide":4,"text":"749","textPreview":"749","textChars":3,"textLines":1,"bbox":[636,207,250,56]}
+{"kind":"textbox","id":"sh/1cr2pwvu","slide":4,"text":"Complete histories","textPreview":"Complete histories","textChars":18,"textLines":1,"bbox":[636,264,250,36]}
+{"kind":"shape","id":"sh/gbi1wre9","slide":4,"bbox":[922,164,250,5]}
+{"kind":"textbox","id":"sh/r6pkj2ds","slide":4,"text":"CALENDAR SPAN","textPreview":"CALENDAR SPAN","textChars":13,"textLines":1,"bbox":[922,180,250,22]}
+{"kind":"textbox","id":"sh/65gjqxw7","slide":4,"text":"183 days","textPreview":"183 days","textChars":8,"textLines":1,"bbox":[922,207,250,56]}
+{"kind":"textbox","id":"sh/uhg32xgz","slide":4,"text":"Apr–Sep 2018","textPreview":"Apr–Sep 2018","textChars":12,"textLines":1,"bbox":[922,264,250,36]}
+{"kind":"shape","id":"sh/v2pkb2hk","slide":4,"bbox":[64,340,540,220]}
+{"kind":"textbox","id":"sh/w3yl47y5","slide":4,"text":"Source","textPreview":"Source","textChars":6,"textLines":1,"bbox":[88,366,180,24]}
+{"kind":"textbox","id":"sh/h472dczq","slide":4,"text":"Fraud Detection Handbook\nsimulated-data-transformed","textPreview":"Fraud Detection Handbook | simulated-data-transformed","textChars":51,"textLines":2,"bbox":[88,402,450,66]}
+{"kind":"textbox","id":"sh/i5g36hgv","slide":4,"text":"Terminal identity is mapped to Location. Fraud labels and scenario identifiers are never model inputs.","textPreview":"Terminal identity is mapped to Location. Fraud labels and scenario identifiers are never model inputs.","textChars":102,"textLines":1,"bbox":[88,490,455,54]}
+{"kind":"shape","id":"sh/j6pkfmhg","slide":4,"bbox":[636,340,536,220]}
+{"kind":"textbox","id":"sh/47yl8ry1","slide":4,"text":"Leakage-safe split","textPreview":"Leakage-safe split","textChars":18,"textLines":1,"bbox":[660,366,240,24]}
+{"kind":"textbox","id":"sh/58rmhczm","slide":4,"text":"70% train  →  10% calibrate  →  20% untouched test","textPreview":"70% train  →  10% calibrate  →  20% untouched test","textChars":50,"textLines":1,"bbox":[660,408,455,64]}
+{"kind":"textbox","id":"sh/6903ahg7","slide":4,"text":"Thresholds are chosen on calibration only; the newest period reports final performance.","textPreview":"Thresholds are chosen on calibration only; the newest period reports final performance.","textChars":87,"textLines":1,"bbox":[660,494,455,48]}
+{"kind":"textbox","id":"sh/ra94jmxs","slide":4,"text":"Evidence boundary: reproducible simulated evidence—not a claim about a live bank population.","textPreview":"Evidence boundary: reproducible simulated evidence—not a claim about a live bank population.","textChars":92,"textLines":1,"bbox":[64,606,1100,30]}
+{"kind":"textbox","id":"sh/14b69gju","slide":4,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/e4v8we","slide":4,"text":"Explain why rarity and chronological splitting matter. The fraud scenario identifier remains diagnostic metadata only.\n\n[Sources]\n- https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_3_GettingStarted/SimulatedDataset.html\n- https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_3_GettingStarted/BaselineModeling.html\n[/Sources]"}
+{"kind":"slide","id":"sl/5vbofv","slide":5,"title":"DUAL-MODE ARCHITECTURE","textShapes":24}
+{"kind":"textbox","id":"sh/6t0zutkn","slide":5,"text":"DUAL-MODE ARCHITECTURE","textPreview":"DUAL-MODE ARCHITECTURE","textChars":22,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/twrip83e","slide":5,"text":"One setting changes the learning path; the operational workflow remains","textPreview":"One setting changes the learning path; the operational workflow remains","textChars":71,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/svihw32t","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/fyt0rilk","slide":5,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/uxkzydkz","slide":5,"bbox":[64,162,310,420]}
+{"kind":"textbox","id":"sh/h0bits3a","slide":5,"text":"UNSUPERVISED","textPreview":"UNSUPERVISED","textChars":12,"textLines":1,"bbox":[90,190,250,28]}
+{"kind":"textbox","id":"sh/gz2h0n25","slide":5,"text":"When labels are absent","textPreview":"When labels are absent","textChars":22,"textLines":1,"bbox":[90,232,250,36]}
+{"kind":"shape","id":"sh/v2pgfel0","slide":5,"bbox":[90,308,8,8]}
+{"kind":"textbox","id":"sh/a1gzm94f","slide":5,"text":"Isolation Forest","textPreview":"Isolation Forest","textChars":16,"textLines":1,"bbox":[114,300,226,51]}
+{"kind":"shape","id":"sh/cn69wzah","slide":5,"bbox":[90,363,8,8]}
+{"kind":"textbox","id":"sh/dofap4b2","slide":5,"text":"Autoencoder","textPreview":"Autoencoder","textChars":11,"textLines":1,"bbox":[114,355,226,51]}
+{"kind":"shape","id":"sh/qlorupsb","slide":5,"bbox":[90,418,8,8]}
+{"kind":"textbox","id":"sh/bmxsnutw","slide":5,"text":"Behavioral Cluster Outlier","textPreview":"Behavioral Cluster Outlier","textChars":26,"textLines":1,"bbox":[114,410,226,51]}
+{"kind":"shape","id":"sh/kbq90zad","slide":5,"bbox":[90,473,8,8]}
+{"kind":"textbox","id":"sh/lczat4by","slide":5,"text":"EM-AUC, score shape, stability","textPreview":"EM-AUC, score shape, stability","textChars":30,"textLines":1,"bbox":[114,465,226,51]}
+{"kind":"shape","id":"sh/y9ory9s7","slide":5,"bbox":[454,162,310,420]}
+{"kind":"textbox","id":"sh/zaxsruts","slide":5,"text":"SUPERVISED","textPreview":"SUPERVISED","textChars":10,"textLines":1,"bbox":[480,190,250,28]}
+{"kind":"textbox","id":"sh/gfm9ofu9","slide":5,"text":"When reviewed labels exist","textPreview":"When reviewed labels exist","textChars":26,"textLines":1,"bbox":[480,232,250,62]}
+{"kind":"shape","id":"sh/1gvahkbu","slide":5,"bbox":[480,320,8,8]}
+{"kind":"textbox","id":"sh/h03y5cz6","slide":5,"text":"XGBoost","textPreview":"XGBoost","textChars":7,"textLines":1,"bbox":[504,312,226,51]}
+{"kind":"shape","id":"sh/wzuhw7il","slide":5,"bbox":[480,375,8,8]}
+{"kind":"textbox","id":"sh/vylg32hg","slide":5,"text":"Class-Balanced Random Forest","textPreview":"Class-Balanced Random Forest","textChars":28,"textLines":1,"bbox":[504,367,226,51]}
+{"kind":"shape","id":"sh/uxczux0v","slide":5,"bbox":[480,430,8,8]}
+{"kind":"textbox","id":"sh/54ny9czi","slide":5,"text":"Extra Trees","textPreview":"Extra Trees","textChars":11,"textLines":1,"bbox":[504,422,226,51]}
+{"kind":"shape","id":"sh/43eh0rix","slide":5,"bbox":[480,485,8,8]}
+{"kind":"textbox","id":"sh/j25g7mhc","slide":5,"text":"PR-AUC, precision, recall, F1","textPreview":"PR-AUC, precision, recall, F1","textChars":29,"textLines":1,"bbox":[504,477,226,51]}
+{"kind":"shape","id":"sh/i1czyh0r","slide":5,"bbox":[844,162,372,420]}
+{"kind":"textbox","id":"sh/tsnydwze","slide":5,"text":"SHARED OPERATIONS","textPreview":"SHARED OPERATIONS","textChars":17,"textLines":1,"bbox":[870,190,300,28]}
+{"kind":"textbox","id":"sh/sreh4rit","slide":5,"text":"The rest of the system does not reset","textPreview":"The rest of the system does not reset","textChars":37,"textLines":1,"bbox":[870,232,300,62]}
+{"kind":"shape","id":"sh/ad8vytgb","slide":5,"bbox":[870,320,8,8]}
+{"kind":"textbox","id":"sh/behwryxw","slide":5,"text":"Customer behaviour","textPreview":"Customer behaviour","textChars":18,"textLines":1,"bbox":[894,312,276,44]}
+{"kind":"shape","id":"sh/cfqd03yh","slide":5,"bbox":[870,368,8,8]}
+{"kind":"textbox","id":"sh/xgzetof2","slide":5,"text":"Peer behaviour","textPreview":"Peer behaviour","textChars":14,"textLines":1,"bbox":[894,360,276,44]}
+{"kind":"shape","id":"sh/y18v2tgn","slide":5,"bbox":[870,416,8,8]}
+{"kind":"textbox","id":"sh/z2hwvyx8","slide":5,"text":"AML rules","textPreview":"AML rules","textChars":9,"textLines":1,"bbox":[894,408,276,44]}
+{"kind":"shape","id":"sh/k3ad43yd","slide":5,"bbox":[870,464,8,8]}
+{"kind":"textbox","id":"sh/l4jex8fy","slide":5,"text":"Risk policy and cases","textPreview":"Risk policy and cases","textChars":21,"textLines":1,"bbox":[894,456,276,44]}
+{"kind":"shape","id":"sh/m5sv6dgj","slide":5,"bbox":[870,512,8,8]}
+{"kind":"textbox","id":"sh/761wzix4","slide":5,"text":"STR workflow and audit","textPreview":"STR workflow and audit","textChars":22,"textLines":1,"bbox":[894,504,276,44]}
+{"kind":"textbox","id":"sh/vmxwjip8","slide":5,"text":"This avoids forcing a client without labels to pretend supervised accuracy exists.","textPreview":"This avoids forcing a client without labels to pretend supervised accuracy exists.","textChars":82,"textLines":1,"bbox":[64,620,1100,28]}
+{"kind":"textbox","id":"sh/u1ovqd8n","slide":5,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/5vbofv","slide":5,"text":"The Settings page chooses the mode. Uploaded labelled rows support supervised learning; null labels are excluded. Unsupervised evidence remains available for clients without reviewed outcomes."}
+{"kind":"slide","id":"sl/pzn5mn","slide":6,"title":"LAYERED RISK DECISION","textShapes":20}
+{"kind":"textbox","id":"sh/6h4zads7","slide":6,"text":"LAYERED RISK DECISION","textPreview":"LAYERED RISK DECISION","textChars":21,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/tkfil8ry","slide":6,"text":"The final 0–100 score combines four independently explainable layers","textPreview":"The final 0–100 score combines four independently explainable layers","textChars":68,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/sjmhc3ad","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/fmx0ni9o","slide":6,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/elozeds3","slide":6,"bbox":[64,174,246,6]}
+{"kind":"textbox","id":"sh/1ofipsru","slide":6,"text":"Customer behaviour","textPreview":"Customer behaviour","textChars":18,"textLines":1,"bbox":[64,202,246,36]}
+{"kind":"textbox","id":"sh/gn6hgna9","slide":6,"text":"Personal amount, velocity, novelty, confidence","textPreview":"Personal amount, velocity, novelty, confidence","textChars":46,"textLines":1,"bbox":[64,252,246,92]}
+{"kind":"textbox","id":"sh/3ax0ri90","slide":6,"text":"0–1 normalized","textPreview":"0–1 normalized","textChars":14,"textLines":1,"bbox":[64,364,246,24]}
+{"kind":"shape","id":"sh/2pozixsf","slide":6,"bbox":[352,174,246,6]}
+{"kind":"textbox","id":"sh/w3u9wje9","slide":6,"text":"Peer behaviour","textPreview":"Peer behaviour","textChars":14,"textLines":1,"bbox":[352,202,246,36]}
+{"kind":"textbox","id":"sh/h43ap4ve","slide":6,"text":"Occupation-age peers with fallback hierarchy","textPreview":"Occupation-age peers with fallback hierarchy","textChars":44,"textLines":1,"bbox":[352,252,246,92]}
+{"kind":"textbox","id":"sh/u1cru9w3","slide":6,"text":"0–1 normalized","textPreview":"0–1 normalized","textChars":14,"textLines":1,"bbox":[352,364,246,24]}
+{"kind":"shape","id":"sh/v2lsnedo","slide":6,"bbox":[640,174,246,6]}
+{"kind":"textbox","id":"sh/4re9kje5","slide":6,"text":"ML ensemble","textPreview":"ML ensemble","textChars":11,"textLines":1,"bbox":[640,202,246,36]}
+{"kind":"textbox","id":"sh/5snatovq","slide":6,"text":"Selected supervised or unsupervised detectors","textPreview":"Selected supervised or unsupervised detectors","textChars":45,"textLines":1,"bbox":[640,252,246,92]}
+{"kind":"textbox","id":"sh/ipcry9wz","slide":6,"text":"0–1 normalized","textPreview":"0–1 normalized","textChars":14,"textLines":1,"bbox":[640,364,246,24]}
+{"kind":"shape","id":"sh/jqlsredk","slide":6,"bbox":[928,174,246,6]}
+{"kind":"textbox","id":"sh/sve9o3e1","slide":6,"text":"AML rules","textPreview":"AML rules","textChars":9,"textLines":1,"bbox":[928,202,246,36]}
+{"kind":"textbox","id":"sh/twnaxovm","slide":6,"text":"Deterministic structuring, velocity, sanctions, turnover","textPreview":"Deterministic structuring, velocity, sanctions, turnover","textChars":56,"textLines":1,"bbox":[928,252,246,92]}
+{"kind":"textbox","id":"sh/1cjahonq","slide":6,"text":"0–1 normalized","textPreview":"0–1 normalized","textChars":14,"textLines":1,"bbox":[928,364,246,24]}
+{"kind":"shape","id":"sh/0ba98j6l","slide":6,"bbox":[64,430,1152,2]}
+{"kind":"textbox","id":"sh/za1sfy50","slide":6,"text":"Final score","textPreview":"Final score","textChars":11,"textLines":1,"bbox":[64,458,220,30]}
+{"kind":"textbox","id":"sh/e9sr6tof","slide":6,"text":"Σ (component score × configured weight) × 100","textPreview":"Σ (component score × configured weight) × 100","textChars":45,"textLines":1,"bbox":[286,450,720,48]}
+{"kind":"textbox","id":"sh/9g3al8n2","slide":6,"text":"= 100%","textPreview":"= 100%","textChars":6,"textLines":1,"bbox":[1040,450,176,48]}
+{"kind":"shape","id":"sh/ofu9c3mh","slide":6,"bbox":[64,544,1152,78]}
+{"kind":"textbox","id":"sh/nelsjy5w","slide":6,"text":"MEDIUM creates a case. HIGH creates a case and prepares draft STR output. Model votes stay visible as diagnostics; policy weights determine the decision.","textPreview":"MEDIUM creates a case. HIGH creates a case and prepares draft STR output. Model votes stay visible as diagnostics; policy weights determi...","textChars":153,"textLines":1,"bbox":[88,566,1104,40]}
+{"kind":"textbox","id":"sh/mdcratob","slide":6,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/pzn5mn","slide":6,"text":"Emphasize that model votes alone do not equal the final score. Each component is normalized, weighted, versioned, and explainable."}
+{"kind":"slide","id":"sl/0byngd","slide":7,"title":"UNSUPERVISED EVIDENCE","textShapes":14}
+{"kind":"textbox","id":"sh/8n25wr2t","slide":7,"text":"UNSUPERVISED EVIDENCE","textPreview":"UNSUPERVISED EVIDENCE","textChars":21,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/7mto3618","slide":7,"text":"Behavioral Cluster Outlier gives the strongest current label-free separation","textPreview":"Behavioral Cluster Outlier gives the strongest current label-free separation","textChars":76,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/mlknu1k3","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/lkb61wji","slide":7,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/zi9ozm1c","slide":7,"bbox":[790,184,380,5]}
+{"kind":"textbox","id":"sh/yx0nqhkr","slide":7,"text":"BEST EM-AUC","textPreview":"BEST EM-AUC","textChars":11,"textLines":1,"bbox":[790,200,380,22]}
+{"kind":"textbox","id":"sh/xwr6xcj6","slide":7,"text":"89.2 / 100","textPreview":"89.2 / 100","textChars":10,"textLines":1,"bbox":[790,227,380,56]}
+{"kind":"textbox","id":"sh/cvi5o72l","slide":7,"text":"Behavioral Cluster Outlier","textPreview":"Behavioral Cluster Outlier","textChars":26,"textLines":1,"bbox":[790,284,380,36]}
+{"kind":"shape","id":"sh/qdo7i5kn","slide":7,"bbox":[790,334,380,5]}
+{"kind":"textbox","id":"sh/bex8ra18","slide":7,"text":"LOWEST ANOMALY RATE","textPreview":"LOWEST ANOMALY RATE","textChars":19,"textLines":1,"bbox":[790,350,380,22]}
+{"kind":"textbox","id":"sh/cf69kf2t","slide":7,"text":"0.82%","textPreview":"0.82%","textChars":5,"textLines":1,"bbox":[790,377,380,56]}
+{"kind":"textbox","id":"sh/dgfqtkje","slide":7,"text":"412 of 50,000 rows","textPreview":"412 of 50,000 rows","textChars":18,"textLines":1,"bbox":[790,434,380,36]}
+{"kind":"shape","id":"sh/2947e5kr","slide":7,"bbox":[790,484,380,5]}
+{"kind":"textbox","id":"sh/3ax8nq1w","slide":7,"text":"FASTEST TRAINING","textPreview":"FASTEST TRAINING","textChars":16,"textLines":1,"bbox":[790,500,380,22]}
+{"kind":"textbox","id":"sh/ob6pgv2h","slide":7,"text":"1.31 s","textPreview":"1.31 s","textChars":6,"textLines":1,"bbox":[790,527,380,56]}
+{"kind":"textbox","id":"sh/pcfqp0j2","slide":7,"text":"Isolation Forest","textPreview":"Isolation Forest","textChars":16,"textLines":1,"bbox":[790,584,380,36]}
+{"kind":"textbox","id":"sh/el47alkf","slide":7,"text":"EM-AUC evaluates anomaly-score structure; it is not fraud precision or recall.","textPreview":"EM-AUC evaluates anomaly-score structure; it is not fraud precision or recall.","textChars":78,"textLines":1,"bbox":[64,620,1100,28]}
+{"kind":"textbox","id":"sh/fmd8jq10","slide":7,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"chart","id":"ch/gfi9wfqx","slide":7,"name":"","chartType":"bar","bbox":[64,172,680,400]}
+{"kind":"notes","id":"nt/0byngd","slide":7,"text":"These are current measured values on the 50,000-row unlabeled snapshot. Explain why EM-AUC and anomaly rate are appropriate before confirmed labels exist.\n\n[Sources]\n- https://proceedings.mlr.press/v38/goix15.html\n- https://arxiv.org/abs/1607.01152\n- https://doi.org/10.1109/ICDM.2008.17\n- https://doi.org/10.1145/2689746.2689747\n[/Sources]"}
+{"kind":"slide","id":"sl/0scham","slide":8,"title":"GROWTH COMPARISON PROTOCOL","textShapes":19}
+{"kind":"textbox","id":"sh/yl07ip87","slide":8,"text":"GROWTH COMPARISON PROTOCOL","textPreview":"GROWTH COMPARISON PROTOCOL","textChars":26,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/l8r6t47y","slide":8,"text":"Every model is retested as the oldest history grows","textPreview":"Every model is retested as the oldest history grows","textChars":51,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/knipkzqd","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/biponapw","slide":8,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/ahgne58b","slide":8,"bbox":[154,285,810,5]}
+{"kind":"shape","id":"sh/xk76pk7m","slide":8,"bbox":[120,250,72,72]}
+{"kind":"textbox","id":"sh/cjy5gfqh","slide":8,"text":"10%","textPreview":"10%","textChars":3,"textLines":1,"bbox":[120,269,72,28]}
+{"kind":"textbox","id":"sh/vetozep0","slide":8,"text":"Early signal","textPreview":"Early signal","textChars":12,"textLines":1,"bbox":[86,344,140,30]}
+{"kind":"shape","id":"sh/udk7q98f","slide":8,"bbox":[390,250,72,72]}
+{"kind":"textbox","id":"sh/ozydsr6d","slide":8,"text":"25%","textPreview":"25%","textChars":3,"textLines":1,"bbox":[390,269,72,28]}
+{"kind":"textbox","id":"sh/p07e1w7y","slide":8,"text":"Emerging pattern","textPreview":"Emerging pattern","textChars":16,"textLines":1,"bbox":[356,344,140,30]}
+{"kind":"shape","id":"sh/2xwvq18n","slide":8,"bbox":[660,250,72,72]}
+{"kind":"textbox","id":"sh/ny5wz6ps","slide":8,"text":"50%","textPreview":"50%","textChars":3,"textLines":1,"bbox":[660,269,72,28]}
+{"kind":"textbox","id":"sh/gvedorqh","slide":8,"text":"Stability check","textPreview":"Stability check","textChars":15,"textLines":1,"bbox":[626,344,140,30]}
+{"kind":"shape","id":"sh/1wnexw72","slide":8,"bbox":[930,250,72,72]}
+{"kind":"textbox","id":"sh/etwvmh8b","slide":8,"text":"100%","textPreview":"100%","textChars":4,"textLines":1,"bbox":[930,269,72,28]}
+{"kind":"textbox","id":"sh/fu5wvmpw","slide":8,"text":"Full history","textPreview":"Full history","textChars":12,"textLines":1,"bbox":[896,344,140,30]}
+{"kind":"textbox","id":"sh/s7udk7q5","slide":8,"text":"Oldest transactions first","textPreview":"Oldest transactions first","textChars":25,"textLines":1,"bbox":[64,166,420,34]}
+{"kind":"textbox","id":"sh/t8nutc7q","slide":8,"text":"The timestamp order never changes; only the amount of available history grows.","textPreview":"The timestamp order never changes; only the amount of available history grows.","textChars":78,"textLines":1,"bbox":[64,206,700,36]}
+{"kind":"textbox","id":"sh/tofux8zu","slide":8,"text":"What the matrix reveals","textPreview":"What the matrix reveals","textChars":23,"textLines":1,"bbox":[64,430,350,32]}
+{"kind":"shape","id":"sh/8nmto3i9","slide":8,"bbox":[64,486,8,8]}
+{"kind":"textbox","id":"sh/7mdsvyho","slide":8,"text":"Does quality improve, decline, or oscillate?","textPreview":"Does quality improve, decline, or oscillate?","textChars":44,"textLines":1,"bbox":[88,478,1056,40]}
+{"kind":"shape","id":"sh/614bmt03","slide":8,"bbox":[64,530,8,8]}
+{"kind":"textbox","id":"sh/l0vat8zi","slide":8,"text":"Does anomaly/classification volume stabilize?","textPreview":"Does anomaly/classification volume stabilize?","textChars":45,"textLines":1,"bbox":[88,522,1056,40]}
+{"kind":"shape","id":"sh/kzmtk3ix","slide":8,"bbox":[64,574,8,8]}
+{"kind":"textbox","id":"sh/jydsryhc","slide":8,"text":"What is the training and scoring cost?","textPreview":"What is the training and scoring cost?","textChars":38,"textLines":1,"bbox":[88,566,1056,40]}
+{"kind":"shape","id":"sh/yx4bit07","slide":8,"bbox":[64,618,8,8]}
+{"kind":"textbox","id":"sh/5wzu5szm","slide":8,"text":"Which model remains credible at production scale?","textPreview":"Which model remains credible at production scale?","textChars":49,"textLines":1,"bbox":[88,610,1056,40]}
+{"kind":"textbox","id":"sh/4vqtwnih","slide":8,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/0scham","slide":8,"text":"The comparison uses oldest-first 10%, 25%, 50%, and 100% partitions with the same chronological holdout logic. Results are cached by immutable snapshot so reopening a page does not rerun training.\n\n[Sources]\n- https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_3_GettingStarted/BaselineModeling.html\n- https://proceedings.mlr.press/v151/bach-nguyen22a.html\n[/Sources]"}
+{"kind":"slide","id":"sl/2v7683","slide":9,"title":"SUPERVISED PROTOCOL","textShapes":15}
+{"kind":"textbox","id":"sh/6t0v6xkf","slide":9,"text":"SUPERVISED PROTOCOL","textPreview":"SUPERVISED PROTOCOL","textChars":19,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/twbu1sjq","slide":9,"text":"Supervised models are calibrated for rare-event decisions—not raw accuracy","textPreview":"Supervised models are calibrated for rare-event decisions—not raw accuracy","textChars":74,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/sv2d8n25","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/fitc321w","slide":9,"bbox":[64,126,1152,1]}
+{"kind":"textbox","id":"sh/ehkvaxkb","slide":9,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,170,60,42]}
+{"kind":"textbox","id":"sh/1kbu5cj2","slide":9,"text":"XGBoost","textPreview":"XGBoost","textChars":7,"textLines":1,"bbox":[140,170,410,36]}
+{"kind":"textbox","id":"sh/gj2dc72h","slide":9,"text":"Gradient boosting for nonlinear interactions","textPreview":"Gradient boosting for nonlinear interactions","textChars":44,"textLines":1,"bbox":[560,170,600,36]}
+{"kind":"shape","id":"sh/3mdw7m1s","slide":9,"bbox":[140,236,1020,1]}
+{"kind":"textbox","id":"sh/2lkvehkn","slide":9,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[64,278,60,42]}
+{"kind":"textbox","id":"sh/w36lg3u9","slide":9,"text":"Class-Balanced Random Forest","textPreview":"Class-Balanced Random Forest","textChars":28,"textLines":1,"bbox":[140,278,410,36]}
+{"kind":"textbox","id":"sh/h4zm98ve","slide":9,"text":"Robust bagged benchmark under imbalance","textPreview":"Robust bagged benchmark under imbalance","textChars":39,"textLines":1,"bbox":[560,278,600,36]}
+{"kind":"shape","id":"sh/u1o3etc3","slide":9,"bbox":[140,344,1020,1]}
+{"kind":"textbox","id":"sh/v2x47ydo","slide":9,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[64,386,60,42]}
+{"kind":"textbox","id":"sh/4rqlknu5","slide":9,"text":"Extra Trees","textPreview":"Extra Trees","textChars":11,"textLines":1,"bbox":[140,386,410,36]}
+{"kind":"textbox","id":"sh/5szmdsvq","slide":9,"text":"Randomized splits for diversity and efficiency","textPreview":"Randomized splits for diversity and efficiency","textChars":46,"textLines":1,"bbox":[560,386,600,36]}
+{"kind":"shape","id":"sh/ip83idcz","slide":9,"bbox":[140,452,1020,1]}
+{"kind":"shape","id":"sh/jqh4bidk","slide":9,"bbox":[64,510,1152,112]}
+{"kind":"textbox","id":"sh/svqlonu1","slide":9,"text":"Operating-point rule","textPreview":"Operating-point rule","textChars":20,"textLines":1,"bbox":[88,530,240,22]}
+{"kind":"textbox","id":"sh/twjmhsbm","slide":9,"text":"Choose the threshold on calibration data to maximize recall while maintaining at least 70% calibration precision. Report once on the untouched newest 20%.","textPreview":"Choose the threshold on calibration data to maximize recall while maintaining at least 70% calibration precision. Report once on the unto...","textChars":154,"textLines":1,"bbox":[88,562,1080,44]}
+{"kind":"textbox","id":"sh/10vulozu","slide":9,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/2v7683","slide":9,"text":"The threshold is not manipulated to force 90% precision. It is chosen once on calibration data under an explicit business constraint, then evaluated on untouched data.\n\n[Sources]\n- https://doi.org/10.1145/2939672.2939785\n- https://doi.org/10.1023/A:1010933404324\n- https://doi.org/10.1007/s10994-006-6226-1\n- https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_4_PerformanceMetrics/TopKBased.html\n[/Sources]"}
+{"kind":"slide","id":"sl/t13ac2","slide":10,"title":"STRONGEST REPRODUCIBLE RESULT","textShapes":29}
+{"kind":"textbox","id":"sh/ory98fq5","slide":10,"text":"STRONGEST REPRODUCIBLE RESULT","textPreview":"STRONGEST REPRODUCIBLE RESULT","textChars":29,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/nqpsza9k","slide":10,"text":"Extra Trees exceeds 70% precision and recall on the untouched period","textPreview":"Extra Trees exceeds 70% precision and recall on the untouched period","textChars":68,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/2pgr658z","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/1onax0re","slide":10,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/0ne94fq9","slide":10,"bbox":[64,166,230,5]}
+{"kind":"textbox","id":"sh/fm5sva9o","slide":10,"text":"PR-AUC","textPreview":"PR-AUC","textChars":6,"textLines":1,"bbox":[64,182,230,22]}
+{"kind":"textbox","id":"sh/e1wr2583","slide":10,"text":"73.3%","textPreview":"73.3%","textChars":5,"textLines":1,"bbox":[64,209,230,56]}
+{"kind":"textbox","id":"sh/d0nat0ri","slide":10,"text":"Ranking quality","textPreview":"Ranking quality","textChars":15,"textLines":1,"bbox":[64,266,230,36]}
+{"kind":"shape","id":"sh/sze90vqx","slide":10,"bbox":[324,166,230,5]}
+{"kind":"textbox","id":"sh/apknex4f","slide":10,"text":"PRECISION","textPreview":"PRECISION","textChars":9,"textLines":1,"bbox":[324,182,230,22]}
+{"kind":"textbox","id":"sh/bqton250","slide":10,"text":"74.8%","textPreview":"74.8%","textChars":5,"textLines":1,"bbox":[324,209,230,56]}
+{"kind":"textbox","id":"sh/cr25g7ml","slide":10,"text":"323 / 432 alerts","textPreview":"323 / 432 alerts","textChars":16,"textLines":1,"bbox":[324,266,230,36]}
+{"kind":"shape","id":"sh/xsb6pcn6","slide":10,"bbox":[584,166,230,5]}
+{"kind":"textbox","id":"sh/210nax4j","slide":10,"text":"RECALL","textPreview":"RECALL","textChars":6,"textLines":1,"bbox":[584,182,230,22]}
+{"kind":"textbox","id":"sh/nm94ji54","slide":10,"text":"71.8%","textPreview":"71.8%","textChars":5,"textLines":1,"bbox":[584,209,230,56]}
+{"kind":"textbox","id":"sh/on25cnmp","slide":10,"text":"323 / 450 frauds","textPreview":"323 / 450 frauds","textChars":16,"textLines":1,"bbox":[584,266,230,36]}
+{"kind":"shape","id":"sh/pob6lsna","slide":10,"bbox":[844,166,230,5]}
+{"kind":"textbox","id":"sh/ex0n6d47","slide":10,"text":"F1","textPreview":"F1","textChars":2,"textLines":1,"bbox":[844,182,230,22]}
+{"kind":"textbox","id":"sh/fy94fi5s","slide":10,"text":"73.2%","textPreview":"73.2%","textChars":5,"textLines":1,"bbox":[844,209,230,56]}
+{"kind":"textbox","id":"sh/jq5craho","slide":10,"text":"Balanced operating point","textPreview":"Balanced operating point","textChars":24,"textLines":1,"bbox":[844,266,230,36]}
+{"kind":"textbox","id":"sh/ipcbypg3","slide":10,"text":"Untouched newest 52,900 transactions","textPreview":"Untouched newest 52,900 transactions","textChars":36,"textLines":1,"bbox":[64,336,500,28]}
+{"kind":"textbox","id":"sh/5snutkze","slide":10,"text":"Actual legitimate","textPreview":"Actual legitimate","textChars":17,"textLines":1,"bbox":[64,408,160,24]}
+{"kind":"textbox","id":"sh/kret0fyt","slide":10,"text":"Actual fraud","textPreview":"Actual fraud","textChars":12,"textLines":1,"bbox":[64,518,160,24]}
+{"kind":"shape","id":"sh/7u5cvuhk","slide":10,"bbox":[230,374,210,92]}
+{"kind":"textbox","id":"sh/6twb2pgz","slide":10,"text":"True negative","textPreview":"True negative","textChars":13,"textLines":1,"bbox":[240,386,190,22]}
+{"kind":"textbox","id":"sh/twnux4zq","slide":10,"text":"52,341","textPreview":"52,341","textChars":6,"textLines":1,"bbox":[240,414,190,35]}
+{"kind":"shape","id":"sh/svet4zy5","slide":10,"bbox":[454,374,210,92]}
+{"kind":"textbox","id":"sh/ny1sjqhg","slide":10,"text":"False positive","textPreview":"False positive","textChars":14,"textLines":1,"bbox":[464,386,190,22]}
+{"kind":"textbox","id":"sh/mxsbq5gv","slide":10,"text":"109","textPreview":"109","textChars":3,"textLines":1,"bbox":[464,414,190,35]}
+{"kind":"shape","id":"sh/c3q90ret","slide":10,"bbox":[230,484,210,92]}
+{"kind":"textbox","id":"sh/d4zqtwfy","slide":10,"text":"False negative","textPreview":"False negative","textChars":14,"textLines":1,"bbox":[240,496,190,22]}
+{"kind":"textbox","id":"sh/q18ry1wn","slide":10,"text":"127","textPreview":"127","textChars":3,"textLines":1,"bbox":[240,524,190,35]}
+{"kind":"shape","id":"sh/b2h8r6x8","slide":10,"bbox":[454,484,210,92]}
+{"kind":"textbox","id":"sh/ozqpwreh","slide":10,"text":"True positive","textPreview":"True positive","textChars":13,"textLines":1,"bbox":[464,496,190,22]}
+{"kind":"textbox","id":"sh/p0zqpwf2","slide":10,"text":"323","textPreview":"323","textChars":3,"textLines":1,"bbox":[464,524,190,35]}
+{"kind":"shape","id":"sh/2xo7uhwb","slide":10,"bbox":[730,374,442,202]}
+{"kind":"textbox","id":"sh/3yx8nmxw","slide":10,"text":"Why this matters","textPreview":"Why this matters","textChars":16,"textLines":1,"bbox":[758,398,300,28]}
+{"kind":"textbox","id":"sh/8va98bel","slide":10,"text":"The result remains credible under 0.8847% fraud prevalence, chronological separation, and a threshold chosen before the final test period.","textPreview":"The result remains credible under 0.8847% fraud prevalence, chronological separation, and a threshold chosen before the final test period.","textChars":138,"textLines":1,"bbox":[758,440,365,98]}
+{"kind":"textbox","id":"sh/9wjq1gf6","slide":10,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/t13ac2","slide":10,"text":"This is the strongest reproducible benchmark in the project. It demonstrates a useful precision-recall operating point without claiming deployment readiness.\n\n[Sources]\n- https://github.com/Fraud-Detection-Handbook/fraud-detection-handbook\n- https://doi.org/10.1007/s10994-006-6226-1\n[/Sources]"}
+{"kind":"slide","id":"sl/y0wd6w","slide":11,"title":"FUSION EVIDENCE","textShapes":9}
+{"kind":"textbox","id":"sh/98jut8rq","slide":11,"text":"FUSION EVIDENCE","textPreview":"FUSION EVIDENCE","textChars":15,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/mlsbidsz","slide":11,"text":"Fusion is useful only when measured—it does not automatically beat one model","textPreview":"Fusion is useful only when measured—it does not automatically beat one model","textChars":76,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/nm1cri9k","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/0jatg3a9","slide":11,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/yhsbets3","slide":11,"bbox":[834,164,338,392]}
+{"kind":"textbox","id":"sh/zi1cny9o","slide":11,"text":"Measured conclusion","textPreview":"Measured conclusion","textChars":19,"textLines":1,"bbox":[858,190,290,26]}
+{"kind":"textbox","id":"sh/4fuds7ad","slide":11,"text":"Weighted probability ensemble","textPreview":"Weighted probability ensemble","textChars":29,"textLines":1,"bbox":[858,234,280,56]}
+{"kind":"textbox","id":"sh/5gnu1sry","slide":11,"text":"58.7% precision\n65.9% recall\n62.0% F1","textPreview":"58.7% precision | 65.9% recall | 62.0% F1","textChars":37,"textLines":3,"bbox":[858,310,280,110]}
+{"kind":"textbox","id":"sh/dc7upgvi","slide":11,"text":"The fusion result is close to—not clearly better than—the strongest standalone classifier on this 25,000-row integration snapshot.","textPreview":"The fusion result is close to—not clearly better than—the strongest standalone classifier on this 25,000-row integration snapshot.","textChars":130,"textLines":1,"bbox":[858,438,270,86]}
+{"kind":"textbox","id":"sh/cbydwbux","slide":11,"text":"Temporal stacking remains a research comparison but is removed from production-model selection.","textPreview":"Temporal stacking remains a research comparison but is removed from production-model selection.","textChars":95,"textLines":1,"bbox":[64,602,1100,32]}
+{"kind":"textbox","id":"sh/rapcn6dc","slide":11,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"image","id":"im/gritsza5","slide":11,"name":"","alt":"Measured standalone and fusion comparison","bbox":[64,164,730,392]}
+{"kind":"notes","id":"nt/y0wd6w","slide":11,"text":"Use this slide to demonstrate scientific honesty. Ensembles can improve robustness, but correlated errors and weak calibration can prevent a gain. Production therefore uses weighted registered base classifiers."}
+{"kind":"slide","id":"sl/req19g","slide":12,"title":"FULL POLICY REPLAY","textShapes":14}
+{"kind":"textbox","id":"sh/f298fa5s","slide":12,"text":"FULL POLICY REPLAY","textPreview":"FULL POLICY REPLAY","textChars":18,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/g32pof6d","slide":12,"text":"The current four-layer policy needs calibration before deployment","textPreview":"The current four-layer policy needs calibration before deployment","textChars":65,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/14bqhkny","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/6d07ilob","slide":12,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/szipkv61","slide":12,"bbox":[824,174,340,5]}
+{"kind":"textbox","id":"sh/t0rqd0nm","slide":12,"text":"CASE PRECISION","textPreview":"CASE PRECISION","textChars":14,"textLines":1,"bbox":[824,190,340,22]}
+{"kind":"textbox","id":"sh/i9g7eloz","slide":12,"text":"54.6%","textPreview":"54.6%","textChars":5,"textLines":1,"bbox":[824,217,340,56]}
+{"kind":"textbox","id":"sh/japo7q5k","slide":12,"text":"99 false positives","textPreview":"99 false positives","textChars":18,"textLines":1,"bbox":[824,274,340,36]}
+{"kind":"shape","id":"sh/vah4nmpw","slide":12,"bbox":[824,310,340,5]}
+{"kind":"textbox","id":"sh/u98nehob","slide":12,"text":"CASE RECALL","textPreview":"CASE RECALL","textChars":11,"textLines":1,"bbox":[824,326,340,22]}
+{"kind":"textbox","id":"sh/hczmpw72","slide":12,"text":"50.2%","textPreview":"50.2%","textChars":5,"textLines":1,"bbox":[824,353,340,56]}
+{"kind":"textbox","id":"sh/wbq5gr6h","slide":12,"text":"118 frauds missed","textPreview":"118 frauds missed","textChars":17,"textLines":1,"bbox":[824,410,340,36]}
+{"kind":"shape","id":"sh/jeh4rmp8","slide":12,"bbox":[824,446,340,5]}
+{"kind":"textbox","id":"sh/id8ni1on","slide":12,"text":"BALANCED ACCURACY","textPreview":"BALANCED ACCURACY","textChars":17,"textLines":1,"bbox":[824,462,340,22]}
+{"kind":"textbox","id":"sh/50j6tw7y","slide":12,"text":"74.1%","textPreview":"74.1%","textChars":5,"textLines":1,"bbox":[824,489,340,56]}
+{"kind":"textbox","id":"sh/4fa5kr6d","slide":12,"text":"Measured on same held-out rows","textPreview":"Measured on same held-out rows","textChars":30,"textLines":1,"bbox":[824,546,340,36]}
+{"kind":"shape","id":"sh/zix4f2po","slide":12,"bbox":[64,596,1100,48]}
+{"kind":"textbox","id":"sh/yhon6xo3","slide":12,"text":"Customer, peer, and rules improve explanation and AML control—but current weights do not yet improve classification over ML-only.","textPreview":"Customer, peer, and rules improve explanation and AML control—but current weights do not yet improve classification over ML-only.","textChars":129,"textLines":1,"bbox":[84,607,1060,26]}
+{"kind":"textbox","id":"sh/2xc7e58r","slide":12,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"image","id":"im/ep4za1sz","slide":12,"name":"","alt":"Measured four-layer risk policy replay","bbox":[64,160,710,414]}
+{"kind":"notes","id":"nt/req19g","slide":12,"text":"The frozen policy used 25% customer behaviour, 10% peer behaviour, 60% ML, and 5% AML rules. The limitation is reported rather than hidden. Next work is calibration on a separate validation period and optimizing case/STR thresholds by investigator capacity."}
+{"kind":"slide","id":"sl/a3j3cp","slide":13,"title":"SCALABILITY DESIGN","textShapes":21}
+{"kind":"textbox","id":"sh/2d87upkz","slide":13,"text":"SCALABILITY DESIGN","textPreview":"SCALABILITY DESIGN","textChars":18,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/p0jq5kjq","slide":13,"text":"Offline learning and online scoring are separated to bound latency and memory","textPreview":"Offline learning and online scoring are separated to bound latency and memory","textChars":77,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/4fapwf25","slide":13,"text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/fahoza1o","slide":13,"bbox":[64,126,1152,1]}
+{"kind":"textbox","id":"sh/u987q5k3","slide":13,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[64,174,52,50]}
+{"kind":"textbox","id":"sh/hczq1kje","slide":13,"text":"Commit transaction","textPreview":"Commit transaction","textChars":18,"textLines":1,"bbox":[64,230,246,58]}
+{"kind":"textbox","id":"sh/gbqpsf29","slide":13,"text":"Persist once; keep the decision path short","textPreview":"Persist once; keep the decision path short","textChars":42,"textLines":1,"bbox":[64,302,246,82]}
+{"kind":"textbox","id":"sh/z618be1s","slide":13,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[352,174,52,50]}
+{"kind":"textbox","id":"sh/e5s729k7","slide":13,"text":"Read point-in-time features","textPreview":"Read point-in-time features","textChars":27,"textLines":1,"bbox":[352,230,246,58]}
+{"kind":"textbox","id":"sh/4na1ojeh","slide":13,"text":"Bounded history and loaded profile state","textPreview":"Bounded history and loaded profile state","textChars":40,"textLines":1,"bbox":[352,302,246,82]}
+{"kind":"textbox","id":"sh/5o3ihov2","slide":13,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[640,174,52,50]}
+{"kind":"textbox","id":"sh/i1sjm9wb","slide":13,"text":"Score loaded artifacts","textPreview":"Score loaded artifacts","textChars":22,"textLines":1,"bbox":[640,230,246,58]}
+{"kind":"textbox","id":"sh/jm10fedw","slide":13,"text":"No retraining inside the request","textPreview":"No retraining inside the request","textChars":32,"textLines":1,"bbox":[640,302,246,82]}
+{"kind":"textbox","id":"sh/wza1kjel","slide":13,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[928,174,52,50]}
+{"kind":"textbox","id":"sh/h0jid4vq","slide":13,"text":"Commit decision","textPreview":"Commit decision","textChars":15,"textLines":1,"bbox":[928,230,246,58]}
+{"kind":"textbox","id":"sh/uxsji9wf","slide":13,"text":"Create case/STR work after scoring","textPreview":"Create case/STR work after scoring","textChars":34,"textLines":1,"bbox":[928,302,246,82]}
+{"kind":"shape","id":"sh/vy10bed0","slide":13,"bbox":[64,414,1152,1]}
+{"kind":"textbox","id":"sh/8vqhgze9","slide":13,"text":"Offline training","textPreview":"Offline training","textChars":16,"textLines":1,"bbox":[64,450,240,28]}
+{"kind":"shape","id":"sh/9wzi94vu","slide":13,"bbox":[64,504,8,8]}
+{"kind":"textbox","id":"sh/pgrqxwj6","slide":13,"text":"Keyset export to immutable Parquet parts","textPreview":"Keyset export to immutable Parquet parts","textChars":40,"textLines":1,"bbox":[88,496,1076,36]}
+{"kind":"shape","id":"sh/ofipor21","slide":13,"bbox":[64,544,8,8]}
+{"kind":"textbox","id":"sh/nep8vm1g","slide":13,"text":"Compact bounded features avoid the earlier 19.8 GiB one-hot allocation","textPreview":"Compact bounded features avoid the earlier 19.8 GiB one-hot allocation","textChars":70,"textLines":1,"bbox":[88,536,1076,36]}
+{"kind":"shape","id":"sh/2dg7mhkv","slide":13,"bbox":[64,584,8,8]}
+{"kind":"textbox","id":"sh/1c76tw3a","slide":13,"text":"Checksummed snapshots and versioned candidate artifacts","textPreview":"Checksummed snapshots and versioned candidate artifacts","textChars":55,"textLines":1,"bbox":[88,576,1076,36]}
+{"kind":"shape","id":"sh/0bypkr2p","slide":13,"bbox":[64,624,8,8]}
+{"kind":"textbox","id":"sh/faporml4","slide":13,"text":"Kafka is the next transport layer—not the governance store","textPreview":"Kafka is the next transport layer—not the governance store","textChars":58,"textLines":1,"bbox":[88,616,1076,36]}
+{"kind":"textbox","id":"sh/e9g7ihkj","slide":13,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/a3j3cp","slide":13,"text":"The 264,500-row pipeline uses compact bounded features and immutable snapshots. Kafka can distribute committed transaction events and isolate back pressure, but SQL Server remains the audit and governance system of record."}
+{"kind":"slide","id":"sl/kr8h3i","slide":14,"title":"END-TO-END WORKFLOW","textShapes":16}
+{"kind":"textbox","id":"sh/50rm10na","slide":14,"text":"END-TO-END WORKFLOW","textPreview":"END-TO-END WORKFLOW","textChars":19,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/ix036loz","slide":14,"text":"The prototype closes the loop from data to investigation","textPreview":"The prototype closes the loop from data to investigation","textChars":56,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/jy94zq5k","slide":14,"text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/s3i5cf61","slide":14,"bbox":[64,126,1152,1]}
+{"kind":"shape","id":"sh/r2943a5g","slide":14,"bbox":[64,500,160,64]}
+{"kind":"textbox","id":"sh/87yl0b6h","slide":14,"text":"Upload & validate","textPreview":"Upload & validate","textChars":17,"textLines":1,"bbox":[72,518,144,30]}
+{"kind":"textbox","id":"sh/987mtgn2","slide":14,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[228,514,28,34]}
+{"kind":"shape","id":"sh/pc7a5ozy","slide":14,"bbox":[256,500,160,64]}
+{"kind":"textbox","id":"sh/4by9wjid","slide":14,"text":"Freeze snapshot","textPreview":"Freeze snapshot","textChars":15,"textLines":1,"bbox":[264,518,144,30]}
+{"kind":"textbox","id":"sh/3aps3ehs","slide":14,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[420,514,28,34]}
+{"kind":"shape","id":"sh/29wru907","slide":14,"bbox":[448,500,160,64]}
+{"kind":"textbox","id":"sh/dg7a9ozu","slide":14,"text":"Train & compare","textPreview":"Train & compare","textChars":15,"textLines":1,"bbox":[456,518,144,30]}
+{"kind":"textbox","id":"sh/cfyt0jy9","slide":14,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[612,514,28,34]}
+{"kind":"shape","id":"sh/reps7eho","slide":14,"bbox":[640,500,160,64]}
+{"kind":"textbox","id":"sh/qdgbyt03","slide":14,"text":"Configure policy","textPreview":"Configure policy","textChars":16,"textLines":1,"bbox":[648,518,144,30]}
+{"kind":"textbox","id":"sh/14rad8zq","slide":14,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[804,514,28,34]}
+{"kind":"shape","id":"sh/03it43yl","slide":14,"bbox":[832,500,160,64]}
+{"kind":"textbox","id":"sh/kzalwbat","slide":14,"text":"Score transaction","textPreview":"Score transaction","textChars":17,"textLines":1,"bbox":[840,518,144,30]}
+{"kind":"textbox","id":"sh/l0jmpwbe","slide":14,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[996,514,28,34]}
+{"kind":"shape","id":"sh/yx83u1sn","slide":14,"bbox":[1024,500,160,64]}
+{"kind":"textbox","id":"sh/jyh4n6t8","slide":14,"text":"Review case / STR","textPreview":"Review case / STR","textChars":17,"textLines":1,"bbox":[1032,518,144,30]}
+{"kind":"textbox","id":"sh/8nal0bap","slide":14,"text":"JWT roles protect administration; model registry and policy versions preserve auditability; pagination keeps investigations usable at scale.","textPreview":"JWT roles protect administration; model registry and policy versions preserve auditability; pagination keeps investigations usable at scale.","textChars":140,"textLines":1,"bbox":[64,610,1120,36]}
+{"kind":"textbox","id":"sh/tojmtgba","slide":14,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"image","id":"im/kfe5g36x","slide":14,"name":"","alt":"Training Operations interface","bbox":[64,160,540,270]}
+{"kind":"image","id":"im/je54ny5c","slide":14,"name":"","alt":"Case Management interface","bbox":[676,160,540,270]}
+{"kind":"notes","id":"nt/kr8h3i","slide":14,"text":"Walk through the administrator and analyst experience. Training creates candidates but does not silently activate them. MEDIUM creates a case; HIGH prepares draft STR output."}
+{"kind":"slide","id":"sl/wi4crb","slide":15,"title":"CONCLUSION","textShapes":18}
+{"kind":"textbox","id":"sh/9gfmpwnu","slide":15,"text":"CONCLUSION","textPreview":"CONCLUSION","textChars":10,"textLines":1,"bbox":[64,34,620,24]}
+{"kind":"textbox","id":"sh/md43u14j","slide":15,"text":"The project proves a credible architecture—and exposes the next research target","textPreview":"The project proves a credible architecture—and exposes the next research target","textChars":79,"textLines":1,"bbox":[64,66,1080,54]}
+{"kind":"textbox","id":"sh/nedknm5o","slide":15,"text":"15","textPreview":"15","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"shape","id":"sh/0rmlsrmd","slide":15,"bbox":[64,126,1152,1]}
+{"kind":"textbox","id":"sh/1cv2lwny","slide":15,"text":"PROVEN","textPreview":"PROVEN","textChars":6,"textLines":1,"bbox":[64,170,250,28]}
+{"kind":"shape","id":"sh/ep43qh47","slide":15,"bbox":[64,222,8,8]}
+{"kind":"textbox","id":"sh/zqdkjm5s","slide":15,"text":"Dual-mode learning before and after labels exist","textPreview":"Dual-mode learning before and after labels exist","textChars":48,"textLines":1,"bbox":[88,214,496,54]}
+{"kind":"shape","id":"sh/cnmlo7m1","slide":15,"bbox":[64,280,8,8]}
+{"kind":"textbox","id":"sh/dov2hcnm","slide":15,"text":"Oldest-first growth comparison with cached evidence","textPreview":"Oldest-first growth comparison with cached evidence","textChars":51,"textLines":1,"bbox":[88,272,496,54]}
+{"kind":"shape","id":"sh/p0f21876","slide":15,"bbox":[64,338,8,8]}
+{"kind":"textbox","id":"sh/oz61s361","slide":15,"text":"74.8% precision and 71.8% recall on the strongest reproducible benchmark","textPreview":"74.8% precision and 71.8% recall on the strongest reproducible benchmark","textChars":72,"textLines":1,"bbox":[88,330,496,54]}
+{"kind":"shape","id":"sh/3yxkzypg","slide":15,"bbox":[64,396,8,8]}
+{"kind":"textbox","id":"sh/2xojqtov","slide":15,"text":"Explainable four-layer scoring, cases, and draft STR workflow","textPreview":"Explainable four-layer scoring, cases, and draft STR workflow","textChars":61,"textLines":1,"bbox":[88,388,496,54]}
+{"kind":"shape","id":"sh/1wfixo7a","slide":15,"bbox":[64,454,8,8]}
+{"kind":"textbox","id":"sh/gv61oj6p","slide":15,"text":"Bounded online scoring with governed offline training","textPreview":"Bounded online scoring with governed offline training","textChars":53,"textLines":1,"bbox":[88,446,496,54]}
+{"kind":"textbox","id":"sh/fud0vyp4","slide":15,"text":"NOT YET PROVEN","textPreview":"NOT YET PROVEN","textChars":14,"textLines":1,"bbox":[680,170,300,28]}
+{"kind":"shape","id":"sh/e94jmtoj","slide":15,"bbox":[680,222,8,8]}
+{"kind":"textbox","id":"sh/t8vito7y","slide":15,"text":"Live-bank generalization","textPreview":"Live-bank generalization","textChars":24,"textLines":1,"bbox":[704,214,486,54]}
+{"kind":"shape","id":"sh/s7m1kj6t","slide":15,"bbox":[680,280,8,8]}
+{"kind":"textbox","id":"sh/4natwnil","slide":15,"text":"Production false-positive cost","textPreview":"Production false-positive cost","textChars":30,"textLines":1,"bbox":[704,272,486,54]}
+{"kind":"shape","id":"sh/5oja5sj6","slide":15,"bbox":[680,338,8,8]}
+{"kind":"textbox","id":"sh/il8bud0v","slide":15,"text":"Fairness across customer segments","textPreview":"Fairness across customer segments","textChars":33,"textLines":1,"bbox":[704,330,486,54]}
+{"kind":"shape","id":"sh/jm1s3i10","slide":15,"bbox":[680,396,8,8]}
+{"kind":"textbox","id":"sh/wzq9s3ip","slide":15,"text":"That the current layered policy beats ML-only","textPreview":"That the current layered policy beats ML-only","textChars":45,"textLines":1,"bbox":[704,388,486,54]}
+{"kind":"shape","id":"sh/h0za18ja","slide":15,"bbox":[680,454,8,8]}
+{"kind":"textbox","id":"sh/ux8rqtkj","slide":15,"text":"Regulatory acceptance of generated STR XML","textPreview":"Regulatory acceptance of generated STR XML","textChars":42,"textLines":1,"bbox":[704,446,486,54]}
+{"kind":"shape","id":"sh/vyhszy14","slide":15,"bbox":[64,548,1152,80]}
+{"kind":"textbox","id":"sh/gvut47it","slide":15,"text":"Next research milestone","textPreview":"Next research milestone","textChars":23,"textLines":1,"bbox":[88,566,240,22]}
+{"kind":"textbox","id":"sh/1w3axcje","slide":15,"text":"Calibrate customer, peer, ML, and rule weights on a separate validation period—then prove improvement on an untouched future window.","textPreview":"Calibrate customer, peer, ML, and rule weights on a separate validation period—then prove improvement on an untouched future window.","textChars":132,"textLines":1,"bbox":[334,560,830,48]}
+{"kind":"textbox","id":"sh/bq5w36lg","slide":15,"text":"INTELLIGENT FRAUD TRANSACTION DETECTION","textPreview":"INTELLIGENT FRAUD TRANSACTION DETECTION","textChars":39,"textLines":1,"bbox":[64,687,700,18]}
+{"kind":"notes","id":"nt/wi4crb","slide":15,"text":"Close by resolving the opening question: the architecture works, the strongest supervised model crosses 70% precision and recall, and the remaining weakness is specifically the calibration of the full layered policy—not an unexplained failure."}

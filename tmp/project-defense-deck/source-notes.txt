@@ -1,0 +1,28 @@
+Communication job: By the end, the academic supervisor should understand that the project solves the label-scarcity, scalability, explainability, and governance problems of transaction monitoring with a dual-mode, four-layer architecture, while reporting measured limitations honestly.
+
+Verified project evidence:
+- 50,000-row unsupervised snapshot: Isolation Forest EM-AUC 67.2; Autoencoder 85.6; Behavioral Cluster Outlier 89.2.
+- Fraud Detection Handbook adapted benchmark: 264,500 rows, 2,340 fraud rows (0.8847%), 749 customers, 183 days, chronological 70/10/20 split.
+- Extra Trees untouched test result: PR-AUC 73.3%, precision 74.8%, recall 71.8%, F1 73.2%, TP 323, FP 109, FN 127, TN 52,341.
+- 25,000-row integration snapshot: fusion did not materially outperform the strongest standalone classifier.
+- Four-layer policy replay: precision 54.6%, recall 50.2%, F1 52.3%, balanced accuracy 74.1%; this is an explicit calibration limitation.
+
+External research sources:
+- Fraud Detection Handbook: https://github.com/Fraud-Detection-Handbook/fraud-detection-handbook
+- Simulator: https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_3_GettingStarted/SimulatedDataset.html
+- Chronological baseline: https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_3_GettingStarted/BaselineModeling.html
+- Precision top-k: https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_4_PerformanceMetrics/TopKBased.html
+- Metrics summary: https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_4_PerformanceMetrics/Summary.html
+- Isolation Forest: https://doi.org/10.1109/ICDM.2008.17
+- Random Forest: https://doi.org/10.1023/A:1010933404324
+- Extra Trees: https://doi.org/10.1007/s10994-006-6226-1
+- XGBoost: https://doi.org/10.1145/2939672.2939785
+- Autoencoder anomaly detection: https://doi.org/10.1145/2689746.2689747
+- Excess-Mass evaluation: https://proceedings.mlr.press/v38/goix15.html
+- Unsupervised evaluation caveats: https://arxiv.org/abs/1607.01152
+- Temporal leakage/future information: https://proceedings.mlr.press/v151/bach-nguyen22a.html
+
+Evidence boundary:
+- Expected/demo cache values are not presented as measured evidence.
+- Unsupervised EM-AUC is not fraud accuracy.
+- The 264,500-row dataset is reproducible simulated evidence, not a claim about a live bank population.

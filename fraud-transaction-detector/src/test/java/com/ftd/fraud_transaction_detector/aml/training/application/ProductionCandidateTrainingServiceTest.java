@@ -78,21 +78,49 @@ class ProductionCandidateTrainingServiceTest {
                 snapshot.fromBusinessDate(), snapshot.toBusinessDate(), snapshot.cutoffTimestamp()
         )).thenReturn(List.of(mock(Transaction.class)));
         when(trainingClient.train(org.mockito.ArgumentMatchers.any())).thenReturn(new TrainModelResponse(
-                "SUCCESS", "trained", 1, 2, List.of("LOF"), java.util.Map.of(),
-                "models/run", java.util.Map.of("LOF", java.util.Map.of())
+                "SUCCESS", "trained", 1, 2, List.of("BehavioralClusterOutlier"), java.util.Map.of(),
+                "models/run", java.util.Map.of("BehavioralClusterOutlier", java.util.Map.of())
         ));
         ProductionCandidateTrainingService service = new ProductionCandidateTrainingService(
                 repository, configService, transactionRepository, trainingClient,
                 mock(BatchCandidateRegistrar.class)
         );
 
-        service.start(snapshotId, List.of("LOCAL_OUTLIER_FACTOR"), "test-operator");
+        service.start(snapshotId, List.of("BEHAVIORAL_CLUSTER_OUTLIER"), "test-operator");
 
         ArgumentCaptor<TrainModelRequest> request = ArgumentCaptor.forClass(TrainModelRequest.class);
         verify(trainingClient).train(request.capture());
         assertEquals(1, request.getValue().transactions().size());
         assertNull(request.getValue().datasetPath());
         assertNull(request.getValue().datasetChecksum());
+    }
+
+    @Test
+    void mapsLegacyLogisticSelectionToExtraTrees() {
+        UUID snapshotId = UUID.randomUUID();
+        AmlTrainingRunRepository repository = mock(AmlTrainingRunRepository.class);
+        AppConfigService configService = mock(AppConfigService.class);
+        ModelTrainingClient trainingClient = mock(ModelTrainingClient.class);
+        AmlTrainingRun snapshot = run(snapshotId, "SUPERVISED_ENSEMBLE", "DATASET_READY");
+        when(repository.findRequired(snapshotId)).thenReturn(snapshot);
+        when(configService.getLearningMode()).thenReturn("SUPERVISED");
+        when(configService.isSupervisedLearningMode()).thenReturn(true);
+        when(configService.isModelTrainingEnabled(anyString(), eq(true))).thenReturn(true);
+        when(trainingClient.train(org.mockito.ArgumentMatchers.any())).thenReturn(new TrainModelResponse(
+                "SUCCESS", "trained", 1, 2, List.of("ExtraTreesClassifier"), java.util.Map.of(),
+                "models/run", java.util.Map.of("ExtraTreesClassifier", java.util.Map.of())
+        ));
+        ProductionCandidateTrainingService service = new ProductionCandidateTrainingService(
+                repository, configService, mock(TransactionRepository.class), trainingClient,
+                mock(BatchCandidateRegistrar.class)
+        );
+
+        var response = service.start(snapshotId, List.of("LOGISTIC_REGRESSION"), "test-operator");
+
+        assertEquals(List.of("EXTRA_TREES_CLASSIFIER"), response.trainedModels());
+        ArgumentCaptor<TrainModelRequest> request = ArgumentCaptor.forClass(TrainModelRequest.class);
+        verify(trainingClient).train(request.capture());
+        assertEquals(List.of("ExtraTreesClassifier"), request.getValue().modelNames());
     }
 
     private AmlTrainingRun run(UUID id, String modelType, String status) {
